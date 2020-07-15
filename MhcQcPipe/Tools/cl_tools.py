@@ -18,7 +18,7 @@ class MhcPeptides:
         self.sample_name = sample_name.replace(' ', '_')
         self.sample_description = sample_description
         self.peptides = peptides
-
+'''
 tester_a = MhcPeptides(
     sample_name='Test A',
     sample_description='first test sample',
@@ -34,7 +34,7 @@ tester_b = MhcPeptides(
                'AIVVDPVHGF', 'AIVVDPVHGFM', 'AKRVIISAPSADAP', 'AKRVIISAPSADAPM']
 )
 test_samples = [tester_a, tester_b]
-
+'''
 # THIS NEEDS TO BE REPLACED WITH A VALUE FROM A PARAMETER FILE
 GIBBS = '/home/labcaron/Projects/Software/gibbscluster-2.0/GibbsCluster-2.0e_SA.pl'
 
@@ -81,12 +81,12 @@ class MhcToolHelper:
         # split peptide list into chunks
         for sample in self.samples:
             peptides = np.array(remove_modifications(sample.peptides))
-            np.random.shuffle(peptides)  # we need to shuffle them so we don't end up with files filled with peptide lengths that take a LONG time to compute (this actually is a very significant speed up)
+
             lengths = np.vectorize(len)(peptides)
-            if self.mhc_class == 'I':
-                peptides = peptides[(lengths >= 8) & (lengths <= 12)]
-            else:
-                peptides = peptides[(lengths >= 12) & (lengths <= 22)]
+            peptides = peptides[(lengths >= self.min_length) & (lengths <= self.max_length)]
+
+            np.random.shuffle(peptides)  # we need to shuffle them so we don't end up with files filled with peptide lengths that take a LONG time to compute (this actually is a very significant speed up)
+
             if len(peptides) > 100:
                 chunks = array_split(peptides, n)
             else:
@@ -165,6 +165,7 @@ class MhcToolHelper:
                     pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
                     ignore_index=True
                 )
+            #self.predictions.to_csv(str(Path(self.tmp_folder)/'predictions.csv'))
 
     def cluster_with_gibbscluster(self):
         n_cpus = int(os.cpu_count())
@@ -185,14 +186,8 @@ class MhcToolHelper:
             if self.mhc_class == 'I':
                 self.gibbs_cluster_lengths[sample.sample_name] = use_length
                 peps = peps[lengths == use_length]
-            #else:
-            #    self.gibbs_cluster_lengths[sample.sample_name] = use_length
-            #    peps = peps[(lengths >= use_length-2) & (lengths <= use_length+2)]
-
-            '''if self.mhc_class == 'I':
-                peps = peps[(lengths >= 8) & (lengths <= 12)]
             else:
-                peps = peps[(lengths >= 12) & (lengths <= 22)]'''
+                peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
@@ -251,6 +246,9 @@ class MhcToolHelper:
                 if len(peps) < 10:
                     self.supervised_gibbs_directories[sample.sample_name][allele] = None
                 else:
+                    lengths = np.vectorize(len)(peps)
+                    peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
+
                     peps.tofile(str(fname), '\n', '%s')
                     g = "1-5" if allele == "unannotated" else "1"
                     if self.mhc_class == 'I':

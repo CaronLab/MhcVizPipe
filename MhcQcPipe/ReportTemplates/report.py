@@ -18,6 +18,7 @@ from dominate.util import raw
 from dominate.tags import *
 from dominate import document
 import PlotlyLogo.logo as pl
+from MhcQcPipe.app import ROOT_DIR
 
 class mhc_report:
     def __init__(self,
@@ -55,6 +56,11 @@ class mhc_report:
             pep_binding_dict[sample] = counts_df.copy(deep=True)
         self.pep_binding_dict = pep_binding_dict
 
+        lab_logo = base64.b64encode(open(str(Path(ROOT_DIR)/'assets/logo_CARONLAB_horizontal.jpg'), 'rb').read()).decode()
+        self.lab_logo = img(src='data:image/jpg;base64,{lab_logo}', className='img-fluid',
+                            style="max-width:100%; max-height:100%; opacity: 50%; margin-left: 10px;"
+                                  "margin-bottom: 8px")
+
     def gen_peptide_tables(self, className=None):
 
         t = table(className=f'table table-hover table-bordered',
@@ -66,7 +72,7 @@ class mhc_report:
                     [
                         th('Allele', style="padding: 5px"),
                         th('Sample', style="padding: 5px"),
-                        th('Total peptides', style="padding: 5px"),
+                        th('Number of peptides', style="padding: 5px"),
                         th('Strong binders', style="padding: 5px"),
                         th('Weak binders', style="padding: 5px"),
                         th('Non-binders', style="padding: 5px")
@@ -101,7 +107,7 @@ class mhc_report:
         card = div(className='card', style='height: 100%')
         card.add(
             [
-                div(b('Peptide Counts'), className='card-header'),
+                div([b('Peptide Counts')], className='card-header'),
                 div(div(t, className='table-responsive'), className='card-body')
             ]
         )
@@ -654,51 +660,52 @@ class mhc_report:
                         )
                     )
             # now the unannotated peptides
-            logos = list((Path(self.results.supervised_gibbs_directories[sample]['unannotated'])/'logos')
-                         .glob(f'*of{n_motifs["unannotated_"+sample]}-001.png'))
-            logos = [str(x) for x in logos]
-            logos.sort()
-            group = 1
-            for x in range(max_n_motifs):
-                if x < len(logos):
-                    logo = logos[x]
-                    encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
-                    motifs_row.add(
-                        div(
-                            [
-                                b(f'Unannotated group {group}'),
-                                img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'
-                                          'display: block;'
-                                          'margin-left: auto;'
-                                          'margin-right: auto;'),
-                                p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][x])}\n'),
-                            ],
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
-                        )
-                    )
-                    group += 1
-                else:
-                    motifs_row.add(
-                        div(
-                            img(
-                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-                                style=f'width: 100%;'
+            if self.results.supervised_gibbs_directories[sample]['unannotated']:
+                logos = list((Path(self.results.supervised_gibbs_directories[sample]['unannotated'])/'logos')
+                             .glob(f'*of{n_motifs["unannotated_"+sample]}-001.png'))
+                logos = [str(x) for x in logos]
+                logos.sort()
+                group = 1
+                for x in range(max_n_motifs):
+                    if x < len(logos):
+                        logo = logos[x]
+                        encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
+                        motifs_row.add(
+                            div(
+                                [
+                                    b(f'Unannotated group {group}'),
+                                    img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
+                                        style='width: 100%;'
+                                              'display: block;'
+                                              'margin-left: auto;'
+                                              'margin-right: auto;'),
+                                    p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][x])}\n'),
+                                ],
+                                style=f'width: {image_width}%;'
                                       f'display: block;'
                                       f'margin-left: auto;'
                                       f'margin-right: auto;'
-                            ),
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
+                                      f'font-size: 10pt'
+                            )
                         )
-                    )
+                        group += 1
+                    else:
+                        motifs_row.add(
+                            div(
+                                img(
+                                    src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+                                    style=f'width: 100%;'
+                                          f'display: block;'
+                                          f'margin-left: auto;'
+                                          f'margin-right: auto;'
+                                ),
+                                style=f'width: {image_width}%;'
+                                      f'display: block;'
+                                      f'margin-left: auto;'
+                                      f'margin-right: auto;'
+                                      f'font-size: 10pt'
+                            )
+                        )
             motifs.add(
                 div(
                     [
@@ -848,34 +855,47 @@ class mhc_report:
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
         with doc:
-            with div(id='layout', className='container', style='max-width: 1250px;'
+            with div(id='layout', className='container', style='max-width: 1600px;'
+                                                               'min-width: 800px;'
                                                                'margin-top: 20px;'
                                                                'margin-bottom: 20px'):
                 with div(className='row'):
-                    with div(className='col-12'):
+                    with div(className='col-12', style='display: flex; height: 60px'):
                         h2('MhcQcPipe Report',
-                           style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px")
+                           style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px; width: 100%")
+                        self.lab_logo
                 with div(className='row'):
-                    with div(className='col-6' if len(self.samples) else 'col-12'):
+                    with div(className='col-6' if len(self.samples) > 1 else 'col-12'):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
                         p([b('Submitted by: '), f'{self.submitter_name if self.submitter_name else "Anonymous"}'])
                         with div(style='display: flex'):
                             b('Desciption of experiment:', style='margin-right: 5px; white-space: nowrap')
                             p(self.experiment_description if self.experiment_description else 'None provided')
-                        p([b('Alleles: '), ' '.join(self.results.alleles)])
+                        p([b('Alleles: '), ', '.join(self.results.alleles)])
 
                         b('Samples:')
                         div(
                             [
-                                p('\n  '.join(
+                                p('\n '.join(
                                     [
-                                        f'{name}: {description}' if description else f'{name}' for name, description in
+                                        f'\t{name}: {description}' if description else f'\t{name}' for name, description in
                                         self.results.descriptions.items()
                                     ]
                                 ), style="white-space: pre"
                                 )
                             ]
                         )
+                        b('Analysis details:')
+                        if self.mhc_class == 'I':
+                            gibbs_lengths = '\n  '.join([f'{sample}: {self.results.gibbs_cluster_lengths[sample]} mers'
+                                                         for sample in self.samples])
+                            gibbs_description = f', except unsupervised GibbsCluster which used the following length ' \
+                                                f'peptides:\n\t{gibbs_lengths}'
+                        else:
+                            gibbs_description = ''
+                        p(f'Peptides for all steps subset by length to between '
+                          f'{self.results.min_length} & {self.results.max_length} mers{gibbs_description}',
+                          style="white-space: pre-wrap")
                     if len(self.samples) > 1:
                         self.gen_upset_plot(className='col-6')
                 hr()

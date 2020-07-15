@@ -16,6 +16,7 @@ from MhcQcPipe.ReportTemplates import report
 from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
 from urllib.parse import quote as urlquote
+from sys import argv
 
 import pandas as pd
 
@@ -27,7 +28,7 @@ external_stylesheets = [dbc.themes.BOOTSTRAP,
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 class_i_alleles = []
-with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
+with open(Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')) as f:
     for allele in f.readlines():
         allele = allele.strip()
         class_i_alleles.append({'label': allele, 'value': allele})
@@ -44,7 +45,7 @@ app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),
     html.Div('', id='tmp-folder', hidden=True),
 
-    html.H1(children='MhcQcPipe'),
+    html.H1(children='MhcQcPipe - DEV'),
 
     html.Div(children='''
         A quick and easy QC application for mass spectrometry data of MHC class I and II peptides.
@@ -385,7 +386,9 @@ def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, s
                     sep = '\t'
                 i = headers.index(selected_column)
                 peps = [line.split(sep)[i].strip().replace('"', '') for line in lines[1:]]
-                peptide_data[file] = {'description': file, 'peptides': peps}
+                total_n = len(peps)
+                peps = list(set(peps))
+                peptide_data[file] = {'description': file, 'peptides': peps, 'total_peps': total_n}
                 loaded_data += [html.P(f'{file}', style={'margin': '2px'})]
             return '', False, [], '', peptide_data, '', '', loaded_data, []
 
@@ -407,8 +410,9 @@ def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, s
                    [dbc.Alert('You cannot enter replicate sample names.', id=str(uniform(0, 1)),
                               className='blink_me', color='danger', style={'width': '360px'})]
         peps = [x.strip() for x in peptide_list_state.split('\n')]
+        total_n = len(peps)
         peps = list(set(peps))
-        peptide_data[sample_name] = {'description': sample_description, 'peptides': peps}
+        peptide_data[sample_name] = {'description': sample_description, 'peptides': peps, 'total_peps': total_n}
         if sample_description != '':
             loaded_data += [html.P(f'{sample_name}: {sample_description}', style={'margin': '2px'})]
         else:
@@ -473,12 +477,19 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
             )
         time = str(datetime.now()).replace(' ', '_')
         analysis_location = str(TMP_DIR/time)
-
+        if mhc_class == 'I':
+            min_length = 8
+            max_length = 14
+        else:
+            min_length = 9
+            max_length = 22
         cl_tools = MhcToolHelper(
             samples=samples,
             mhc_class=mhc_class,
             alleles=alleles,
-            tmp_directory=analysis_location
+            tmp_directory=analysis_location,
+            min_length=min_length,
+            max_length=max_length
         )
         cl_tools.make_binding_predictions()
         cl_tools.cluster_with_gibbscluster()
@@ -489,11 +500,13 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
 
         return 'Link to report', download_href, [], '', True
 
-
 @app.server.route("/download/<path:path>")
 def get_report(path):
     return flask.send_from_directory(TMP_DIR, path)
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8791, host='0.0.0.0')
+    if 'dev' in argv:
+        app.run_server(debug=True, port=8792, host='0.0.0.0')
+    else:
+        app.run_server(debug=True, port=8791, host='0.0.0.0')
