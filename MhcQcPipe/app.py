@@ -41,14 +41,28 @@ with open(Path(ROOT_DIR, 'assets', 'class_II_alleles.txt')) as f:
 
 TMP_DIR = Path("/tmp/mhcqcpipe")
 
+
+def lab_logo():
+    lab_logo = base64.b64encode(
+        open(str(Path(ROOT_DIR) / 'assets/logo_CARONLAB_horizontal.jpg'), 'rb').read()).decode()
+    return html.Img(src=f'data:image/jpg;base64,{lab_logo}', className='img-fluid',
+                    style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px'})  # can add opacity: 50% to style if desired
+
 app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),
     html.Div('', id='tmp-folder', hidden=True),
 
-    html.H1(children='MhcQcPipe - DEV'),
-
+    html.Div(
+        [
+            html.H1(children='MhcQcPipe - DEV',
+                    style={"background-color": "#4CAF50", "padding": "5px", "color": "white",
+                           "border-radius": "6px", "width": "100%"}),
+            lab_logo()
+        ],
+        style={'height': '75px', 'display': 'flex'}
+    ),
     html.Div(children='''
-        A quick and easy QC application for mass spectrometry data of MHC class I and II peptides.
+        A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.
     '''),
 
     html.Hr(),

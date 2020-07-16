@@ -56,10 +56,12 @@ class mhc_report:
             pep_binding_dict[sample] = counts_df.copy(deep=True)
         self.pep_binding_dict = pep_binding_dict
 
-        lab_logo = base64.b64encode(open(str(Path(ROOT_DIR)/'assets/logo_CARONLAB_horizontal.jpg'), 'rb').read()).decode()
-        self.lab_logo = img(src='data:image/jpg;base64,{lab_logo}', className='img-fluid',
-                            style="max-width:100%; max-height:100%; opacity: 50%; margin-left: 10px;"
-                                  "margin-bottom: 8px")
+    def lab_logo(self):
+        lab_logo = base64.b64encode(
+            open(str(Path(ROOT_DIR) / 'assets/logo_CARONLAB_horizontal.jpg'), 'rb').read()).decode()
+        return img(src=f'data:image/jpg;base64,{lab_logo}', className='img-fluid',
+                   style="max-width:100%; max-height:100%; margin-left: 10px;"
+                         "margin-bottom: 8px")  # can add opacity: 50% to style if desired
 
     def gen_peptide_tables(self, className=None):
 
@@ -863,7 +865,7 @@ class mhc_report:
                     with div(className='col-12', style='display: flex; height: 60px'):
                         h2('MhcQcPipe Report',
                            style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px; width: 100%")
-                        self.lab_logo
+                        self.lab_logo()
                 with div(className='row'):
                     with div(className='col-6' if len(self.samples) > 1 else 'col-12'):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
