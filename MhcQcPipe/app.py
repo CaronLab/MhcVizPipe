@@ -46,7 +46,8 @@ def lab_logo():
     lab_logo = base64.b64encode(
         open(str(Path(ROOT_DIR) / 'assets/logo_CARONLAB_horizontal.jpg'), 'rb').read()).decode()
     return html.Img(src=f'data:image/jpg;base64,{lab_logo}', className='img-fluid',
-                    style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px'})  # can add opacity: 50% to style if desired
+                    style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px'})
+
 
 app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),

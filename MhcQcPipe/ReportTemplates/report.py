@@ -20,6 +20,23 @@ from dominate import document
 import PlotlyLogo.logo as pl
 from MhcQcPipe.app import ROOT_DIR
 
+
+def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
+    if 'px' in width:
+        fig = fig.to_html(include_plotlyjs='cdn', full_html=False, default_height=height, default_width=width)
+        return div(raw(fig), style=f'width: {width}')
+    else:
+        fig = fig.to_html(include_plotlyjs='cdn', full_html=False, default_height=height, default_width='100%')
+        return div(raw(fig), style=f'width: {width}')
+
+
+def ploty_fig_to_image(fig: go.Figure, width: int = 360, height: int = 360):
+    fig_data = fig.to_image(format='svg', width=width, height=height).decode()
+    return img(src=f'data:image/svg+xml;base64,{fig_data}',
+               className='img-fluid',
+               style=f'width: 100%; height: auto')
+
+
 class mhc_report:
     def __init__(self,
                  analysis_results: MhcToolHelper,
@@ -196,7 +213,7 @@ class mhc_report:
                          title_text='Number of peptides')
         fig.update_xaxes(title_text='Allele')
 
-        return raw(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+        return fig
 
     def gen_heatmaps(self, className=None):
         ymax = np.max([self.peptide_numbers[sample]['total'] for sample in self.samples])
@@ -273,9 +290,9 @@ class mhc_report:
             upset = UpSet(data,
                           sort_by='cardinality',
                           sort_categories_by=None,
-                          show_counts=True,
-                          totals_plot_elements=4,
-                          intersection_plot_elements=10)
+                          show_counts=True,)
+                          #totals_plot_elements=4,
+                          #intersection_plot_elements=10)
             upset.add_catplot(value='peptide_length', kind='boxen', color='gray')
             plot = upset.plot()
             plot['totals'].grid(False)
@@ -322,8 +339,11 @@ class mhc_report:
                             style=f'width: 100%; height: auto'),
                         className='card-body')
         card.add(plot_body)
-        #if plot['intersections'].get_xlim()[1] > 2:
-        #    className = 'col-12'
+        if not className:
+            if plot['intersections'].get_xlim()[1] >= 10:
+                className = 'col-6'
+            else:
+                className = 'col col-lg-6 col-xl-4'
         return div(card, className=className)
 
     def logo_order(self):
@@ -399,10 +419,10 @@ class mhc_report:
                     strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
                                                     len(g_peps)) for allele in self.alleles}
                     non_binding_peps = [set(p_df[(p_df[allele] == "Non-binder") | (p_df[allele] == "Weak")].index) for allele in self.alleles]
-                    non_binding_set = non_binding_peps[0]
+                    '''non_binding_set = non_binding_peps[0]
                     for x in non_binding_peps[1:]:
                         non_binding_set = non_binding_set & x
-                    non_binding_composition = round(len(non_binding_set & g_peps) * 100 / len(g_peps))
+                    non_binding_composition = round(len(non_binding_set & g_peps) * 100 / len(g_peps))'''
                     logo = logo_orders[i]
                     image_filename = logo
                     encoded_motif_image = base64.b64encode(open(image_filename, 'rb').read())
@@ -417,19 +437,15 @@ class mhc_report:
                                           'margin-right: auto;'),
                                 p(f'Peptides: {len(g_peps)}\n'
                                   f'Strong binders:\n'
-                                  f'  {composition}\n'
-                                  f'Non/weak binders: {non_binding_composition}%',
+                                  f'  {composition}\n',
+                                  #f'Non/weak binders: {non_binding_composition}%',
                                   style='white-space: pre'),
-                                #p('Composition:'),
-                                #*[p(f'{a}: {allele_composition[a]}%', style='margin-left: 10px')
-                                #  for a in allele_composition.keys()],
-                                #p(f'Non-binding: {non_binding_composition}%', style='margin-left: 10px')
                             ],
                             style=f'width: {image_width}%;'
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
-                                  f'font-size: 10pt'
+                                  #f'font-size: 10pt'
                         )
                     )
                 else:
@@ -496,7 +512,6 @@ class mhc_report:
 
         for sample in sorted_samples:
             motifs_row = div(className='row')
-
             logos = list(self.results.tmp_folder.glob(f'./{sample}_*/logos/gibbs_logos_*.png'))
             logos = [str(l) for l in logos if f'of{n_motifs[sample]}' in str(l)]
             logos.sort()
@@ -526,8 +541,9 @@ class mhc_report:
                         best_score = score
                 order = best_order
 
-            image_width = np.floor(95 / n) if n > 3 else np.floor(95 / 4)
+            image_width = np.floor(95 / (n + 1)) if n > 3 else np.floor(95 / 4)
             p_df: pd.DataFrame = self.pep_binding_dict[sample]
+            motifs_row.add(div(ploty_fig_to_image(self.sample_heatmap(sample)), style=f'width: {image_width}'))
             for i in order:
                 if i is not None:
                     g_peps = set(gibbs_peps[sample][i])
@@ -541,7 +557,11 @@ class mhc_report:
                     logo = logos[i]
                     image_filename = logo
                     encoded_motif_image = base64.b64encode(open(image_filename, 'rb').read())
-                    composition = "\n  ".join([str(a)+": "+str(strong_binders[a])+"%" for a in strong_binders.keys()])
+                    top_binder = np.max(list(strong_binders.values()))
+                    composition = [p(f'{a}: {strong_binders[a]}%',
+                                     style=f"text-align: center;"
+                                           f"{'font-weight: bold' if strong_binders[a] == top_binder else ''}")
+                                   for a in strong_binders.keys()]
                     motifs_row.add(
                         div(
                             [
@@ -551,20 +571,15 @@ class mhc_report:
                                           'margin-left: auto;'
                                           'margin-right: auto;'),
                                 p(f'Peptides: {len(g_peps)}\n'
-                                  f'Strong binders:\n'
-                                  f'  {composition}\n'
-                                  f'Non/weak binders: {non_binding_composition}%',
-                                  style='white-space: pre'),
-                                #p('Composition:'),
-                                #*[p(f'{a}: {allele_composition[a]}%', style='margin-left: 10px')
-                                #  for a in allele_composition.keys()],
-                                #p(f'Non-binding: {non_binding_composition}%', style='margin-left: 10px')
+                                  f'Strong binders:\n',
+                                  style='text-align: center; white-space: pre'),
+                                *composition
+
                             ],
                             style=f'width: {image_width}%;'
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
-                                  f'font-size: 10pt'
                         )
                     )
                 else:
@@ -722,7 +737,7 @@ class mhc_report:
 
     def supervised_sequence_logos_and_heatmaps(self, className=None):
 
-        motifs = div(className=className)
+        motifs = div(className=className, style='width: 100%')
         first_set = {}
         n_motifs = {}
         gibbs_peps = {}
@@ -748,10 +763,7 @@ class mhc_report:
         image_width = np.floor(95 / (len(self.alleles) + max_n_motifs + 1))
         for sample in self.samples:
             motifs_row = div(className='row')
-            motifs_row.add(div(self.sample_heatmap(sample), style=f'width: {image_width}%;'
-                                                                  'display: block;'
-                                                                  'margin-left: auto;'
-                                                                  'margin-right: auto;'))
+            motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), height='218px', width='218px'))
             for allele in self.alleles:
                 if self.results.supervised_gibbs_directories[sample][allele]:
                     logo = str(Path(self.results.supervised_gibbs_directories[sample][allele])/'logos'/'gibbs_logos_1of1-001.png')
@@ -761,14 +773,10 @@ class mhc_report:
                             [
                                 b(f'{allele}'),
                                 img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'
-                                          'display: block;'
-                                          'margin-left: auto;'
-                                          'margin-right: auto;'),
+                                    style='width: 100%;'),
                                 p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"][0])}\n'),
                             ],
                             style=f'width: {image_width}%;'
-                                  f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
                                   f'font-size: 10pt'
@@ -841,7 +849,8 @@ class mhc_report:
                             className='card-header'),
                         div(motifs_row, className='card-body')
                     ],
-                    className='card'
+                    className='card',
+                    style='width: 100%'
                 )
             )
         return motifs
@@ -854,6 +863,7 @@ class mhc_report:
                  crossorigin="anonymous")
             link(rel="stylesheet", href='/home/labcaron/Projects/MhcQcPipe/MhcQcPipe/assets/report_style.css')
             #script(type='text/javascript', src='https://cdn.plot.ly/plotly-latest.min.js')
+            script(src='https://cdn.plot.ly/plotly-latest.min.js')
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
         with doc:
@@ -867,7 +877,7 @@ class mhc_report:
                            style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px; width: 100%")
                         self.lab_logo()
                 with div(className='row'):
-                    with div(className='col-6' if len(self.samples) > 1 else 'col-12'):
+                    with div(className='col'):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
                         p([b('Submitted by: '), f'{self.submitter_name if self.submitter_name else "Anonymous"}'])
                         with div(style='display: flex'):
@@ -878,10 +888,10 @@ class mhc_report:
                         b('Samples:')
                         div(
                             [
-                                p('\n '.join(
+                                p('\n'.join(
                                     [
-                                        f'\t{name}: {description}' if description else f'\t{name}' for name, description in
-                                        self.results.descriptions.items()
+                                        f'\t{name}: {description}' if description else f'\t{name}'
+                                        for name, description in self.results.descriptions.items()
                                     ]
                                 ), style="white-space: pre"
                                 )
@@ -899,7 +909,7 @@ class mhc_report:
                           f'{self.results.min_length} & {self.results.max_length} mers{gibbs_description}',
                           style="white-space: pre-wrap")
                     if len(self.samples) > 1:
-                        self.gen_upset_plot(className='col-6')
+                        self.gen_upset_plot()
                 hr()
                 with div(className='row'):
                     pep_table = self.gen_peptide_tables(className='col-12')
@@ -973,7 +983,7 @@ class mhc_report:
                             logos['role'] = 'tabpanel'
                             logos['aria-labelledby'] = 'plain-gibbs-tab'
 
-                            allele_logos = self.supervised_sequence_logos(className='tab-pane fade')
+                            allele_logos = self.supervised_sequence_logos_and_heatmaps(className='tab-pane fade')
                             allele_logos['id'] = 'allele-gibbs'
                             allele_logos['role'] = 'tabpanel'
                             allele_logos['aria-labelledby'] = 'allele-gibbs-tab'
