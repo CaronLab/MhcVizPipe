@@ -983,7 +983,8 @@ class mhc_report:
                             logos['role'] = 'tabpanel'
                             logos['aria-labelledby'] = 'plain-gibbs-tab'
 
-                            allele_logos = self.supervised_sequence_logos_and_heatmaps(className='tab-pane fade')
+                            #allele_logos = self.supervised_sequence_logos_and_heatmaps(className='tab-pane fade')
+                            allele_logos = self.supervised_sequence_logos(className='tab-pane fade')
                             allele_logos['id'] = 'allele-gibbs'
                             allele_logos['role'] = 'tabpanel'
                             allele_logos['aria-labelledby'] = 'allele-gibbs-tab'
