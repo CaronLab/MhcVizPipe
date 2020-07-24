@@ -45,7 +45,7 @@ class MhcToolHelper:
                  mhc_class: str = 'I',
                  alleles: List[str] = ('HLA-A03:02', 'HLA-A02:02'),
                  min_length: int = 8,
-                 max_length: int = 14):
+                 max_length: int = 12):
 
         if isinstance(alleles, str):
             if ',' in alleles:
