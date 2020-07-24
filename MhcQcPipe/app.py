@@ -494,7 +494,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
         analysis_location = str(TMP_DIR/time)
         if mhc_class == 'I':
             min_length = 8
-            max_length = 14
+            max_length = 12
         else:
             min_length = 9
             max_length = 22
