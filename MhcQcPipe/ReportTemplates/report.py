@@ -17,7 +17,7 @@ from pathlib import Path
 from dominate.util import raw
 from dominate.tags import *
 from dominate import document
-import PlotlyLogo.logo as pl
+#import PlotlyLogo.logo as pl
 from MhcQcPipe.app import ROOT_DIR
 
 
