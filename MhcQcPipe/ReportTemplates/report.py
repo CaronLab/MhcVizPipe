@@ -164,7 +164,7 @@ class mhc_report:
     def gen_length_histogram(self, className=None):
         len_dist = go.Figure()
         for sample in self.samples:
-            lengths, counts = np.unique(self.preds.loc[self.preds['Sample'] == sample, 'Peptide'].str.len().values,
+            lengths, counts = np.unique(np.vectorize(len)(self.preds.loc[self.preds['Sample'] == sample, 'Peptide'].unique()),
                                         return_counts=True)
             len_dist.add_trace(go.Bar(name=sample, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
@@ -559,7 +559,7 @@ class mhc_report:
                     encoded_motif_image = base64.b64encode(open(image_filename, 'rb').read())
                     top_binder = np.max(list(strong_binders.values()))
                     composition = [p(f'{a}: {strong_binders[a]}%',
-                                     style=f"text-align: center;"
+                                     style=f"text-align: center; margin: 0;"
                                            f"{'font-weight: bold' if strong_binders[a] == top_binder else ''}")
                                    for a in strong_binders.keys()]
                     motifs_row.add(
@@ -572,7 +572,7 @@ class mhc_report:
                                           'margin-right: auto;'),
                                 p(f'Peptides: {len(g_peps)}\n'
                                   f'Strong binders:\n',
-                                  style='text-align: center; white-space: pre'),
+                                  style='text-align: center; white-space: pre; margin: 0'),
                                 *composition
 
                             ],
@@ -763,7 +763,7 @@ class mhc_report:
         image_width = np.floor(95 / (len(self.alleles) + max_n_motifs + 1))
         for sample in self.samples:
             motifs_row = div(className='row')
-            motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), height='218px', width='218px'))
+            #motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), height='218px', width='218px'))
             for allele in self.alleles:
                 if self.results.supervised_gibbs_directories[sample][allele]:
                     logo = str(Path(self.results.supervised_gibbs_directories[sample][allele])/'logos'/'gibbs_logos_1of1-001.png')
@@ -880,6 +880,7 @@ class mhc_report:
                     with div(className='col'):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
                         p([b('Submitted by: '), f'{self.submitter_name if self.submitter_name else "Anonymous"}'])
+                        p([b('Analysis type: ', f'Class {self.mhc_class}')])
                         with div(style='display: flex'):
                             b('Desciption of experiment:', style='margin-right: 5px; white-space: nowrap')
                             p(self.experiment_description if self.experiment_description else 'None provided')
