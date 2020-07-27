@@ -163,10 +163,10 @@ class mhc_report:
 
     def gen_length_histogram(self, className=None):
         len_dist = go.Figure()
-        for sample in self.samples:
-            lengths, counts = np.unique(np.vectorize(len)(self.preds.loc[self.preds['Sample'] == sample, 'Peptide'].unique()),
-                                        return_counts=True)
-            len_dist.add_trace(go.Bar(name=sample, x=lengths, y=counts))
+        for sample in self.results.samples:
+            peps = list(set(sample.peptides))
+            lengths, counts = np.unique(np.vectorize(len)(peps), return_counts=True)
+            len_dist.add_trace(go.Bar(name=sample.sample_name, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                                hovermode='x')
         len_dist.update_yaxes(title_text='Number of peptides')

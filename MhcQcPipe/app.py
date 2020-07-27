@@ -489,10 +489,11 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
 
         samples = []
         for sample_name in peptides.keys():
+            peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
             samples.append(
                 MhcPeptides(sample_name=sample_name,
                             sample_description=peptides[sample_name]['description'],
-                            peptides=peptides[sample_name]['peptides'])
+                            peptides=peps)
             )
         time = str(datetime.now()).replace(' ', '_')
         analysis_location = str(TMP_DIR/time)
