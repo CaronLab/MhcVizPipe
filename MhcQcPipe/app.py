@@ -55,9 +55,14 @@ app.layout = html.Div(children=[
 
     html.Div(
         [
-            html.H1(children='MhcQcPipe - DEV',
+            html.H1(children=[html.P('M'),
+                              html.H3('hc'),
+                              html.P('V'),
+                              html.H3('iz'),
+                              html.P('P'),
+                              html.H3('ipe')],
                     style={"background-color": "#4CAF50", "padding": "5px", "color": "white",
-                           "border-radius": "6px", "width": "100%"}),
+                           "border-radius": "6px", "width": "100%", "display": 'flex'}),
             lab_logo()
         ],
         style={'height': '75px', 'display': 'flex'}
