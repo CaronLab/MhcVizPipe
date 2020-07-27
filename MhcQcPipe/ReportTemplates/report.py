@@ -80,6 +80,52 @@ class mhc_report:
                    style="max-width:100%; max-height:100%; margin-left: 10px;"
                          "margin-bottom: 8px")  # can add opacity: 50% to style if desired
 
+    def sample_overview_table(self, className=None):
+
+        t = table(className=f'table table-hover table-bordered',
+                  style="text-align: center",
+                  id='peptidetable')
+        t.add(
+            thead(
+                tr(
+                    [
+                        th('', style="padding: 5px"),
+                        th('Peptide length', style="padding: 5px"),
+                        th('Total # of peptides', style="padding: 5px"),
+                        th('%', style="padding: 5px")
+                    ]
+                )
+            )
+        )
+        tablebody = tbody()
+        for sample in self.results.samples:
+            tablerow = tr()
+            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold'),
+                            rowspan=3,
+                            style="vertical-align : middle;text-align:center;"))
+            tablerow.add(td('all lengths'))
+            all_peptides = len(set(sample.peptides))
+            tablerow.add(td(f'{all_peptides}'))
+            tablerow.add(td('100'))
+            tablebody.add(tablerow)
+
+            tablerow = tr()
+            tablerow.add(td(f'{self.results.min_length}-{self.results.max_length} mers'))
+            within_length = self.peptide_numbers[sample.sample_name]['total']
+            tablerow.add(td(f'{within_length}'))
+            tablerow.add(td(f'{round(within_length/all_peptides * 100)}'))
+            tablebody.add(tablerow)
+
+            tablerow = tr()
+            tablerow.add(td('other'))
+            other_lengths = all_peptides - within_length
+            tablerow.add(td(f'{other_lengths}'))
+            tablerow.add(td(f'{round(other_lengths / all_peptides * 100)}'))
+            tablebody.add(tablerow)
+
+        t.add(tablebody)
+        return div(t, className=f'table-responsive {className}' if className else 'table-responsive')
+
     def gen_peptide_tables(self, className=None):
 
         t = table(className=f'table table-hover table-bordered',
@@ -289,7 +335,7 @@ class mhc_report:
         if n_sets <= 100:  # Plot horizontal
             upset = UpSet(data,
                           sort_by='cardinality',
-                          sort_categories_by=None,
+                          #sort_categories_by=None,
                           show_counts=True,)
                           #totals_plot_elements=4,
                           #intersection_plot_elements=10)
@@ -877,10 +923,10 @@ class mhc_report:
                            style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px; width: 100%")
                         self.lab_logo()
                 with div(className='row'):
-                    with div(className='col'):
+                    with div(className='col', style="margin: 0"):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
                         p([b('Submitted by: '), f'{self.submitter_name if self.submitter_name else "Anonymous"}'])
-                        p([b('Analysis type: ', f'Class {self.mhc_class}')])
+                        p([b('Analysis type: '), f'Class {self.mhc_class}'])
                         with div(style='display: flex'):
                             b('Desciption of experiment:', style='margin-right: 5px; white-space: nowrap')
                             p(self.experiment_description if self.experiment_description else 'None provided')
@@ -898,6 +944,7 @@ class mhc_report:
                                 )
                             ]
                         )
+                        '''
                         b('Analysis details:')
                         if self.mhc_class == 'I':
                             gibbs_lengths = '\n  '.join([f'{sample}: {self.results.gibbs_cluster_lengths[sample]} mers'
@@ -906,12 +953,22 @@ class mhc_report:
                                                 f'peptides:\n\t{gibbs_lengths}'
                         else:
                             gibbs_description = ''
+                            
                         p(f'Peptides for all steps subset by length to between '
                           f'{self.results.min_length} & {self.results.max_length} mers{gibbs_description}',
                           style="white-space: pre-wrap")
-                    if len(self.samples) > 1:
-                        self.gen_upset_plot()
+                        '''
+                    #if len(self.samples) > 1:
+                    #    self.gen_upset_plot()
                 hr()
+                h3("Sample Overview")
+                with div(className='row'):
+                    if len(self.samples) > 1:
+                        self.sample_overview_table(className='col-6')
+                        self.gen_upset_plot()
+                    else:
+                        self.sample_overview_table(className='col-6')
+
                 with div(className='row'):
                     pep_table = self.gen_peptide_tables(className='col-12')
                     #if len(self.samples) > 1:

@@ -182,12 +182,14 @@ class MhcToolHelper:
             fname = Path(self.tmp_folder, f'{sample.sample_name}_forgibbs.csv')
             peps = np.array(remove_modifications(sample.peptides))
             lengths = np.vectorize(len)(peps)
+            peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
+            '''
             use_length = mode(lengths)
             if self.mhc_class == 'I':
                 self.gibbs_cluster_lengths[sample.sample_name] = use_length
                 peps = peps[lengths == use_length]
             else:
-                peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
+                peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]'''
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
