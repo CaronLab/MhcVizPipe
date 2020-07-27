@@ -77,19 +77,14 @@ app.layout = html.Div(children=[
 
     dbc.Row(dbc.Col(
         [
-            html.P('Use the "LOAD DATA" button to load a peptide search results file or paste a list of peptides '
-               'directly in the box below. Note that you must subsequently add the data to the analysis '
-               'using the "ADD TO ANALYSIS" button below. If you are analyzing data from more than one '
-               'experiment, fill out the sample name and description fields so you can distinguish them '
-               'in the report. You may load up to 6 samples.'),
             html.P([html.B('Note: ', style={'white-space': 'pre'}),
                     'If you select more than one file make sure they are all the same format (i.e. don\'t mix a '
                     'simple peptide list with a multi-column search result file). All files will be '
                     'automatically added using the filename as the sample name.']),
-            html.P('File names cannot contain any of the following characters: (){}[]. If they do, the characters '
+            html.P('Sample names cannot contain any of the following characters: (){}[]. If they do, the characters '
                    'will be replaced with underscores.')
         ],
-        width=8
+        style={'max-width': '750px'}
     )),
 
     dcc.Upload(
@@ -337,6 +332,10 @@ def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, s
     if filename:
         filename = [str(f).replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')
                         .replace('[', '_').replace(']', '_') for f in filename]
+
+    if sample_name:
+        sample_name = sample_name.replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')\
+            .replace('[', '_').replace(']', '_')
 
     if triggered_by == 'upload-data':
         if len(filename) == 1:
