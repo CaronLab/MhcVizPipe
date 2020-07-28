@@ -55,9 +55,14 @@ app.layout = html.Div(children=[
 
     html.Div(
         [
-            html.H1(children='MhcQcPipe',
+            html.H1(children=[html.P('M'),
+                              html.H3('hc'),
+                              html.P('V'),
+                              html.H3('iz'),
+                              html.P('P'),
+                              html.H3('ipe')],
                     style={"background-color": "#4CAF50", "padding": "5px", "color": "white",
-                           "border-radius": "6px", "width": "100%"}),
+                           "border-radius": "6px", "width": "100%", "display": 'flex'}),
             lab_logo()
         ],
         style={'height': '75px', 'display': 'flex'}
@@ -72,19 +77,14 @@ app.layout = html.Div(children=[
 
     dbc.Row(dbc.Col(
         [
-            html.P('Use the "LOAD DATA" button to load a peptide search results file or paste a list of peptides '
-               'directly in the box below. Note that you must subsequently add the data to the analysis '
-               'using the "ADD TO ANALYSIS" button below. If you are analyzing data from more than one '
-               'experiment, fill out the sample name and description fields so you can distinguish them '
-               'in the report. You may load up to 6 samples.'),
             html.P([html.B('Note: ', style={'white-space': 'pre'}),
                     'If you select more than one file make sure they are all the same format (i.e. don\'t mix a '
                     'simple peptide list with a multi-column search result file). All files will be '
                     'automatically added using the filename as the sample name.']),
-            html.P('File names cannot contain any of the following characters: (){}[]. If they do, the characters '
+            html.P('Sample names cannot contain any of the following characters: (){}[]. If they do, the characters '
                    'will be replaced with underscores.')
         ],
-        width=8
+        style={'max-width': '750px'}
     )),
 
     dcc.Upload(
@@ -333,6 +333,10 @@ def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, s
         filename = [str(f).replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')
                         .replace('[', '_').replace(']', '_') for f in filename]
 
+    if sample_name:
+        sample_name = sample_name.replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')\
+            .replace('[', '_').replace(']', '_')
+
     if triggered_by == 'upload-data':
         if len(filename) == 1:
             filename = filename[0]
@@ -485,10 +489,11 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
 
         samples = []
         for sample_name in peptides.keys():
+            peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
             samples.append(
                 MhcPeptides(sample_name=sample_name,
                             sample_description=peptides[sample_name]['description'],
-                            peptides=peptides[sample_name]['peptides'])
+                            peptides=peps)
             )
         time = str(datetime.now()).replace(' ', '_')
         analysis_location = str(TMP_DIR/time)

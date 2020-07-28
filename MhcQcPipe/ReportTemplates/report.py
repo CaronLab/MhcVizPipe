@@ -23,10 +23,10 @@ from MhcQcPipe.app import ROOT_DIR
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
     if 'px' in width:
-        fig = fig.to_html(include_plotlyjs='cdn', full_html=False, default_height=height, default_width=width)
+        fig = fig.to_html(include_plotlyjs=False, full_html=False, default_height=height, default_width=width)
         return div(raw(fig), style=f'width: {width}')
     else:
-        fig = fig.to_html(include_plotlyjs='cdn', full_html=False, default_height=height, default_width='100%')
+        fig = fig.to_html(include_plotlyjs=False, full_html=False, default_height=height, default_width='100%')
         return div(raw(fig), style=f'width: {width}')
 
 
@@ -35,6 +35,12 @@ def ploty_fig_to_image(fig: go.Figure, width: int = 360, height: int = 360):
     return img(src=f'data:image/svg+xml;base64,{fig_data}',
                className='img-fluid',
                style=f'width: 100%; height: auto')
+
+def get_plotlyjs():
+    fig = go.Figure()
+    fig = fig.to_html(include_plotlyjs=True, full_html=False)
+    plotlyjs = fig[fig.index("<script"):fig.rindex("<div id=")] + "</div></script>"
+    return raw(plotlyjs)
 
 
 class mhc_report:
@@ -80,7 +86,54 @@ class mhc_report:
                    style="max-width:100%; max-height:100%; margin-left: 10px;"
                          "margin-bottom: 8px")  # can add opacity: 50% to style if desired
 
-    def gen_peptide_tables(self, className=None):
+    def sample_overview_table(self, className=None):
+
+        t = table(className=f'table table-hover table-bordered',
+                  style="text-align: center",
+                  id='peptidetable')
+        t.add(
+            thead(
+                tr(
+                    [
+                        th('', style="padding: 5px"),
+                        th('Peptide length', style="padding: 5px"),
+                        th('Total # of peptides', style="padding: 5px"),
+                        th('%', style="padding: 5px")
+                    ]
+                )
+            )
+        )
+        tablebody = tbody()
+        for sample in self.results.samples:
+            tablerow = tr()
+            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold;'),
+                                                        #'word-break: break-word; height: 120px'),
+                            rowspan=3,
+                            style="vertical-align : middle;text-align:center"))
+            tablerow.add(td('all lengths'))
+            all_peptides = len(set(sample.peptides))
+            tablerow.add(td(f'{all_peptides}'))
+            tablerow.add(td('100'))
+            tablebody.add(tablerow)
+
+            tablerow = tr()
+            tablerow.add(td(f'{self.results.min_length}-{self.results.max_length} mers'))
+            within_length = self.peptide_numbers[sample.sample_name]['total']
+            tablerow.add(td(f'{within_length}'))
+            tablerow.add(td(f'{round(within_length/all_peptides * 100)}'))
+            tablebody.add(tablerow)
+
+            tablerow = tr()
+            tablerow.add(td('other'))
+            other_lengths = all_peptides - within_length
+            tablerow.add(td(f'{other_lengths}'))
+            tablerow.add(td(f'{round(other_lengths / all_peptides * 100)}'))
+            tablebody.add(tablerow)
+
+        t.add(tablebody)
+        return div(t, className=f'table-responsive {className}' if className else 'table-responsive')
+
+    def gen_peptide_tables(self, className=None, return_card=False):
 
         t = table(className=f'table table-hover table-bordered',
                   style="text-align: center",
@@ -111,7 +164,7 @@ class mhc_report:
                                     style="vertical-align : middle;text-align:center;"
                                     )
                                  )
-                tablerow.add(td(sample))
+                tablerow.add(td(sample, style="word-break: break-word"))
                 tablerow.add(td(self.peptide_numbers[sample]['total']))
                 tablerow.add(
                     [
@@ -122,15 +175,17 @@ class mhc_report:
                 )
                 tablebody.add(tablerow)
             t.add(tablebody)
-
-        card = div(className='card', style='height: 100%')
-        card.add(
-            [
-                div([b('Peptide Counts')], className='card-header'),
-                div(div(t, className='table-responsive'), className='card-body')
-            ]
-        )
-        return div(card, className=className)
+        if return_card:
+            card = div(className='card', style='height: 100%')
+            card.add(
+                [
+                    div([b('Peptide Counts')], className='card-header'),
+                    div(div(t, className='table-responsive'), className='card-body')
+                ]
+            )
+            return div(card, className=className)
+        else:
+            return div(t, className=f'table-responsive {className}' if className else 'table-responsive')
 
     def gen_binding_histogram(self, className=None):
         def get_highest_binding(predictions):
@@ -157,22 +212,22 @@ class mhc_report:
         n_peps_fig.update_yaxes(title_text='Number of peptides')
         n_peps_fig.update_xaxes(title_text='Binding strength')
         card = div(div(b('Binding Affinities'), className='card-header'), className='card')
-        card.add(div(raw(n_peps_fig.to_html(full_html=False, include_plotlyjs='cdn')), className='card-body'))
+        card.add(div(raw(n_peps_fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
 
         return div(card, className=className)
 
     def gen_length_histogram(self, className=None):
         len_dist = go.Figure()
-        for sample in self.samples:
-            lengths, counts = np.unique(np.vectorize(len)(self.preds.loc[self.preds['Sample'] == sample, 'Peptide'].unique()),
-                                        return_counts=True)
-            len_dist.add_trace(go.Bar(name=sample, x=lengths, y=counts))
+        for sample in self.results.samples:
+            peps = list(set(sample.peptides))
+            lengths, counts = np.unique(np.vectorize(len)(peps), return_counts=True)
+            len_dist.add_trace(go.Bar(name=sample.sample_name, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                                hovermode='x')
         len_dist.update_yaxes(title_text='Number of peptides')
         len_dist.update_xaxes(title_text='Peptide length')
         card = div(div(b('Peptide Length Disctribution'), className='card-header'), className='card')
-        card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs='cdn')), className='card-body'))
+        card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
         return div(card, className=className)
 
     def sample_heatmap(self, sample: str):
@@ -256,7 +311,7 @@ class mhc_report:
             fig.update_xaxes(title_text='Allele')
 
             heatmaps.add(
-                div(raw(fig.to_html(full_html=False, include_plotlyjs='cdn')), className='col-4',  # NOTE HERE IS WHERE YOU SPECIFY WIDTH OF HEATMAPS IF I NEED TO CHANGE IT BACK TO COL-4
+                div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='col-4',  # NOTE HERE IS WHERE YOU SPECIFY WIDTH OF HEATMAPS IF I NEED TO CHANGE IT BACK TO COL-4
                     style="margin-left: auto; margin-right: auto")
             )
 
@@ -272,7 +327,7 @@ class mhc_report:
         venn = div(className='card')
         with venn:
             div(b('Venn Diagram'), className='card-header')
-            div(raw(fig.to_html(full_html=False, include_plotlyjs='cdn')), className='card-body')
+            div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body')
 
         return div(venn, className=className)
 
@@ -289,7 +344,7 @@ class mhc_report:
         if n_sets <= 100:  # Plot horizontal
             upset = UpSet(data,
                           sort_by='cardinality',
-                          sort_categories_by=None,
+                          #sort_categories_by=None,
                           show_counts=True,)
                           #totals_plot_elements=4,
                           #intersection_plot_elements=10)
@@ -339,11 +394,6 @@ class mhc_report:
                             style=f'width: 100%; height: auto'),
                         className='card-body')
         card.add(plot_body)
-        if not className:
-            if plot['intersections'].get_xlim()[1] >= 10:
-                className = 'col-6'
-            else:
-                className = 'col col-lg-6 col-xl-4'
         return div(card, className=className)
 
     def logo_order(self):
@@ -863,10 +913,11 @@ class mhc_report:
                  crossorigin="anonymous")
             link(rel="stylesheet", href='/home/labcaron/Projects/MhcQcPipe/MhcQcPipe/assets/report_style.css')
             #script(type='text/javascript', src='https://cdn.plot.ly/plotly-latest.min.js')
-            script(src='https://cdn.plot.ly/plotly-latest.min.js')
+            #script(src='https://cdn.plot.ly/plotly-latest.min.js')
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
         with doc:
+            get_plotlyjs()
             with div(id='layout', className='container', style='max-width: 1600px;'
                                                                'min-width: 800px;'
                                                                'margin-top: 20px;'
@@ -877,10 +928,10 @@ class mhc_report:
                            style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px; width: 100%")
                         self.lab_logo()
                 with div(className='row'):
-                    with div(className='col'):
+                    with div(className='col', style="margin: 0"):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
                         p([b('Submitted by: '), f'{self.submitter_name if self.submitter_name else "Anonymous"}'])
-                        p([b('Analysis type: ', f'Class {self.mhc_class}')])
+                        p([b('Analysis type: '), f'Class {self.mhc_class}'])
                         with div(style='display: flex'):
                             b('Desciption of experiment:', style='margin-right: 5px; white-space: nowrap')
                             p(self.experiment_description if self.experiment_description else 'None provided')
@@ -898,6 +949,7 @@ class mhc_report:
                                 )
                             ]
                         )
+                        '''
                         b('Analysis details:')
                         if self.mhc_class == 'I':
                             gibbs_lengths = '\n  '.join([f'{sample}: {self.results.gibbs_cluster_lengths[sample]} mers'
@@ -906,14 +958,32 @@ class mhc_report:
                                                 f'peptides:\n\t{gibbs_lengths}'
                         else:
                             gibbs_description = ''
+                            
                         p(f'Peptides for all steps subset by length to between '
                           f'{self.results.min_length} & {self.results.max_length} mers{gibbs_description}',
                           style="white-space: pre-wrap")
+                        '''
+                    '''
                     if len(self.samples) > 1:
                         self.gen_upset_plot()
+                    '''
                 hr()
+                h3("Sample Overview")
                 with div(className='row'):
-                    pep_table = self.gen_peptide_tables(className='col-12')
+                    if len(self.samples) > 1:
+                        self.sample_overview_table(className='col')
+                        up = self.gen_upset_plot()
+                        up['style'] = "margin-right: 15px; margin-left: 15px; margin-bottom: 15px"
+                        hr(style="height: 0px")
+                        self.gen_length_histogram(className='col-12')
+                    else:
+                        self.sample_overview_table(className='col-6')
+                        self.gen_length_histogram(className='col-6')
+                hr()
+                h3("Annotation Results")
+                with div(className='row'):
+                    self.gen_peptide_tables(className='col-6')
+                    self.gen_binding_histogram(className='col-6')
                     #if len(self.samples) > 1:
                         #hor_rul = hr(className="hidden-hr")
                         #plot_holder = div(className='col-6')
@@ -923,10 +993,12 @@ class mhc_report:
                         #    plot_holder['class'] = 'row'
                         #    hor_rul['class'] = 'not-hidden-hr'
                         #    pep_table['class'] = 'col-12'
+                '''
                 hr()
                 with div(className='row'):
                     self.gen_binding_histogram(className='col-6')
                     self.gen_length_histogram(className='col-6')
+                '''
                 hr()
                 '''
                 if len(self.samples) > 1:
