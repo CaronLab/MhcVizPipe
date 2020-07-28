@@ -95,7 +95,7 @@ class mhc_report:
             thead(
                 tr(
                     [
-                        th('', style="padding: 5px"),
+                        th('Sample', style="padding: 5px"),
                         th('Peptide length', style="padding: 5px"),
                         th('Total # of peptides', style="padding: 5px"),
                         th('%', style="padding: 5px")
@@ -106,10 +106,7 @@ class mhc_report:
         tablebody = tbody()
         for sample in self.results.samples:
             tablerow = tr()
-            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold;'),
-                                                        #'word-break: break-word; height: 120px'),
-                            rowspan=3,
-                            style="vertical-align : middle;text-align:center"))
+            tablerow.add(td(sample.sample_name, style='word-break: break-word', rowspan=3))
             tablerow.add(td('all lengths'))
             all_peptides = len(set(sample.peptides))
             tablerow.add(td(f'{all_peptides}'))
@@ -144,10 +141,9 @@ class mhc_report:
                     [
                         th('Allele', style="padding: 5px"),
                         th('Sample', style="padding: 5px"),
-                        th('Number of peptides', style="padding: 5px"),
+                        th('Total peptides', style="padding: 5px"),
                         th('Strong binders', style="padding: 5px"),
-                        th('Weak binders', style="padding: 5px"),
-                        th('Non-binders', style="padding: 5px")
+                        th('Weak binders', style="padding: 5px")
                     ]
                 )
             )
@@ -170,7 +166,7 @@ class mhc_report:
                     [
                         td(f"{self.peptide_numbers[sample][allele][strength]} "
                            f"({round(self.peptide_numbers[sample][allele][strength] * 100 / self.peptide_numbers[sample]['total'], 1)}%)")
-                        for strength in ['Strong', 'Weak', 'Non-binder']
+                        for strength in ['Strong', 'Weak']
                     ]
                 )
                 tablebody.add(tablerow)
@@ -208,7 +204,16 @@ class mhc_report:
             binders = ['Strong', 'Weak', 'Non-binder']
             n_peps_fig.add_trace(go.Bar(x=binders, y=counts, name=sample))
         n_peps_fig.update_layout(margin=dict(l=20, r=20, t=20, b=20),
-                                 hovermode='x')
+                                 hovermode='x',
+                                 legend=dict(yanchor="top",
+                                             y=0.99,
+                                             xanchor="right",
+                                             x=0.99,
+                                             bgcolor="rgba(255, 255, 255, 0.8)"),
+                                 font_family='Sans Serif',
+                                 font_color='#212529'
+                                 )
+        n_peps_fig.layout.title.xanchor = 'center'
         n_peps_fig.update_yaxes(title_text='Number of peptides')
         n_peps_fig.update_xaxes(title_text='Binding strength')
         card = div(div(b('Binding Affinities'), className='card-header'), className='card')
@@ -224,7 +229,16 @@ class mhc_report:
             lengths, counts = np.unique(np.vectorize(len)(peps), return_counts=True)
             len_dist.add_trace(go.Bar(name=sample.sample_name, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
-                               hovermode='x')
+                               hovermode='x',
+                               legend=dict(yanchor="top",
+                                           y=0.99,
+                                           xanchor="right",
+                                           x=0.99,
+                                           bgcolor="rgba(255, 255, 255, 0.8)"),
+                               font_family='Sans Serif',
+                               font_color='#212529'
+                               )
+        len_dist.layout.title.xanchor = 'center'
         len_dist.update_yaxes(title_text='Number of peptides')
         len_dist.update_xaxes(title_text='Peptide length')
         card = div(div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)']), className='card-header'), className='card')
@@ -262,7 +276,13 @@ class mhc_report:
             colorscale=colorscale,
             colorbar=colorbar
         ))
-        fig.layout.title = sample
+        fig.update_layout(font_family='Sans Serif',
+                          font_color='#212529',
+                          title={
+                              'text': sample,
+                              'x': 0.5,
+                              'xanchor': 'center'}
+                          )
         fig.layout.plot_bgcolor = '#e5ecf6'
         fig.layout.margin = dict(l=20, r=20, t=20, b=20)
         fig.update_yaxes(range=[0, ymax],
@@ -304,7 +324,13 @@ class mhc_report:
                 colorscale=colorscale,
                 colorbar=colorbar
             ))
-            fig.layout.title = sample
+            fig.update_layout(font_family='Sans Serif',
+                              font_color='#212529',
+                              title={
+                                  'text': sample,
+                                  'x': 0.5,
+                                  'xanchor': 'center'}
+                              )
             fig.layout.plot_bgcolor = '#e5ecf6'
             fig.layout.margin = dict(l=20, r=20, t=40, b=20)
             fig.update_yaxes(range=[0, ymax],
@@ -926,7 +952,7 @@ class mhc_report:
                 with div(className='row'):
                     with div(className='col-12', style='display: flex; height: 60px'):
                         h2('MhcQcPipe Report',
-                           style="background-color:#4CAF50; padding:5px; color:white; border-radius: 4px; width: 100%")
+                           style="background-color:#0c0c0c; padding:5px; color:white; border-radius: 4px; width: 100%")
                         self.lab_logo()
                 with div(className='row'):
                     with div(className='col', style="margin: 0"):
