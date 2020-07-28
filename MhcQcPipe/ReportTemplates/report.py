@@ -106,8 +106,8 @@ class mhc_report:
         tablebody = tbody()
         for sample in self.results.samples:
             tablerow = tr()
-            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold;'
-                                                        'word-break: break-word; height: 120px'),
+            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold;'),
+                                                        #'word-break: break-word; height: 120px'),
                             rowspan=3,
                             style="vertical-align : middle;text-align:center"))
             tablerow.add(td('all lengths'))
