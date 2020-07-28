@@ -766,7 +766,7 @@ class mhc_report:
                         motifs_row.add(
                             div(
                                 [
-                                    b(f'Unannotated group {group}'),
+                                    b(f'Non-binders group {group}'),
                                     img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
                                         style='width: 100%;'
                                               'display: block;'
@@ -807,126 +807,6 @@ class mhc_report:
                         div(motifs_row, className='card-body')
                     ],
                     className='card'
-                )
-            )
-        return motifs
-
-    def supervised_sequence_logos_and_heatmaps(self, className=None):
-
-        motifs = div(className=className, style='width: 100%')
-        first_set = {}
-        n_motifs = {}
-        gibbs_peps = {}
-        for sample in self.samples:
-            for allele in self.alleles + ['unannotated']:
-                if self.results.supervised_gibbs_directories[sample][allele] is not None:
-                    report = str(list(self.results.tmp_folder.glob(f'./{allele}_{sample}_*/*_report.html'))[0])
-                    with open(report, 'r') as f:
-                        lines = ' '.join(f.readlines())
-                    n_motifs[f'{allele}_{sample}'] = (re.search('Identified ([0-9]*) sequence motifs', lines)[1])
-                    pep_groups_file = str(list(self.results.tmp_folder.glob(
-                        f'./{allele}_{sample}_*/res/gibbs.{n_motifs[f"{allele}_{sample}"]}g.ds.out'))[0])
-                    with open(pep_groups_file, 'r') as f:
-                        pep_lines = f.readlines()[1:]
-                    gibbs_peps[f'{allele}_{sample}'] = {x: [] for x in range(int(n_motifs[f"{allele}_{sample}"]))}
-                    for line in pep_lines:
-                        line = [x for x in line.split(' ') if x != '']
-                        group = int(line[1])
-                        pep = line[3]
-                        gibbs_peps[f'{allele}_{sample}'][group].append(pep)
-
-        max_n_motifs = np.max([int(n) for n in n_motifs.values()])
-        image_width = np.floor(95 / (len(self.alleles) + max_n_motifs + 1))
-        for sample in self.samples:
-            motifs_row = div(className='row')
-            #motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), height='218px', width='218px'))
-            for allele in self.alleles:
-                if self.results.supervised_gibbs_directories[sample][allele]:
-                    logo = str(Path(self.results.supervised_gibbs_directories[sample][allele])/'logos'/'gibbs_logos_1of1-001.png')
-                    encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
-                    motifs_row.add(
-                        div(
-                            [
-                                b(f'{allele}'),
-                                img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'),
-                                p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"][0])}\n'),
-                            ],
-                            style=f'width: {image_width}%;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
-                        )
-                    )
-                else:  # there were not enough peptides to cluster
-                    motifs_row.add(
-                        div(
-                            [
-                                b(f'{allele}'),
-                                p('Too few peptides to cluster')
-                            ],
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
-                        )
-                    )
-            # now the unannotated peptides
-            logos = list((Path(self.results.supervised_gibbs_directories[sample]['unannotated'])/'logos')
-                         .glob(f'*of{n_motifs["unannotated_"+sample]}-001.png'))
-            logos = [str(x) for x in logos]
-            logos.sort()
-            group = 1
-            for x in range(max_n_motifs):
-                if x < len(logos):
-                    logo = logos[x]
-                    encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
-                    motifs_row.add(
-                        div(
-                            [
-                                b(f'Non-binders group {group}'),
-                                img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'
-                                          'display: block;'
-                                          'margin-left: auto;'
-                                          'margin-right: auto;'),
-                                p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][x])}\n'),
-                            ],
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
-                        )
-                    )
-                    group += 1
-                else:
-                    motifs_row.add(
-                        div(
-                            img(
-                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-                                style=f'width: 100%;'
-                                      f'display: block;'
-                                      f'margin-left: auto;'
-                                      f'margin-right: auto;'
-                            ),
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
-                        )
-                    )
-            motifs.add(
-                div(
-                    [
-                        div(b(f'{sample} sequence motif(s)'),
-                            className='card-header'),
-                        div(motifs_row, className='card-body')
-                    ],
-                    className='card',
-                    style='width: 100%'
                 )
             )
         return motifs
