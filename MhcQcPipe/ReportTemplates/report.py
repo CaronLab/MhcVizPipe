@@ -690,7 +690,6 @@ class mhc_report:
     def supervised_sequence_logos(self, className=None):
 
         motifs = div(className=className)
-        first_set = {}
         n_motifs = {}
         gibbs_peps = {}
         for sample in self.samples:
@@ -718,7 +717,8 @@ class mhc_report:
             motifs_row = div(className='row')
             for allele in self.alleles:
                 if self.results.supervised_gibbs_directories[sample][allele]:
-                    logo = str(Path(self.results.supervised_gibbs_directories[sample][allele])/'logos'/'gibbs_logos_1of1-001.png')
+                    logo = str(Path(self.results.supervised_gibbs_directories[sample][allele]) / 'logos' /
+                               'gibbs_logos_1of1-001.png')
                     encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
                     motifs_row.add(
                         div(
@@ -818,8 +818,6 @@ class mhc_report:
                  integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk",
                  crossorigin="anonymous")
             link(rel="stylesheet", href='/home/labcaron/Projects/MhcQcPipe/MhcQcPipe/assets/report_style.css')
-            #script(type='text/javascript', src='https://cdn.plot.ly/plotly-latest.min.js')
-            #script(src='https://cdn.plot.ly/plotly-latest.min.js')
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
         with doc:
@@ -890,29 +888,7 @@ class mhc_report:
                 with div(className='row'):
                     self.gen_peptide_tables(className='col-6')
                     self.gen_binding_histogram(className='col-6')
-                    #if len(self.samples) > 1:
-                        #hor_rul = hr(className="hidden-hr")
-                        #plot_holder = div(className='col-6')
-                        #upset_plot = self.gen_upset_plot(className='col-4')
-                        #plot_holder.add(upset_plot)
-                        #if upset_plot['class'] == 'col-12':
-                        #    plot_holder['class'] = 'row'
-                        #    hor_rul['class'] = 'not-hidden-hr'
-                        #    pep_table['class'] = 'col-12'
-                '''
                 hr()
-                with div(className='row'):
-                    self.gen_binding_histogram(className='col-6')
-                    self.gen_length_histogram(className='col-6')
-                '''
-                hr()
-                '''
-                if len(self.samples) > 1:
-                    with div(className='row'):
-                        self.gen_venn_diagram(className='col-12')
-                    hr()
-                '''
-
                 with div(className='row'):
                     with div(className='col-12'):
                         h3('Binding Heatmaps')
@@ -962,73 +938,15 @@ class mhc_report:
                             logos['role'] = 'tabpanel'
                             logos['aria-labelledby'] = 'plain-gibbs-tab'
 
-                            #allele_logos = self.supervised_sequence_logos_and_heatmaps(className='tab-pane fade')
                             allele_logos = self.supervised_sequence_logos(className='tab-pane fade')
                             allele_logos['id'] = 'allele-gibbs'
                             allele_logos['role'] = 'tabpanel'
                             allele_logos['aria-labelledby'] = 'allele-gibbs-tab'
-                '''
-                #hr()
-                #with div(className='row'):
-                    with div(className='col-8'):
-                        h3('Sequence Logos (clustering from GibbsCluster)')
-                        div([
-                            div(style='width: 18px; height: 18px; background-color: #21d426; border-radius: 3px'),
-                            p('Polar', style="margin-left: 5px; margin-right: 10px"),
-                            #div(style='width: 18px; height: 18px; background-color: #d41cbf; border-radius: 3px'),
-                            #p('Neutral', style="margin-left: 5px; margin-right: 10px"),
-                            div(style='width: 18px; height: 18px; background-color: #0517bd; border-radius: 3px'),
-                            p('Basic', style="margin-left: 5px; margin-right: 10px"),
-                            div(style='width: 18px; height: 18px; background-color: #d40a14; border-radius: 3px'),
-                            p('Acidic', style="margin-left: 5px; margin-right: 10px"),
-                            div(style='width: 18px; height: 18px; background-color: #000000; border-radius: 3px'),
-                            p('Hydrophobic', style="margin-left: 5px; margin-right: 10px")
-                        ], style="display: flex; pad: 5px"),
-                with div(className='row'):
-                    with div(className='col-4'):
-                        self.gen_heatmaps(className='col-12')
-
-                    with div(className='col-8'):
-                        with ul(className='nav nav-tabs', id='myTab') as navtab:
-                            navtab['role'] = 'tablist'
-                            with li(className='nav-item') as navitem:
-                                navitem['role'] = 'presentation'
-                                with a("Unsupervised GibbsCluster", className="nav-link active") as navlink:
-                                    navlink['id'] = 'plain-gibbs-tab'
-                                    navlink['data-toggle'] = 'tab'
-                                    navlink['role'] = 'tab'
-                                    navlink['aria-controls'] = 'plain-gibbs'
-                                    navlink['aria-selected'] = 'true'
-                                    navlink['href'] = '#plain-gibbs'
-                            with li(className='nav-item') as navitem:
-                                navitem['role'] = 'presentation'
-                                with a("Allele-specific GibbsCluster", className="nav-link") as navlink:
-                                    navlink['id'] = 'allele-gibbs-tab'
-                                    navlink['data-toggle'] = 'tab'
-                                    navlink['role'] = 'tab'
-                                    navlink['aria-controls'] = 'allele-gibbs'
-                                    navlink['aria-selected'] = 'false'
-                                    navlink['href'] = '#allele-gibbs'
-                        with div(className='tab-content', id='myTabContent'):
-                            logos = self.sequence_logos(className='tab-pane fade show active')
-                            logos['id'] = 'plain-gibbs'
-                            logos['role'] = 'tabpanel'
-                            logos['aria-labelledby'] = 'plain-gibbs-tab'
-
-                            allele_logos = self.supervised_sequence_logos_and_heatmaps(className='tab-pane fade')
-                            allele_logos['id'] = 'allele-gibbs'
-                            allele_logos['role'] = 'tabpanel'
-                            allele_logos['aria-labelledby'] = 'allele-gibbs-tab'
-                '''
-
-                    #self.sequence_logos(className='col-12')
-                    #self.supervised_sequence_logos(className='col-12')
 
         loc = f'{str(self.results.tmp_folder/"report.html")}'
         with open(loc, 'w') as f:
             f.write(doc.render())
         return loc
-
 
 
 def venn_diagram(analysis_results: MhcToolHelper) -> go.Figure:
