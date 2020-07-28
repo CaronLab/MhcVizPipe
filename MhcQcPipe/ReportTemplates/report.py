@@ -277,11 +277,7 @@ class mhc_report:
             colorbar=colorbar
         ))
         fig.update_layout(font_family='Sans Serif',
-                          font_color='#212529',
-                          title={
-                              'text': sample,
-                              'x': 0.5,
-                              'xanchor': 'center'}
+                          font_color='#212529'
                           )
         fig.layout.plot_bgcolor = '#e5ecf6'
         fig.layout.margin = dict(l=20, r=20, t=20, b=20)
@@ -618,9 +614,9 @@ class mhc_report:
                         best_score = score
                 order = best_order
 
-            image_width = np.floor(95 / (n + 1)) if n > 3 else np.floor(95 / 4)
             p_df: pd.DataFrame = self.pep_binding_dict[sample]
-            motifs_row.add(div(ploty_fig_to_image(self.sample_heatmap(sample)), style=f'width: {image_width}'))
+            width = 160 + 50*len(self.alleles)
+            motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), width=f'{width}px', height='360px'))
             for i in order:
                 if i is not None:
                     g_peps = set(gibbs_peps[sample][i])
@@ -635,45 +631,48 @@ class mhc_report:
                     image_filename = logo
                     encoded_motif_image = base64.b64encode(open(image_filename, 'rb').read())
                     top_binder = np.max(list(strong_binders.values()))
-                    composition = [p(f'{a}: {strong_binders[a]}%',
-                                     style=f"text-align: center; margin: 0;"
-                                           f"{'font-weight: bold' if strong_binders[a] == top_binder else ''}")
-                                   for a in strong_binders.keys()]
+
+                    composition = []
+                    for key in list(strong_binders.keys()):
+                        text = f'{key}: {strong_binders[key]}%, '
+                        if key == list(strong_binders.keys())[-1]:
+                            text = text[:-2]
+                        style_str = "display: inline-block; white-space: pre; margin: 0"
+                        if (strong_binders[key] == top_binder) & (strong_binders[key] != 0):
+                            composition.append(b(text, style=style_str))
+                        else:
+                            composition.append(p(text, style=style_str))
+
                     motifs_row.add(
                         div(
                             [
                                 img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'
-                                          'display: block;'
-                                          'margin-left: auto;'
-                                          'margin-right: auto;'),
-                                p(f'Peptides: {len(g_peps)}\n'
-                                  f'Strong binders:\n',
+                                    style=f'width: 100%;'
+                                          f'display: block;'
+                                          f'margin-left: auto;'
+                                          f'margin-right: auto;'),
+                                p(f'Peptides in group: {len(g_peps)}\n',
                                   style='text-align: center; white-space: pre; margin: 0'),
-                                *composition
+                                div([*composition], style="width: 100%; text-align: center")
 
                             ],
-                            style=f'width: {image_width}%;'
+                            className='col',
+                            style=f'max-width: 275px;'
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
+                                  f'font-size: 11pt'
                         )
                     )
                 else:
                     motifs_row.add(
                         div(
-                            img(
-                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-                                style=f'width: 100%;'
-                                      f'display: block;'
-                                      f'margin-left: auto;'
-                                      f'margin-right: auto;'
-                            ),
-                            style=f'width: {image_width}%;'
+                            className='col',
+                            style=f'max-width: 275px;'
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
-                                  f'font-size: 10pt'
+                                  f'font-size: 11pt'
                         )
                     )
             motifs.add(
