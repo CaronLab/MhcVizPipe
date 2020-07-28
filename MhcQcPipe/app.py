@@ -46,7 +46,7 @@ def lab_logo():
     lab_logo = base64.b64encode(
         open(str(Path(ROOT_DIR) / 'assets/logo_CARONLAB_horizontal.jpg'), 'rb').read()).decode()
     return html.Img(src=f'data:image/jpg;base64,{lab_logo}', className='img-fluid',
-                    style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px'})
+                    style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px', 'opacity': '95%'})
 
 
 app.layout = html.Div(children=[
@@ -61,31 +61,18 @@ app.layout = html.Div(children=[
                               html.H3('iz'),
                               html.P('P'),
                               html.H3('ipe')],
-                    style={"background-color": "#4CAF50", "padding": "5px", "color": "white",
+                    style={"background-color": "#0c0c0c", "padding": "5px", "color": "white",
                            "border-radius": "6px", "width": "100%", "display": 'flex'}),
             lab_logo()
         ],
         style={'height': '75px', 'display': 'flex'}
     ),
-    html.Div(children='''
-        A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.
-    '''),
+    html.P('A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
+    html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
 
     html.Hr(),
 
     html.H3(children='Data', style={'text-decoration': 'underline'}),
-
-    dbc.Row(dbc.Col(
-        [
-            html.P([html.B('Note: ', style={'white-space': 'pre'}),
-                    'If you select more than one file make sure they are all the same format (i.e. don\'t mix a '
-                    'simple peptide list with a multi-column search result file). All files will be '
-                    'automatically added using the filename as the sample name.']),
-            html.P('Sample names cannot contain any of the following characters: (){}[]. If they do, the characters '
-                   'will be replaced with underscores.')
-        ],
-        style={'max-width': '750px'}
-    )),
 
     dcc.Upload(
             id='upload-data',
@@ -110,7 +97,7 @@ app.layout = html.Div(children=[
     html.P(id='display-file-name'),
 
     dcc.Textarea(
-        placeholder='Paste a peptide list or use the LOAD DATA button',
+        placeholder='Paste a peptide list or select a file using the above interface',
         id='peptide-list-area',
         style={
             'margin-left': '10px',
@@ -119,6 +106,101 @@ app.layout = html.Div(children=[
         },
         spellCheck=False
     ),
+
+    dbc.Modal(
+        children=[
+            dbc.ModalHeader('Resources and Help'),
+            dbc.ModalBody(
+                [
+                    html.Div(
+                        [
+                            html.B('Welcome to MhcVizPipe!'),
+                            html.P('Here you will find information on how to run an analysis and the tools used '
+                                   'in the pipeline.'),
+                            html.P(['MhcVizPipe is developed and maintained by the laboratory of Dr. Etienne Caron. '
+                                    'For general inquiries and information please visit ',
+                                    html.A('https://github.com/caronlab/MhcVizPipe/wiki',
+                                           href='https://github.com/caronlab/MhcVizPipe/wiki',
+                                           target='_blank',
+                                           style=dict(color='blue')),
+                                    ' or contact Etienne (caronchusj@gmail.com) or Kevin (kkovalchik.chusj@gmail.com). '
+                                    'For technical issues and support, please open an issue on our GitHub repository: ',
+                                    html.A('https://github.com/caronlab/MhcVizPipe/issues',
+                                           href='https://github.com/caronlab/MhcVizPipe/issues',
+                                           style=dict(color='blue'),
+                                           target="_blank"),],
+                                   style={'margin-left': '20px'}),
+                            html.Hr(style={'margin-top': '0'}),
+                            html.B('Running an analysis:'),
+                            html.Div([
+                                html.P([html.P('1. ', style={'white-space': 'pre'}),
+                                        'Load data by pasting a peptide list into the peptide list section, using '
+                                       'the "drag and drop" area, or clicking "Select a File".'],
+                                       style={'display': 'flex'}),
+                                html.P([html.B('    Note: ', style={'white-space': 'pre'}),
+                                        'You may load more than one file at a time. If you do so the sample names '
+                                        'will be completed using the filenames and all samples will be automatically '
+                                        'added to the analysis. You can skip steps 2 and 3 unless you are adding other '
+                                        'individual samples.'], style={'display': 'flex'}),
+                                html.P([html.P('2. ', style={'white-space': 'pre'}),
+                                        'Enter a sample name and (optionally) a description of the sample. '
+                                        'If you selected a single file the filename will have been automatically '
+                                        'entered into the sample name field, but you are free to change it.'
+                                        ], style={'display': 'flex'}),
+                                html.P([html.P('3. ', style={'white-space': 'pre'}),
+                                        html.P(['Click the ', html.B('"ADD TO ANALYSIS"'),
+                                                ' button and the sample will show up under "Loaded data".'])
+                                        ], style={'display': 'flex'}),
+                                html.P([html.P('4. ', style={'white-space': 'pre'}),
+                                        'Add more samples as needed.'
+                                        ], style={'display': 'flex'}),
+                                html.P([html.P('5. ', style={'white-space': 'pre'}),
+                                        'Using the drop-down "MHC class" menu, select the class of peptides you '
+                                        'are analyzing (i.e. class I or class II).'
+                                        ], style={'display': 'flex'}),
+                                html.P([html.P('6. ', style={'white-space': 'pre'}),
+                                        'Add alleles using the "Alleles" search box. Start typing an allele name '
+                                        'and available options will appear. Note that the format you enter must match '
+                                        'the available list, so pay attention to how the allele names are formatted. '
+                                        'You may add any number of alleles.'
+                                        ], style={'display': 'flex'}),
+                                html.P([html.P('7. ', style={'white-space': 'pre'}),
+                                        html.P(['Optionally, use the text boxes above the ', html.B('"GO!" '),
+                                                ' button to enter a general description of the experiment and your '
+                                                'name (if needed for your own bookkeeping).']),
+                                        ], style={'display': 'flex'}),
+                                html.P([html.P('8. ', style={'white-space': 'pre'}),
+                                        html.P(['Click the ', html.B('"GO!" '), 'button to start your analysis! '
+                                                                                'You will see a loading screen '
+                                                                                'while things are running, followed '
+                                                                                'by a pop-up window with a link '
+                                                                                'to the report.'])
+                                        ], style={'display': 'flex'}),
+                            ], style={'margin-left': '20px'}),
+                            html.B('References:'),
+                            html.Div([
+                                'If you use MhcVizPipe, please cite the following publication:',
+                                html.P('Paper info to go here', style={'font-size': '11pt', 'margin-left': '20px'}),
+                                'MhcVizPipe makes use of the following tools: NetMHCpan4.0, NetMHCIIpan4.0 and'
+                                ' GibbsCluster2.0.',
+                                html.P('NetMHCpan citation', style={'font-size': '11pt', 'margin-left': '20px'}),
+                                html.P('NetMHCIIpan citation', style={'font-size': '11pt', 'margin-left': '20px'}),
+                                html.P('GibbsCluster citation', style={'font-size': '11pt', 'margin-left': '20px'}),
+                            ], style={'margin-left': '20px'}),
+                            html.Button(
+                                id='close-info-modal',
+                                children='Done',
+                                style={'background-color': '#636efa', 'color': 'white', 'border': 'none'}
+                            )
+                        ]
+                    )
+                ]
+            )],
+        id="resources",
+        is_open=False,
+        centered=True,
+        style={'max-width': '800px'}
+        ),
 
     dbc.Modal(
         children=[
@@ -187,7 +269,7 @@ app.layout = html.Div(children=[
         html.Button(
             id='add-peptides',
             children='Add to analysis',
-            style={'background-color': '#4CAF50', 'color': 'white', 'border': 'none', 'margin-top': '10px'})
+            style={'background-color': '#636efa', 'color': 'white', 'border': 'none', 'margin-top': '10px'})
     ]),
 
     html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
@@ -207,7 +289,7 @@ app.layout = html.Div(children=[
             {'label': 'Class II', 'value': 'II'},
         ],
         value='I',
-        style={'width': '40%', 'margin-left': '1em'}
+        style={'width': '360px', 'margin-left': '5px'}
     ),
 
     html.P('Alleles (type to search, can select multiple):', style={'font-weight': 'bold'}),
@@ -216,7 +298,7 @@ app.layout = html.Div(children=[
         id='mhc-alleles',
         options=class_i_alleles,
         multi=True,
-        style={'width': '40%', 'margin-left': '1em'}
+        style={'width': '360px', 'margin-left': '5px'}
     ),
 
 
@@ -226,7 +308,7 @@ app.layout = html.Div(children=[
         [
             dcc.Input(id='analysis-description',
                       placeholder='Experiment description (optional)',
-                      style={'height': '50%', 'margin-top': '10px', 'width': '360px'})
+                      style={'height': '50%', 'margin-top': '10px', 'margin-left': '5px', 'width': '360px'})
         ],
         style={'display': 'flex'}
     ),
@@ -235,7 +317,7 @@ app.layout = html.Div(children=[
         [
             dcc.Input(id='submitter-name',
                       placeholder='Submitter name (optional)',
-                      style={'height': '50%', 'margin-top': '10px', 'width': '360px'})
+                      style={'height': '50%', 'margin-top': '10px', 'margin-left': '5px', 'width': '360px'})
         ],
         style={'display': 'flex'}
     ),
@@ -246,7 +328,7 @@ app.layout = html.Div(children=[
     ),
 
     html.Button(id='run-analysis',
-                children='Go!', style={'background-color': '#4CAF50', 'color': 'white',
+                children='Go!', style={'background-color': '#636efa', 'color': 'white',
                                        'border': 'none', 'margin-top': '10px'}),
 
     dcc.Loading([html.A(id='loading', hidden=True)], fullscreen=True),
@@ -299,8 +381,22 @@ app.layout = html.Div(children=[
         backdrop='static'
         ),
 
-], style={'padding': '20px'}, id='main-contents')
+], style={'padding': '20px', 'max-width': '600px'}, id='main-contents')
 
+
+@app.callback([Output('resources', 'is_open')],
+              [Input('open-info-modal', 'n_clicks'),
+               Input('close-info-modal', 'n_clicks')])
+def open_close_info_modal(open, close):
+    ctx = dash.callback_context
+    triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_by == 'open-info-modal':
+        return [True]
+    elif triggered_by == 'close-info-modal':
+        return [False]
+    else:
+        raise PreventUpdate
 
 @app.callback([Output('peptide-list-area', 'value'),
                Output('modal', 'is_open'),
