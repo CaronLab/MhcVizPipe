@@ -220,13 +220,14 @@ class mhc_report:
         len_dist = go.Figure()
         for sample in self.results.samples:
             peps = list(set(sample.peptides))
+            peps = [pep for pep in peps if len(pep) <= 30]
             lengths, counts = np.unique(np.vectorize(len)(peps), return_counts=True)
             len_dist.add_trace(go.Bar(name=sample.sample_name, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                                hovermode='x')
         len_dist.update_yaxes(title_text='Number of peptides')
         len_dist.update_xaxes(title_text='Peptide length')
-        card = div(div(b('Peptide Length Disctribution'), className='card-header'), className='card')
+        card = div(div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)']), className='card-header'), className='card')
         card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
         return div(card, className=className)
 
