@@ -39,7 +39,7 @@ def ploty_fig_to_image(fig: go.Figure, width: int = 360, height: int = 360):
 def get_plotlyjs():
     fig = go.Figure()
     fig = fig.to_html(include_plotlyjs=True, full_html=False)
-    plotlyjs = fig[fig.index("<script"):fig.rindex("<div id=")] + "</div>"
+    plotlyjs = fig[fig.index("<script"):fig.rindex("<div id=")] + "</div></script>"
     return raw(plotlyjs)
 
 
@@ -106,9 +106,10 @@ class mhc_report:
         tablebody = tbody()
         for sample in self.results.samples:
             tablerow = tr()
-            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold'),
+            tablerow.add(td(p(sample.sample_name, style='writing-mode: vertical-rl; font-weight: bold;'
+                                                        'word-break: break-word; height: 120px'),
                             rowspan=3,
-                            style="vertical-align : middle;text-align:center;"))
+                            style="vertical-align : middle;text-align:center"))
             tablerow.add(td('all lengths'))
             all_peptides = len(set(sample.peptides))
             tablerow.add(td(f'{all_peptides}'))
@@ -163,7 +164,7 @@ class mhc_report:
                                     style="vertical-align : middle;text-align:center;"
                                     )
                                  )
-                tablerow.add(td(sample))
+                tablerow.add(td(sample, style="word-break: break-word"))
                 tablerow.add(td(self.peptide_numbers[sample]['total']))
                 tablerow.add(
                     [
