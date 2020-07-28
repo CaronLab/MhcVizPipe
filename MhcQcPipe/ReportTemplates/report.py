@@ -945,7 +945,7 @@ class mhc_report:
         with doc:
             get_plotlyjs()
             with div(id='layout', className='container', style='max-width: 1600px;'
-                                                               'min-width: 800px;'
+                                                               'min-width: 1000px;'
                                                                'margin-top: 20px;'
                                                                'margin-bottom: 20px'):
                 with div(className='row'):
