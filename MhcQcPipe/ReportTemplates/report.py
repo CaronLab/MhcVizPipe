@@ -241,7 +241,8 @@ class mhc_report:
         len_dist.layout.title.xanchor = 'center'
         len_dist.update_yaxes(title_text='Number of peptides')
         len_dist.update_xaxes(title_text='Peptide length')
-        card = div(div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)']), className='card-header'), className='card')
+        card = div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)'], className='card-header'),
+                   className='card')
         card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
         return div(card, className=className)
 
@@ -477,82 +478,6 @@ class mhc_report:
             ordered_logos[sample] = order
         return ordered_logos, gibbs_peps
 
-    def sample_logos(self, sample: str, logo_orders: dict, gibbs_peptides: dict, className=None):
-
-        motifs = div(className=className)
-        n = logo_orders['max_n_logos']
-        for sample in list(logo_orders.keys()):
-            motifs_row = div(className='row')
-            order = logo_orders[sample]
-            image_width = np.floor(95 / n) if n > 3 else np.floor(95 / 4)
-            p_df: pd.DataFrame = self.pep_binding_dict[sample]
-            for i in order:
-                if i is not None:
-                    g_peps = set(gibbs_peptides[sample][i])
-                    strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
-                                                    len(g_peps)) for allele in self.alleles}
-                    non_binding_peps = [set(p_df[(p_df[allele] == "Non-binder") | (p_df[allele] == "Weak")].index) for allele in self.alleles]
-                    '''non_binding_set = non_binding_peps[0]
-                    for x in non_binding_peps[1:]:
-                        non_binding_set = non_binding_set & x
-                    non_binding_composition = round(len(non_binding_set & g_peps) * 100 / len(g_peps))'''
-                    logo = logo_orders[i]
-                    image_filename = logo
-                    encoded_motif_image = base64.b64encode(open(image_filename, 'rb').read())
-                    composition = "\n  ".join([str(a)+": "+str(strong_binders[a])+"%" for a in strong_binders.keys()])
-                    motifs_row.add(
-                        div(
-                            [
-                                img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'
-                                          'display: block;'
-                                          'margin-left: auto;'
-                                          'margin-right: auto;'),
-                                p(f'Peptides: {len(g_peps)}\n'
-                                  f'Strong binders:\n'
-                                  f'  {composition}\n',
-                                  #f'Non/weak binders: {non_binding_composition}%',
-                                  style='white-space: pre'),
-                            ],
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  #f'font-size: 10pt'
-                        )
-                    )
-                else:
-                    motifs_row.add(
-                        div(
-                            img(
-                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-                                style=f'width: 100%;'
-                                      f'display: block;'
-                                      f'margin-left: auto;'
-                                      f'margin-right: auto;'
-                            ),
-                            style=f'width: {image_width}%;'
-                                  f'display: block;'
-                                  f'margin-left: auto;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 10pt'
-                        )
-                    )
-            motifs.add(
-                div(
-                    [
-                        div(b(f'{sample} sequence motif(s)'),
-                            className='card-header'),
-                        div(motifs_row, className='card-body')
-                    ],
-                    className='card'
-                )
-            )
-        return motifs
-
-    #def sample_heatmap_and_logos(self, sample:str):
-
-
     def sequence_logos(self, className=None):
         def cosine_similarity(x, y) -> int:
             x = np.array(x).flatten()
@@ -678,7 +603,7 @@ class mhc_report:
             motifs.add(
                 div(
                     [
-                        div(b(f'{sample} sequence motif(s)'),
+                        div(b(f'{sample}'),
                             className='card-header'),
                         div(motifs_row, className='card-body')
                     ],
@@ -812,7 +737,7 @@ class mhc_report:
         return motifs
 
     def make_report(self):
-        doc = document(title='MhcQcPipe Report')
+        doc = document(title='MhcVizPipe Report')
         with doc.head:
             link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css",
                  integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk",
@@ -828,9 +753,11 @@ class mhc_report:
                                                                'margin-bottom: 20px'):
                 with div(className='row'):
                     with div(className='col-12', style='display: flex; height: 60px'):
-                        h2('MhcQcPipe Report',
-                           style="background-color:#0c0c0c; padding:5px; color:white; border-radius: 4px; width: 100%")
+                        div([h1('M'), h3('hc'), h1('V'), h3('iz'), h1('P'), h3('ipe'),
+                             h2(' - Analysis report', style="white-space: pre")],
+                            style="width: 100%; display: flex"),
                         self.lab_logo()
+                hr()
                 with div(className='row'):
                     with div(className='col', style="margin: 0"):
                         p([b('Date: '), f'{str(datetime.now().date())}'])
@@ -853,24 +780,6 @@ class mhc_report:
                                 )
                             ]
                         )
-                        '''
-                        b('Analysis details:')
-                        if self.mhc_class == 'I':
-                            gibbs_lengths = '\n  '.join([f'{sample}: {self.results.gibbs_cluster_lengths[sample]} mers'
-                                                         for sample in self.samples])
-                            gibbs_description = f', except unsupervised GibbsCluster which used the following length ' \
-                                                f'peptides:\n\t{gibbs_lengths}'
-                        else:
-                            gibbs_description = ''
-                            
-                        p(f'Peptides for all steps subset by length to between '
-                          f'{self.results.min_length} & {self.results.max_length} mers{gibbs_description}',
-                          style="white-space: pre-wrap")
-                        '''
-                    '''
-                    if len(self.samples) > 1:
-                        self.gen_upset_plot()
-                    '''
                 hr()
                 h3("Sample Overview")
                 with div(className='row'):
@@ -885,6 +794,8 @@ class mhc_report:
                         self.gen_length_histogram(className='col-6')
                 hr()
                 h3("Annotation Results")
+                p(f'Binding predictions made for all peptides between {self.results.min_length} & '
+                  f'{self.results.max_length} mers, inclusive.')
                 with div(className='row'):
                     self.gen_peptide_tables(className='col-6')
                     self.gen_binding_histogram(className='col-6')
@@ -897,7 +808,11 @@ class mhc_report:
                 hr()
                 with div(className='row'):
                     with div(className='col-8'):
-                        h3('Sequence Logos (clustering from GibbsCluster)')
+                        h3('Sequence Motifs')
+                        p(f'Clustering performed with all peptides between {self.results.min_length} & '
+                          f'{self.results.max_length} mers, inclusive.')
+                        p('Percentages represent the percentage of peptides in a given group predicted to strongly '
+                          'bind the indicated allele.')
                         div([
                             div(style='width: 18px; height: 18px; background-color: #21d426; border-radius: 3px'),
                             p('Polar', style="margin-left: 5px; margin-right: 10px"),
