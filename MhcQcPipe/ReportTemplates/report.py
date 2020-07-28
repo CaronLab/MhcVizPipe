@@ -885,7 +885,7 @@ class mhc_report:
                     motifs_row.add(
                         div(
                             [
-                                b(f'Unannotated group {group}'),
+                                b(f'Non-binders group {group}'),
                                 img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
                                     style='width: 100%;'
                                           'display: block;'
