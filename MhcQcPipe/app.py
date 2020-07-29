@@ -53,59 +53,122 @@ app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),
     html.Div('', id='tmp-folder', hidden=True),
 
-    html.Div(
-        [
-            html.H1(children=[html.P('M'),
-                              html.H3('hc'),
-                              html.P('V'),
-                              html.H3('iz'),
-                              html.P('P'),
-                              html.H3('ipe')],
-                    style={"background-color": "#0c0c0c", "padding": "5px", "color": "white",
-                           "border-radius": "6px", "width": "100%", "display": 'flex'}),
-            lab_logo()
-        ],
-        style={'height': '75px', 'display': 'flex'}
-    ),
-    html.P('A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
-    html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
+    dbc.Row([
+        dbc.Col([
+            html.Div(
+                [
+                    html.H1(children=[html.P('M'),
+                                      html.H3('hc'),
+                                      html.P('V'),
+                                      html.H3('iz'),
+                                      html.P('P'),
+                                      html.H3('ipe')],
+                            style={"background-color": "#0c0c0c", "padding": "5px", "color": "white",
+                                   "border-radius": "6px", "width": "100%", "display": 'flex'}),
+                    lab_logo()
+                ],
+                style={'height': '75px', 'display': 'flex'}
+            ),
+            html.P(
+                'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
+            html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
+        ])
+    ]),
+
 
     html.Hr(),
 
-    html.H3(children='Data', style={'text-decoration': 'underline'}),
+    dbc.Row([
+        dbc.Col([
+            dcc.Upload(
+                id='upload-data',
+                children=html.Div([
+                    'Drag and Drop or ',
+                    html.A('Select a File', style={'text-decoration': 'underline', 'color': 'blue'})
+                ]),
+                style={
+                    'height': '60px',
+                    'lineHeight': '60px',
+                    'borderWidth': '1px',
+                    'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center'
+                },
+                # Allow multiple files to be uploaded
+                multiple=True
+            ),
 
-    dcc.Upload(
-            id='upload-data',
-            children=html.Div([
-                'Drag and Drop or ',
-                html.A('Select a File', style={'text-decoration': 'underline', 'color': 'blue'})
+            html.P(id='display-file-name'),
+
+            dcc.Textarea(
+                placeholder='Paste a peptide list or select a file using the above interface',
+                id='peptide-list-area',
+                style={
+                    'width': '100%',
+                    'height': '120px'
+                },
+                spellCheck=False
+            ),
+
+            html.P(
+                'Sample information:',
+                style={
+                    'margin-top': '10px',
+                    'font-weight': 'bold'
+                }),
+            html.P(
+                'Provide some information to identify data in the report.',
+                style={
+                    'margin-left': '10px'
+                }
+            ),
+
+            html.Div(
+                [
+                    dcc.Input(
+                        id='sample-name',
+                        placeholder='Sample name',
+                        style={'height': '50%', 'width': '100%'})
+                ],
+                style={'display': 'flex', 'margin-left': '10px', 'margin-bottom': '2px'}
+            ),
+
+            html.Div(
+                [
+                    dcc.Input(
+                        id='sample-description',
+                        placeholder='Sample description (optional)',
+                        value='',
+                        style={'height': '50%', 'width': '100%'})
+                ],
+                style={'display': 'flex', 'margin-left': '10px', 'margin-bottom': '2px'}
+            ),
+
+            html.Div(
+                [],
+                id='info-needed',
+                style={'margin-left': '10px'}
+            ),
+
+            html.Div(children=[
+                html.Button(
+                    id='add-peptides',
+                    children='Load data',
+                    style={'background-color': '#636efa', 'color': 'white', 'border': 'none', 'margin-top': '10px'})
             ]),
-            style={
-                'width': '360px',
-                'height': '60px',
-                'lineHeight': '60px',
-                'borderWidth': '1px',
-                'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-                'margin': '10px'
-            },
-            # Allow multiple files to be uploaded
-            multiple=True
-        ),
 
-    html.P(id='display-file-name'),
+            html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
 
-    dcc.Textarea(
-        placeholder='Paste a peptide list or select a file using the above interface',
-        id='peptide-list-area',
-        style={
-            'margin-left': '10px',
-            'width': '360px',
-            'height': '120px'
-        },
-        spellCheck=False
-    ),
+            html.Div(
+                id='loaded-data',
+                children=[],
+                style={'margin-left': '2em'}
+            ),
+        ], width=12)
+    ]),
+
+    html.Hr(),
+
 
     dbc.Modal(
         children=[
@@ -148,7 +211,7 @@ app.layout = html.Div(children=[
                                         'entered into the sample name field, but you are free to change it.'
                                         ], style={'display': 'flex'}),
                                 html.P([html.P('3. ', style={'white-space': 'pre'}),
-                                        html.P(['Click the ', html.B('"ADD TO ANALYSIS"'),
+                                        html.P(['Click the ', html.B('"LOAD DATA"'),
                                                 ' button and the sample will show up under "Loaded data".'])
                                         ], style={'display': 'flex'}),
                                 html.P([html.P('4. ', style={'white-space': 'pre'}),
@@ -224,112 +287,82 @@ app.layout = html.Div(children=[
         backdrop='static'
         ),
 
-    html.P(
-        'Sample information:',
-        style={
-            'margin-top': '10px',
-            'font-weight': 'bold'
-        }),
-    html.P(
-        'Provide some information to identify data in the report.',
-        style={
-            'margin-left': '10px'
-        }
-    ),
+    dbc.Row([
+        dbc.Col([
+            html.P('MHC class:', style={'font-weight': 'bold'}),
 
-    html.Div(
-        [
-            dcc.Input(
-                id='sample-name',
-                placeholder='Sample name',
-                style={'height': '50%', 'width': '360px'})
-        ],
-        style={'display': 'flex', 'margin-left': '10px', 'margin-bottom': '2px'}
-    ),
+            dcc.Dropdown(
+                id='mhc-class',
+                options=[
+                    {'label': 'Class I', 'value': 'I'},
+                    {'label': 'Class II', 'value': 'II'},
+                ],
+                value='I',
+                style={'width': '100%', 'margin-left': '5px'}
+            ),
 
-    html.Div(
-        [
-            dcc.Input(
-                id='sample-description',
-                placeholder='Sample description (optional)',
-                value='',
-                style={'height': '50%', 'width': '360px'})
-        ],
-        style={'display': 'flex', 'margin-left': '10px', 'margin-bottom': '2px'}
-    ),
+            html.P('Alleles (type to search, can select multiple):',
+                   style={'font-weight': 'bold', 'margin-top': '10px'}),
 
-    html.Div(
-        [],
-        id='info-needed',
-        style={'margin-left': '10px'}
-    ),
+            dcc.Dropdown(
+                id='mhc-alleles',
+                options=class_i_alleles,
+                multi=True,
+                style={'width': '100%', 'margin-left': '5px'}
+            ),
 
+            html.P('General information:', style={'font-weight': 'bold', 'margin-top': '10px'}),
 
-    html.Div(children=[
-        html.Button(
-            id='add-peptides',
-            children='Add to analysis',
-            style={'background-color': '#636efa', 'color': 'white', 'border': 'none', 'margin-top': '10px'})
-    ]),
-
-    html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
-
-    html.Div(
-        id='loaded-data',
-        children=[],
-        style={'margin-left': '2em'}
-    ),
-
-    html.P('MHC class:', style={'font-weight': 'bold'}),
-
-    dcc.Dropdown(
-        id='mhc-class',
-        options=[
-            {'label': 'Class I', 'value': 'I'},
-            {'label': 'Class II', 'value': 'II'},
-        ],
-        value='I',
-        style={'width': '360px', 'margin-left': '5px'}
-    ),
-
-    html.P('Alleles (type to search, can select multiple):', style={'font-weight': 'bold'}),
-
-    dcc.Dropdown(
-        id='mhc-alleles',
-        options=class_i_alleles,
-        multi=True,
-        style={'width': '360px', 'margin-left': '5px'}
-    ),
-
-
-    html.H3(children='Run analysis', style={'text-decoration': 'underline'}),
-
-    html.Div(
-        [
             dcc.Input(id='analysis-description',
                       placeholder='Experiment description (optional)',
-                      style={'height': '50%', 'margin-top': '10px', 'margin-left': '5px', 'width': '360px'})
-        ],
-        style={'display': 'flex'}
-    ),
+                      style={'margin-left': '10px', 'width': '100%', 'display': 'flex'}),
 
-    html.Div(
-        [
             dcc.Input(id='submitter-name',
                       placeholder='Submitter name (optional)',
-                      style={'height': '50%', 'margin-top': '10px', 'margin-left': '5px', 'width': '360px'})
-        ],
-        style={'display': 'flex'}
-    ),
+                      style={'margin-top': '10px', 'margin-left': '10px', 'width': '100%', 'display': 'flex'})
 
+        ], width=6),
+
+        dbc.Col([
+            html.P('Experimental information (optional):', style={'font-weight': 'bold'}),
+
+            dcc.Textarea(
+                id='experimental-info',
+                style={
+                    'margin-left': '10px',
+                    'width': '100%',
+                    'height': '325px'
+                },
+                value='Species: \n'
+                      '# of cells: \n'
+                      'Lysis buffer: \n'
+                      'Type of beads: \n'
+                      'Antibody: \n'
+                      'Incubation time: \n'
+                      'MHC-ligand complex elution buffer: \n'
+                      'Peptide elution buffer: \n'
+                      'Type of MS/MS: \n'
+                      'Peptide identification software: \n'
+                      'Peptide FDR: \n'
+                      '(Enter any further information using the same format)',
+                spellCheck=False
+            ),
+        ], width=6)
+    ]),
     html.Div(
         id='is-there-a-problem',
         children=[]
     ),
 
-    html.Button(id='run-analysis',
-                children='Go!', style={'background-color': '#636efa', 'color': 'white',
-                                       'border': 'none', 'margin-top': '10px'}),
+    html.Hr(),
+
+    html.Div(
+        html.Button(id='run-analysis',
+                    children='Go!', style={'background-color': '#636efa', 'color': 'white',
+                                           'border': 'none', 'margin-top': '10px', 'width': '50%'}),
+        style={'text-align': 'center'}
+    ),
+
 
     dcc.Loading([html.A(id='loading', hidden=True)], fullscreen=True),
 
@@ -381,7 +414,7 @@ app.layout = html.Div(children=[
         backdrop='static'
         ),
 
-], style={'padding': '20px', 'max-width': '600px'}, id='main-contents')
+], style={'padding': '20px', 'max-width': '800px'}, id='main-contents')
 
 
 @app.callback([Output('resources', 'is_open')],

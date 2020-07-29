@@ -97,7 +97,7 @@ class mhc_report:
                     [
                         th('Sample', style="padding: 5px"),
                         th('Peptide length', style="padding: 5px"),
-                        th('Total # of peptides', style="padding: 5px"),
+                        th('Total peptides', style="padding: 5px"),
                         th('%', style="padding: 5px")
                     ]
                 )
@@ -210,7 +210,6 @@ class mhc_report:
                                              xanchor="right",
                                              x=0.99,
                                              bgcolor="rgba(255, 255, 255, 0.8)"),
-                                 font_family='Sans Serif',
                                  font_color='#212529'
                                  )
         n_peps_fig.layout.title.xanchor = 'center'
@@ -235,12 +234,12 @@ class mhc_report:
                                            xanchor="right",
                                            x=0.99,
                                            bgcolor="rgba(255, 255, 255, 0.8)"),
-                               font_family='Sans Serif',
                                font_color='#212529'
                                )
         len_dist.layout.title.xanchor = 'center'
         len_dist.update_yaxes(title_text='Number of peptides')
         len_dist.update_xaxes(title_text='Peptide length')
+        len_dist.layout.xaxis.dtick = 1
         card = div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)'], className='card-header'),
                    className='card')
         card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
@@ -277,8 +276,7 @@ class mhc_report:
             colorscale=colorscale,
             colorbar=colorbar
         ))
-        fig.update_layout(font_family='Sans Serif',
-                          font_color='#212529'
+        fig.update_layout(font_color='#212529'
                           )
         fig.layout.plot_bgcolor = '#e5ecf6'
         fig.layout.margin = dict(l=20, r=20, t=20, b=20)
@@ -321,8 +319,7 @@ class mhc_report:
                 colorscale=colorscale,
                 colorbar=colorbar
             ))
-            fig.update_layout(font_family='Sans Serif',
-                              font_color='#212529',
+            fig.update_layout(font_color='#212529',
                               title={
                                   'text': sample,
                                   'x': 0.5,
@@ -582,7 +579,7 @@ class mhc_report:
 
                             ],
                             className='col',
-                            style=f'max-width: 275px;'
+                            style=f'max-width: 275px;'  # CHANGE????? IT CAN BE A LITTLE WIDER <-----------------
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
@@ -660,7 +657,8 @@ class mhc_report:
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
-                                  f'font-size: 10pt'
+                                  f'font-size: 11pt;'
+                                  f'text-align: center'
                         )
                     )
                 else:  # there were not enough peptides to cluster
@@ -674,7 +672,8 @@ class mhc_report:
                                   f'display: block;'
                                   f'margin-left: auto;'
                                   f'margin-right: auto;'
-                                  f'font-size: 10pt'
+                                  f'font-size: 11pt;'
+                                  f'text-align: center'
                         )
                     )
             # now the unannotated peptides
@@ -703,7 +702,8 @@ class mhc_report:
                                       f'display: block;'
                                       f'margin-left: auto;'
                                       f'margin-right: auto;'
-                                      f'font-size: 10pt'
+                                      f'font-size: 11pt;'
+                                      f'text-align: center'
                             )
                         )
                         group += 1
@@ -721,7 +721,8 @@ class mhc_report:
                                       f'display: block;'
                                       f'margin-left: auto;'
                                       f'margin-right: auto;'
-                                      f'font-size: 10pt'
+                                      f'font-size: 11pt;'
+                                      f'text-align: center'
                             )
                         )
             motifs.add(
@@ -754,8 +755,9 @@ class mhc_report:
                 with div(className='row'):
                     with div(className='col-12', style='display: flex; height: 60px'):
                         div([h1('M'), h3('hc'), h1('V'), h3('iz'), h1('P'), h3('ipe'),
-                             h2(' - Analysis report', style="white-space: pre")],
-                            style="width: 100%; display: flex"),
+                             h3(' - Analysis report', style="white-space: pre")],
+                            style="background-color: #0c0c0c; padding: 5px; color: white;"
+                                  "border-radius: 6px; width: 100%; display: flex"),
                         self.lab_logo()
                 hr()
                 with div(className='row'):
@@ -764,7 +766,7 @@ class mhc_report:
                         p([b('Submitted by: '), f'{self.submitter_name if self.submitter_name else "Anonymous"}'])
                         p([b('Analysis type: '), f'Class {self.mhc_class}'])
                         with div(style='display: flex'):
-                            b('Desciption of experiment:', style='margin-right: 5px; white-space: nowrap')
+                            b('Description of experiment:', style='margin-right: 5px; white-space: nowrap')
                             p(self.experiment_description if self.experiment_description else 'None provided')
                         p([b('Alleles: '), ', '.join(self.results.alleles)])
 
@@ -782,16 +784,16 @@ class mhc_report:
                         )
                 hr()
                 h3("Sample Overview")
-                with div(className='row'):
+                with div(className='row', style='flex-direction: row-reverse'):
                     if len(self.samples) > 1:
-                        self.sample_overview_table(className='col')
                         up = self.gen_upset_plot()
                         up['style'] = "margin-right: 15px; margin-left: 15px; margin-bottom: 15px"
-                        hr(style="height: 0px")
-                        self.gen_length_histogram(className='col-12')
+                        self.gen_length_histogram(className='col')
+                        #hr(style="height: 0px")
+                        self.sample_overview_table(className='col-12')
                     else:
-                        self.sample_overview_table(className='col-6')
                         self.gen_length_histogram(className='col-6')
+                        self.sample_overview_table(className='col-6')
                 hr()
                 h3("Annotation Results")
                 p(f'Binding predictions made for all peptides between {self.results.min_length} & '
