@@ -3,15 +3,15 @@ plotly
 dash-bootstrap-components
 pandas
 numpy
-logomaker
-ipywidgets
-svgwrite
-svgpathtools
-notebook
+#logomaker
+#ipywidgets
+#svgwrite
+#svgpathtools
+#notebook
 dominate
 upsetplot
 seaborn
-psutil
-requests
+# psutil
+# requests
 # Note that the user needs to install Orca if we want to do the logos in Plotly, unless we just use the HTML from the figures. That would be nice, but sizing them is more difficult because Plotly Figures are stupid when it comes to relative sizing
 # plotly-logo when it is up on PyPI
