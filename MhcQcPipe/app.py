@@ -116,12 +116,6 @@ app.layout = html.Div(children=[
                     'margin-top': '10px',
                     'font-weight': 'bold'
                 }),
-            html.P(
-                'Provide some information to identify data in the report.',
-                style={
-                    'margin-left': '10px'
-                }
-            ),
 
             html.Div(
                 [
