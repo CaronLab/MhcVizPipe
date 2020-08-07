@@ -1,7 +1,7 @@
 import argparse
-from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
-from MhcQcPipe.ReportTemplates import report
-from MhcQcPipe.app import TMP_DIR, ROOT_DIR
+from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcVizPipe.ReportTemplates import report
+from MhcVizPipe.app import TMP_DIR, ROOT_DIR
 from pathlib import Path
 from datetime import datetime
 from os import getcwd

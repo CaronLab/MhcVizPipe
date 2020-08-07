@@ -12,8 +12,8 @@ from dash.exceptions import PreventUpdate
 from random import uniform
 from datetime import datetime
 from pathlib import Path
-from MhcQcPipe.ReportTemplates import report
-from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcVizPipe.ReportTemplates import report
+from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
 from urllib.parse import quote as urlquote
 from sys import argv

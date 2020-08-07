@@ -5,10 +5,10 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from datetime import datetime
 from typing import List
-from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import plotly.graph_objects as go
 import numpy as np
-from MhcQcPipe.Tools import plotly_venn
+from MhcVizPipe.Tools import plotly_venn
 import base64
 import itertools
 import re
@@ -348,7 +348,7 @@ def generate_report(analysis_results: MhcToolHelper,
     layout = html.Div(
         [
             html.H2(
-                'MhcQcPipe Report',
+                'MhcVizPipe Report',
                 style={
                     'background-color': '#4CAF50',
                     'color': 'white'

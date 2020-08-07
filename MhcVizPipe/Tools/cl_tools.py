@@ -5,7 +5,7 @@ import os
 from numpy import array_split
 import numpy as np
 from pathlib import Path
-from MhcQcPipe.Tools.unmodify_peptides import remove_modifications
+from MhcVizPipe.Tools.unmodify_peptides import remove_modifications
 from typing import List, Dict
 from statistics import mode
 
