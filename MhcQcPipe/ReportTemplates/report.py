@@ -17,7 +17,7 @@ from pathlib import Path
 from dominate.util import raw
 from dominate.tags import *
 from dominate import document
-#import PlotlyLogo.logo as pl
+import PlotlyLogo.logo as pl
 from MhcQcPipe.app import ROOT_DIR
 
 
@@ -30,11 +30,16 @@ def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
         return div(raw(fig), style=f'width: {width}')
 
 
+def make_logo(cores_file: str):
+    return pl.logo_from_alignment(cores_file, plot=False, return_fig=True)
+
+
 def ploty_fig_to_image(fig: go.Figure, width: int = 360, height: int = 360):
     fig_data = fig.to_image(format='svg', width=width, height=height).decode()
     return img(src=f'data:image/svg+xml;base64,{fig_data}',
                className='img-fluid',
                style=f'width: 100%; height: auto')
+
 
 def get_plotlyjs():
     fig = go.Figure()
@@ -475,6 +480,32 @@ class mhc_report:
             ordered_logos[sample] = order
         return ordered_logos, gibbs_peps
 
+    def sequence_logos2(self, className=None):
+        def cosine_similarity(x, y) -> int:
+            x = np.array(x).flatten()
+            y = np.array(y).flatten()
+            return np.dot(x, y) / (np.sqrt(np.dot(x, x)) * np.sqrt(np.dot(y, y)))
+
+        motifs = div(className=className)
+        n_motifs = {}
+        for sample in self.samples:
+            kld_file = str(list(self.results.tmp_folder.glob(f'./{sample}_*/images/gibbs.KLDvsClusters.tab'))[0])
+            with open(kld_file, 'r') as f:
+                klds = [l.strip().split('\t') for l in f.readlines()[1:]]
+            max_kld = -1e6
+            for i in range(len(klds)):
+                kld = np.sum(np.array(klds[i][1:], dtype=float))
+                if kld > max_kld:
+                    max_kld = kld
+                    n = klds[i][0]
+                    idx = i
+                    good_groups = np.array(klds[i][1:], dtype=float) > 0
+            logos = list(self.results.tmp_folder.glob(f'./{sample}_*/cores/gibbs.*.core'))
+            logos = [str(l) for l in logos if f'of{n}' in str(l)]
+            logos.sort()
+            logos = [make_logo(x) for x in logos]
+            np_matrices = [l[1] for l in logos]
+
     def sequence_logos(self, className=None):
         def cosine_similarity(x, y) -> int:
             x = np.array(x).flatten()
@@ -486,36 +517,43 @@ class mhc_report:
         n_motifs = {}
         gibbs_peps = {}
         for sample in self.samples:
-            report = str(list(self.results.tmp_folder.glob(f'./{sample}_*/*_report.html'))[0])
-            with open(report, 'r') as f:
-                lines = ' '.join(f.readlines())
-            n_motifs[sample] = (re.search('Identified ([0-9]*) sequence motifs', lines)[1])
+            kld_file = str(list(self.results.tmp_folder.glob(f'./{sample}_*/images/gibbs.KLDvsClusters.tab'))[0])
+            with open(kld_file, 'r') as f:
+                klds = [l.strip().split('\t') for l in f.readlines()[1:]]
+            n = 1
+            max_kld = 0
+            for scores in klds:
+                kld = np.sum(np.array(scores[1:], dtype=float))
+                if kld > max_kld:
+                    max_kld = kld
+                    n = scores[0]
+                    n_not_empty = np.argwhere(np.array(scores[1:], dtype=float) != 0)
+            n = n
+            n_motifs[sample] = len(n_not_empty)
             pep_groups_file = str(list(self.results.tmp_folder.glob(
                 f'./{sample}_*/res/gibbs.{n_motifs[sample]}g.ds.out'))[0])
             with open(pep_groups_file, 'r') as f:
                 pep_lines = f.readlines()[1:]
-            gibbs_peps[sample] = {x: [] for x in range(int(n_motifs[sample]))}
+            gibbs_peps[sample] = {x: [] for x in range(int(n_motifs[sample]))}  # <---- there is a problem here because gibbcluster can find weird groups (like 2of2 but no 1of2) so we need to account for this somehow
+
             for line in pep_lines:
                 line = [x for x in line.split(' ') if x != '']
                 group = int(line[1])
                 pep = line[3]
                 gibbs_peps[sample][group].append(pep)
 
-        n = np.max([int(n) for n in n_motifs.values()])
         sorted_samples = self.samples
         sorted_samples.sort(key=lambda x: int(n_motifs[x]), reverse=True)
 
         for sample in sorted_samples:
             motifs_row = div(className='row')
-            logos = list(self.results.tmp_folder.glob(f'./{sample}_*/logos/gibbs_logos_*.png'))
+            logos = list(self.results.tmp_folder.glob(f'./{sample}_*/cores/gibbs.*.core'))
             logos = [str(l) for l in logos if f'of{n_motifs[sample]}' in str(l)]
             logos.sort()
-            matrices = list(self.results.tmp_folder.glob(f'./{sample}_*/matrices/gibbs*.mat'))
-            matrices = [str(m) for m in matrices if f'of{n_motifs[sample]}' in str(m)]
-            matrices.sort()
+            logos = [make_logo(x) for x in logos]
+            np_matrices = [l[1] for l in logos]
+            print(len(logos))
 
-            np_matrices = [np.loadtxt(matrix, dtype=float, delimiter=' ', skiprows=2, usecols=range(2, 22)) for
-                           matrix in matrices]
             if sample == sorted_samples[0]:
                 first_set[0] = np_matrices.copy()
                 order = range(len(first_set[0]))
@@ -539,8 +577,10 @@ class mhc_report:
             p_df: pd.DataFrame = self.pep_binding_dict[sample]
             width = 160 + 50*len(self.alleles)
             motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), width=f'{width}px', height='360px'))
+            logos_for_row = div(className="row")
+            motifs_row.add(div(logos_for_row, className="col"))
             for i in order:
-                if i is not None:
+                if i is not None and len(gibbs_peps[sample][i]) > 0:
                     g_peps = set(gibbs_peps[sample][i])
                     strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
                                                     len(g_peps)) for allele in self.alleles}
@@ -548,10 +588,6 @@ class mhc_report:
                     non_binding_set = non_binding_peps[0]
                     for x in non_binding_peps[1:]:
                         non_binding_set = non_binding_set & x
-                    non_binding_composition = round(len(non_binding_set & g_peps) * 100 / len(g_peps))
-                    logo = logos[i]
-                    image_filename = logo
-                    encoded_motif_image = base64.b64encode(open(image_filename, 'rb').read())
                     top_binder = np.max(list(strong_binders.values()))
 
                     composition = []
@@ -565,37 +601,33 @@ class mhc_report:
                         else:
                             composition.append(p(text, style=style_str))
 
-                    motifs_row.add(
+                    logos_for_row.add(
                         div(
                             [
-                                img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style=f'width: 100%;'
-                                          f'display: block;'
-                                          f'margin-left: auto;'
-                                          f'margin-right: auto;'),
+                                wrap_plotly_fig(logos[i][0], height="300px", width="100%"),
                                 p(f'Peptides in group: {len(g_peps)}\n',
                                   style='text-align: center; white-space: pre; margin: 0'),
                                 div([*composition], style="width: 100%; text-align: center")
-
                             ],
                             className='col',
-                            style=f'max-width: 275px;'  # CHANGE????? IT CAN BE A LITTLE WIDER <-----------------
+                            style=f'max-width: 50%;'
+                                  f'min-width: 260px'
+                                  f'height: 100%;'
                                   f'display: block;'
-                                  f'margin-left: auto;'
                                   f'margin-right: auto;'
                                   f'font-size: 11pt'
-                        )
+                        ),
                     )
                 else:
-                    motifs_row.add(
-                        div(
+                    logos_for_row.add(
+                        div([],
                             className='col',
-                            style=f'max-width: 275px;'
+                            style=f'max-width: 50%;'
+                                  f'min-width: 260px'
                                   f'display: block;'
-                                  f'margin-left: auto;'
                                   f'margin-right: auto;'
                                   f'font-size: 11pt'
-                        )
+                            )
                     )
             motifs.add(
                 div(
@@ -617,10 +649,19 @@ class mhc_report:
         for sample in self.samples:
             for allele in self.alleles + ['unannotated']:
                 if self.results.supervised_gibbs_directories[sample][allele] is not None:
-                    report = str(list(self.results.tmp_folder.glob(f'./{allele}_{sample}_*/*_report.html'))[0])
-                    with open(report, 'r') as f:
-                        lines = ' '.join(f.readlines())
-                    n_motifs[f'{allele}_{sample}'] = (re.search('Identified ([0-9]*) sequence motifs', lines)[1])
+                    kld_file = str(
+                        list(self.results.tmp_folder.glob(f'./{allele}_{sample}_*/images/gibbs.KLDvsClusters.tab'))[0])
+                    with open(kld_file, 'r') as f:
+                        klds = [l.strip().split('\t') for l in f.readlines()[1:]]
+                    n = 1
+                    max_kld = 0
+                    for scores in klds:
+                        kld = np.sum(np.array(scores[1:], dtype=float))
+                        if kld > max_kld:
+                            max_kld = kld
+                            n = scores[0]
+                            n_not_empty = np.argwhere(np.array(scores[1:], dtype=float) != 0)
+                    n_motifs[f'{allele}_{sample}'] = n
                     pep_groups_file = str(list(self.results.tmp_folder.glob(
                         f'./{allele}_{sample}_*/res/gibbs.{n_motifs[f"{allele}_{sample}"]}g.ds.out'))[0])
                     with open(pep_groups_file, 'r') as f:
@@ -633,29 +674,23 @@ class mhc_report:
                         gibbs_peps[f'{allele}_{sample}'][group].append(pep)
 
         max_n_motifs = np.max([int(n) for n in n_motifs.values()])
-        image_width = np.floor(95 / (len(self.alleles) + max_n_motifs))\
-            if (len(self.alleles) + max_n_motifs) > 3 else np.floor(95 / 4)
         for sample in self.samples:
             motifs_row = div(className='row')
             for allele in self.alleles:
                 if self.results.supervised_gibbs_directories[sample][allele]:
-                    logo = str(Path(self.results.supervised_gibbs_directories[sample][allele]) / 'logos' /
-                               'gibbs_logos_1of1-001.png')
-                    encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
+                    logo = str(Path(self.results.supervised_gibbs_directories[sample][allele]) / 'cores' /
+                               'gibbs.1of1.core')
                     motifs_row.add(
                         div(
                             [
                                 b(f'{allele}'),
-                                img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                    style='width: 100%;'
-                                          'display: block;'
-                                          'margin-left: auto;'
-                                          'margin-right: auto;'),
+                                wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
                                 p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"][0])}\n'),
                             ],
-                            style=f'width: {image_width}%;'
+                            className='col',
+                            style=f'max-width: 50%;'
+                                  f'min-width: 260px'
                                   f'display: block;'
-                                  f'margin-left: auto;'
                                   f'margin-right: auto;'
                                   f'font-size: 11pt;'
                                   f'text-align: center'
@@ -668,9 +703,10 @@ class mhc_report:
                                 b(f'{allele}'),
                                 p('Too few peptides to cluster')
                             ],
-                            style=f'width: {image_width}%;'
+                            className='col',
+                            style=f'max-width: 50%;'
+                                  f'min-width: 260px'
                                   f'display: block;'
-                                  f'margin-left: auto;'
                                   f'margin-right: auto;'
                                   f'font-size: 11pt;'
                                   f'text-align: center'
@@ -678,29 +714,25 @@ class mhc_report:
                     )
             # now the unannotated peptides
             if self.results.supervised_gibbs_directories[sample]['unannotated']:
-                logos = list((Path(self.results.supervised_gibbs_directories[sample]['unannotated'])/'logos')
-                             .glob(f'*of{n_motifs["unannotated_"+sample]}-001.png'))
+                logos = list((Path(self.results.supervised_gibbs_directories[sample]['unannotated'])/'cores')
+                             .glob(f'*of{n_motifs["unannotated_"+sample]}.core'))
                 logos = [str(x) for x in logos]
                 logos.sort()
                 group = 1
                 for x in range(max_n_motifs):
-                    if x < len(logos):
+                    if (x < len(logos)) and (len(gibbs_peps[f"unannotated_{sample}"][x]) > 0):
                         logo = logos[x]
-                        encoded_motif_image = base64.b64encode(open(logo, 'rb').read())
                         motifs_row.add(
                             div(
                                 [
                                     b(f'Non-binders group {group}'),
-                                    img(src='data:image/png;base64,{}'.format(encoded_motif_image.decode()),
-                                        style='width: 100%;'
-                                              'display: block;'
-                                              'margin-left: auto;'
-                                              'margin-right: auto;'),
+                                    wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
                                     p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][x])}\n'),
                                 ],
-                                style=f'width: {image_width}%;'
+                                className='col',
+                                style=f'max-width: 50%;'
+                                      f'min-width: 260px'
                                       f'display: block;'
-                                      f'margin-left: auto;'
                                       f'margin-right: auto;'
                                       f'font-size: 11pt;'
                                       f'text-align: center'
@@ -709,17 +741,10 @@ class mhc_report:
                         group += 1
                     else:
                         motifs_row.add(
-                            div(
-                                img(
-                                    src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
-                                    style=f'width: 100%;'
-                                          f'display: block;'
-                                          f'margin-left: auto;'
-                                          f'margin-right: auto;'
-                                ),
-                                style=f'width: {image_width}%;'
+                            div(className='col',
+                                style=f'max-width: 50%;'
+                                      f'min-width: 260px'
                                       f'display: block;'
-                                      f'margin-left: auto;'
                                       f'margin-right: auto;'
                                       f'font-size: 11pt;'
                                       f'text-align: center'
@@ -746,6 +771,16 @@ class mhc_report:
             link(rel="stylesheet", href='/home/labcaron/Projects/MhcQcPipe/MhcQcPipe/assets/report_style.css')
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
+            body(onload="plots = document.getElementsByClassName('plotly-graph-div');"
+                        "l = plots.length;"
+                        "for (i=0; i < l; i++) {Plotly.relayout(plots[i], {autosize: true});}")
+            script("$(document).ready(function(){$('.nav-tabs a').click(function(){$(this).tab('show');});"
+                   "$('.nav-tabs a').on('shown.bs.tab',"
+                   "function(){"
+                   "plots = document.getElementsByClassName('plotly-graph-div');"
+                        "l = plots.length;"
+                        "for (i=0; i < l; i++) {Plotly.update(plots[i]);}"
+                   "});});")
         with doc:
             get_plotlyjs()
             with div(id='layout', className='container', style='max-width: 1600px;'
@@ -818,8 +853,8 @@ class mhc_report:
                         div([
                             div(style='width: 18px; height: 18px; background-color: #21d426; border-radius: 3px'),
                             p('Polar', style="margin-left: 5px; margin-right: 10px"),
-                            # div(style='width: 18px; height: 18px; background-color: #d41cbf; border-radius: 3px'),
-                            # p('Neutral', style="margin-left: 5px; margin-right: 10px"),
+                            div(style='width: 18px; height: 18px; background-color: #d41cbf; border-radius: 3px'),
+                            p('Neutral', style="margin-left: 5px; margin-right: 10px"),
                             div(style='width: 18px; height: 18px; background-color: #0517bd; border-radius: 3px'),
                             p('Basic', style="margin-left: 5px; margin-right: 10px"),
                             div(style='width: 18px; height: 18px; background-color: #d40a14; border-radius: 3px'),
@@ -862,7 +897,7 @@ class mhc_report:
 
         loc = f'{str(self.results.tmp_folder/"report.html")}'
         with open(loc, 'w') as f:
-            f.write(doc.render())
+            f.write(doc.render().replace("&lt;", "<"))
         return loc
 
 
