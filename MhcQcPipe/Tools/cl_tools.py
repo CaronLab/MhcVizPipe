@@ -183,23 +183,112 @@ class MhcToolHelper:
             peps = np.array(remove_modifications(sample.peptides))
             lengths = np.vectorize(len)(peps)
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
-            '''
-            use_length = mode(lengths)
-            if self.mhc_class == 'I':
-                self.gibbs_cluster_lengths[sample.sample_name] = use_length
-                peps = peps[lengths == use_length]
-            else:
-                peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]'''
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
                 command = f'gibbscluster -f {fname} -P {sample.sample_name} -k {k} ' \
-                          f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1'.split(' ')
+                          f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
             else:
                 command = f'gibbscluster -f {fname} -P {sample.sample_name} -k {k} ' \
-                          f'-g 1-{n if n>5 else 5} -T -j 2'.split(' ')
+                          f'-g 1-{n if n>5 else 5} -T -j 2 -G'.split(' ')
+
+            #jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
+            job = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            job.communicate()
+        for job in jobs:
+            job.communicate()
+            if job.returncode != 0:
+                raise subprocess.SubprocessError(f"Error in running: {job.args}\n\n{job.stderr}")
+        ls = list(self.tmp_folder.glob('*'))
+        for f in ls:
+            if Path(f).is_dir():
+                self.gibbs_directories.append(f)
+
+    def cluster_with_gibbscluster2(self):
+        n_cpus = int(os.cpu_count())
+        # split peptide list into chunks
+        n_samples = len(self.samples)
+        n_alleles = len(self.alleles)
+        n_jobs = n_samples + (n_alleles + 1)*n_samples
+        cpus_per_job = []
+        cpus_per_job += [5 for x in range(n_samples)]  # for all-peptide runs
+        cpus_per_job += [1 for x in range(n_samples*n_alleles)]  # for allele-specific runs
+        cpus_per_job += [5 for x in range(n_samples)]  # for non-binder runs
+
+        cpus_per_job = [len(x) if len(x) > 0 else 1 for x in array_split(range(n_cpus), n_samples)]
+        jobs = []
+        os.chdir(self.tmp_folder)
+
+        # first by sample
+
+        for sample in self.samples:
+            i = self.samples.index(sample)
+            k = cpus_per_job[i]
+            n = len(self.alleles)
+            fname = Path(self.tmp_folder, f'{sample.sample_name}_forgibbs.csv')
+            peps = np.array(remove_modifications(sample.peptides))
+            lengths = np.vectorize(len)(peps)
+            peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
+
+            peps.tofile(str(fname), '\n', '%s')
+            if self.mhc_class == 'I':
+                command = f'gibbscluster -f {fname} -P {sample.sample_name} -k 24 ' \
+                          f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
+            else:
+                command = f'gibbscluster -f {fname} -P {sample.sample_name} -k 24 ' \
+                          f'-g 1-{n if n>5 else 5} -T -j 2 -G'.split(' ')
 
             jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
+
+        # now by allele
+
+        alleles = list(self.predictions['Allele'].unique())
+        samples = list(self.predictions['Sample'].unique())
+        n_cpus = int(os.cpu_count())
+        n_samples = len(samples) * (len(alleles) + 1)
+        cpus_per_job = [len(x) if len(x) > 0 else 1 for x in array_split(range(n_cpus), n_samples)]
+        jobs = []
+        os.chdir(self.tmp_folder)
+        i = 0
+        for sample in self.samples:
+            self.supervised_gibbs_directories[sample.sample_name] = {}
+            sample_peps = self.predictions.loc[self.predictions['Sample'] == sample.sample_name, :]
+            allele_peps = {}
+            for allele in alleles:
+                allele_peps[allele] = set(list(sample_peps.loc[(sample_peps['Allele'] == allele) &
+                                                               ((sample_peps['Binder'] == 'Strong') |
+                                                                (sample_peps[
+                                                                     'Binder'] == 'Weak')), 'Peptide'].unique()))
+            allele_sets = allele_peps
+            allele_sets['unannotated'] = set(list(sample_peps['Peptide']))
+            for allele in alleles:
+                allele_sets['unannotated'] = allele_sets['unannotated'] - allele_sets[allele]
+
+            for allele, peps in allele_sets.items():
+                n_cpus = cpus_per_job[i]
+                i += 1
+                fname = Path(self.tmp_folder, f"{allele}_{sample.sample_name}_forgibbs.csv")
+                peps = np.array(list(allele_sets[allele]))
+                if len(peps) < 10:
+                    self.supervised_gibbs_directories[sample.sample_name][allele] = None
+                else:
+                    lengths = np.vectorize(len)(peps)
+                    peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
+
+                    peps.tofile(str(fname), '\n', '%s')
+                    g = "1-5" if allele == "unannotated" else "1"
+                    if self.mhc_class == 'I':
+                        if 'kb' in allele.lower():
+                            length = 8
+                        else:
+                            length = 9
+                        command = f'gibbscluster -f {fname} -P {allele}_{sample.sample_name} -k 24 -l {str(length)} ' \
+                                  f'-g {g} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
+                    else:
+                        command = f'gibbscluster -f {fname} -P {allele}_{sample.sample_name} -k 24 ' \
+                                  f'-g {g} -T -j 2 -G'.split(' ')
+
+                    jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
         for job in jobs:
             job.communicate()
             if job.returncode != 0:
@@ -259,12 +348,14 @@ class MhcToolHelper:
                         else:
                             length = 9
                         command = f'gibbscluster -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} -l {str(length)} ' \
-                                  f'-g {g} -T -j 2 -C -D 4 -I 1'.split(' ')
+                                  f'-g {g} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
                     else:
                         command = f'gibbscluster -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} ' \
-                                  f'-g {g} -T -j 2'.split(' ')
+                                  f'-g {g} -T -j 2 -G'.split(' ')
 
                     jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
+                    # job = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    # job.communicate()
         for job in jobs:
             job.communicate()
             if job.returncode != 0:
