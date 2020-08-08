@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from typing import List
-from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import plotly.graph_objects as go
 import numpy as np
-from MhcVizPipe.Tools import plotly_venn
+from MhcQcPipe.Tools import plotly_venn
 import base64
 import itertools
 import re
@@ -18,7 +18,7 @@ from dominate.util import raw
 from dominate.tags import *
 from dominate import document
 import PlotlyLogo.logo as pl
-from MhcVizPipe.app import ROOT_DIR
+from MhcQcPipe.app import ROOT_DIR
 
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
@@ -769,12 +769,12 @@ class mhc_report:
         return motifs
 
     def make_report(self):
-        doc = document(title='MhcVizPipe Report')
+        doc = document(title='MhcQcPipe Report')
         with doc.head:
             link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css",
                  integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk",
                  crossorigin="anonymous")
-            link(rel="stylesheet", href='/home/labcaron/Projects/MhcVizPipe/MhcVizPipe/assets/report_style.css')
+            link(rel="stylesheet", href='/home/labcaron/Projects/MhcQcPipe/MhcQcPipe/assets/report_style.css')
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
             body(onload="plots = document.getElementsByClassName('plotly-graph-div');"

@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name='MhcVizPipe',
+    name='MhcQcPipe',
     version='',
-    packages=['MhcVizPipe', 'MhcVizPipe.Tools', 'MhcVizPipe.ReportTemplates'],
+    packages=['MhcQcPipe', 'MhcQcPipe.Tools', 'MhcQcPipe.ReportTemplates'],
     url='',
     license='',
     author='Kevin Kovalchik',

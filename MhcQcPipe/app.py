@@ -12,8 +12,8 @@ from dash.exceptions import PreventUpdate
 from random import uniform
 from datetime import datetime
 from pathlib import Path
-from MhcVizPipe.ReportTemplates import report
-from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcQcPipe.ReportTemplates import report
+from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
 from urllib.parse import quote as urlquote
 from sys import argv
@@ -172,10 +172,10 @@ app.layout = html.Div(children=[
                 [
                     html.Div(
                         [
-                            html.B('Welcome to MhcVizPipe!'),
+                            html.B('Welcome to MhcQcPipe!'),
                             html.P('Here you will find information on how to run an analysis and the tools used '
                                    'in the pipeline.'),
-                            html.P(['MhcVizPipe is developed and maintained by the laboratory of Dr. Etienne Caron. '
+                            html.P(['MhcQcPipe is developed and maintained by the laboratory of Dr. Etienne Caron. '
                                     'For general inquiries and information please visit ',
                                     html.A('https://github.com/caronlab/MhcVizPipe/wiki',
                                            href='https://github.com/caronlab/MhcVizPipe/wiki',
@@ -237,9 +237,9 @@ app.layout = html.Div(children=[
                             ], style={'margin-left': '20px'}),
                             html.B('References:'),
                             html.Div([
-                                'If you use MhcVizPipe, please cite the following publication:',
+                                'If you use MhcQcPipe, please cite the following publication:',
                                 html.P('Paper info to go here', style={'font-size': '11pt', 'margin-left': '20px'}),
-                                'MhcVizPipe makes use of the following tools: NetMHCpan4.0, NetMHCIIpan4.0 and'
+                                'MhcQcPipe makes use of the following tools: NetMHCpan4.0, NetMHCIIpan4.0 and'
                                 ' GibbsCluster2.0.',
                                 html.P('NetMHCpan citation', style={'font-size': '11pt', 'margin-left': '20px'}),
                                 html.P('NetMHCIIpan citation', style={'font-size': '11pt', 'margin-left': '20px'}),
