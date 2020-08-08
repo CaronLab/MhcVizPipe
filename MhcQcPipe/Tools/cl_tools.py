@@ -334,7 +334,7 @@ class MhcToolHelper:
                 i += 1
                 fname = Path(self.tmp_folder, f"{allele}_{sample.sample_name}_forgibbs.csv")
                 peps = np.array(list(allele_sets[allele]))
-                if len(peps) < 10:
+                if len(peps) < 20:
                     self.supervised_gibbs_directories[sample.sample_name][allele] = None
                 else:
                     lengths = np.vectorize(len)(peps)

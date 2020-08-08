@@ -148,8 +148,8 @@ app.layout = html.Div(children=[
                 html.Button(
                     id='add-peptides',
                     children='Load data',
-                    style={'background-color': '#636efa', 'color': 'white', 'border': 'none', 'margin-top': '10px',
-                           'width': '50%'})
+                    className='btn btn-secondary',
+                    style={'margin-top': '10px', 'width': '50%', 'font-size': '14pt'})
             ], style={'text-align': 'center'}),
 
             html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
@@ -353,8 +353,9 @@ app.layout = html.Div(children=[
 
     html.Div(
         html.Button(id='run-analysis',
-                    children='Go!', style={'background-color': '#636efa', 'color': 'white',
-                                           'border': 'none', 'margin-top': '10px', 'width': '50%'}),
+                    children='Go!',
+                    className='btn btn-secondary',
+                    style={'margin-top': '10px', 'width': '50%', 'font-size': '14pt'}),
         style={'text-align': 'center'}
     ),
 
