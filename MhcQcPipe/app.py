@@ -17,13 +17,12 @@ from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
 from urllib.parse import quote as urlquote
 from sys import argv
+from MhcQcPipe.defaults import ROOT_DIR, TMP_DIR
 
-import pandas as pd
-
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 external_stylesheets = [dbc.themes.BOOTSTRAP,
                         #'https://codepen.io/chriddyp/pen/bWLwgP.css',
                         f'{ROOT_DIR}/assets/blinker.css']
+
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -38,9 +37,6 @@ with open(Path(ROOT_DIR, 'assets', 'class_II_alleles.txt')) as f:
     for allele in f.readlines():
         allele = allele.strip()
         class_ii_alleles.append({'label': allele, 'value': allele})
-
-TMP_DIR = Path("/tmp/mhcqcpipe")
-
 
 def lab_logo():
     lab_logo = base64.b64encode(
@@ -621,7 +617,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                             peptides=peps)
             )
         time = str(datetime.now()).replace(' ', '_')
-        analysis_location = str(TMP_DIR/time)
+        analysis_location = str(Path(TMP_DIR)/time)
         if mhc_class == 'I':
             min_length = 8
             max_length = 12

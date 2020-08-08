@@ -13,13 +13,11 @@ from upsetplot import UpSet, from_contents
 import matplotlib.pyplot as plt
 from matplotlib.text import Text as plotText
 from pathlib import Path
-
 from dominate.util import raw
 from dominate.tags import *
 from dominate import document
 import PlotlyLogo.logo as pl
-from MhcQcPipe.app import ROOT_DIR
-
+from MhcQcPipe.defaults import ROOT_DIR
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
     if 'px' in width:
@@ -774,7 +772,7 @@ class mhc_report:
             link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css",
                  integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk",
                  crossorigin="anonymous")
-            link(rel="stylesheet", href='/home/labcaron/Projects/MhcQcPipe/MhcQcPipe/assets/report_style.css')
+            style(open(str(Path(ROOT_DIR)/'assets/report_style.css'), 'r').read())
             script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js")
             script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js")
             body(onload="plots = document.getElementsByClassName('plotly-graph-div');"
