@@ -743,17 +743,6 @@ class mhc_report:
                             )
                         )
                         group += 1
-                    else:
-                        motifs_row.add(
-                            div(className='col',
-                                style=f'max-width: 50%;'
-                                      f'min-width: 260px'
-                                      f'display: block;'
-                                      f'margin-right: auto;'
-                                      f'font-size: 11pt;'
-                                      f'text-align: center'
-                            )
-                        )
             motifs.add(
                 div(
                     [
