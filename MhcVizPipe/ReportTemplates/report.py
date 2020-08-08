@@ -220,6 +220,8 @@ class mhc_report:
         n_peps_fig.layout.title.xanchor = 'center'
         n_peps_fig.update_yaxes(title_text='Number of peptides')
         n_peps_fig.update_xaxes(title_text='Binding strength')
+        n_peps_fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
+        n_peps_fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
         card = div(div(b('Binding Affinities'), className='card-header'), className='card')
         card.add(div(raw(n_peps_fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
 
@@ -244,6 +246,8 @@ class mhc_report:
         len_dist.layout.title.xanchor = 'center'
         len_dist.update_yaxes(title_text='Number of peptides')
         len_dist.update_xaxes(title_text='Peptide length')
+        len_dist.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
+        len_dist.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
         len_dist.layout.xaxis.dtick = 1
         card = div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)'], className='card-header'),
                    className='card')
@@ -335,6 +339,8 @@ class mhc_report:
             fig.update_yaxes(range=[0, ymax],
                              title_text='Number of peptides')
             fig.update_xaxes(title_text='Allele')
+            fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
+            fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
 
             heatmaps.add(
                 div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='col-4',  # NOTE HERE IS WHERE YOU SPECIFY WIDTH OF HEATMAPS IF I NEED TO CHANGE IT BACK TO COL-4
