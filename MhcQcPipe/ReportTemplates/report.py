@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from typing import List
 from MhcQcPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import plotly.graph_objects as go
 import numpy as np
@@ -18,6 +17,7 @@ from dominate.tags import *
 from dominate import document
 import PlotlyLogo.logo as pl
 from MhcQcPipe.defaults import ROOT_DIR
+
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
     if 'px' in width:

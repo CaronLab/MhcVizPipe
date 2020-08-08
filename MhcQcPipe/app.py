@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
 import io
-import os
 import dash
 from dash.dependencies import Input, Output, State
 from dash.dash import no_update
