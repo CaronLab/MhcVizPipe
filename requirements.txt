@@ -6,4 +6,4 @@ numpy
 dominate
 upsetplot
 seaborn
-plotly-logo
+#plotly-logo

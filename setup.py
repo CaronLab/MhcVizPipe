@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='MhcVizPipe',
-    version='',
+    version='0.0.1',
     packages=find_packages(),
     url='https://github.com/kevinkovalchik/MhcVizPipe',
     license='MIT',
@@ -10,6 +10,7 @@ setup(
     author_email='',
     description='A reporting pipeline for visualization of immunopeptidomics MS data.',
     python_requires='>=3.7',
+    include_package_data=True,
     install_requires=[
         'dash>=1.12.0',
         'plotly',
