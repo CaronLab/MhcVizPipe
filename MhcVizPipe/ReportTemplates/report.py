@@ -587,7 +587,6 @@ class mhc_report:
             logos.sort()
             logos = [make_logo(x) for x in logos]
             np_matrices = [l[1] for l in logos]
-            print(len(logos))
 
             if sample == sorted_samples[0]:
                 first_set[0] = np_matrices.copy()

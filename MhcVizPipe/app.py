@@ -14,16 +14,19 @@ from pathlib import Path
 from MhcVizPipe.ReportTemplates import report
 from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
-from urllib.parse import quote as urlquote
 from sys import argv
-from MhcVizPipe.defaults import ROOT_DIR, TMP_DIR
+from urllib.parse import quote as urlquote
+from MhcVizPipe.defaults import ROOT_DIR, TMP_DIR, HOSTNAME, PORT, TIMEOUT
+import gunicorn.app.base
+from time import sleep
 
 external_stylesheets = [dbc.themes.BOOTSTRAP,
                         #'https://codepen.io/chriddyp/pen/bWLwgP.css',
                         f'{ROOT_DIR}/assets/blinker.css']
 
+server = flask.Flask(__name__)
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 app.title = "MhcVizPipe"
 
 class_i_alleles = []
@@ -647,8 +650,47 @@ def get_report(path):
     return flask.send_from_directory(TMP_DIR, path)
 
 
+def make_app():
+    return app
+
+class StandaloneApplication(gunicorn.app.base.BaseApplication):
+
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {key: value for key, value in self.options.items()
+                  if key in self.cfg.settings and value is not None}
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
+
 if __name__ == '__main__':
-    if 'dev' in argv:
-        app.run_server(debug=True, port=8792, host='0.0.0.0')
+    welcome = f'''
+     ========================================
+     MhcVizPipe v0.0.1
+
+     Welcome to MhcVizPipe! To open the GUI, open the following link
+     in your web browser (also found below): http://{HOSTNAME}:{PORT}
+
+     For a brief introduction to using the GUI, click the link to
+     "help and resources" near the top of the GUI. For more information
+     and the latest updates please visit our GitHub repository:
+     https://github.com/kevinkovalchik/MhcVizPipe.
+
+     ========================================
+    '''
+    if 'debug' in argv or '-debug' in argv or '--debug' in argv:
+        app.run_server(debug=True, port=int(PORT), host=HOSTNAME)
     else:
-        app.run_server(debug=True, port=8791, host='0.0.0.0')
+        print(welcome)
+        sleep(0.5)
+        options = {
+            'bind': f'{HOSTNAME}:{PORT}',
+            'timeout': TIMEOUT
+        }
+        StandaloneApplication(app.server, options).run()
