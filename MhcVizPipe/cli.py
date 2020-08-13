@@ -1,11 +1,14 @@
 import argparse
 from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 from MhcVizPipe.ReportTemplates import report
-from MhcVizPipe.gui import TMP_DIR, ROOT_DIR
+from MhcVizPipe.defaults import Parameters, ROOT_DIR
 from pathlib import Path
 from datetime import datetime
 from os import getcwd
 from shutil import copy
+
+Parameters = Parameters()
+TMP_DIR = Parameters.TMP_DIR
 
 parser = argparse.ArgumentParser()
 
@@ -95,7 +98,7 @@ if __name__ == '__main__':
         alleles=args.alleles,
         tmp_directory=analysis_location,
     )
-    cl_tools.make_binding_predictions(version=args.version, score=args.score)
+    cl_tools.make_binding_predictions(score=args.score)
     cl_tools.cluster_with_gibbscluster()
     cl_tools.cluster_with_gibbscluster_by_allele()
     analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name)
