@@ -3,14 +3,24 @@ import os
 from pathlib import Path
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+config_file = str(Path(ROOT_DIR)/'mhcvizpipe.config')
+default_config_file = str(Path(ROOT_DIR)/'mhcvizpipe_defaults.config')
 config = ConfigParser()
-config.read(Path(ROOT_DIR)/'mhcvizpipe.config')
+config.read(config_file)
 
-TMP_DIR = config['DEFAULTS']['temp directory']
-NETMHCPAN = config['DEFAULTS']['NetMHCpan path']
-NETMHCPAN_VERSION = config['DEFAULTS']['NetMHCpan version']
-NETMHCIIPAN = config['DEFAULTS']['NetMHCIIpan path']
-GIBBSCLUSTER = config['DEFAULTS']['GibbsCluster path']
-HOSTNAME = config['DEFAULTS']['HOSTNAME']
-PORT = config['DEFAULTS']['PORT']
-TIMEOUT = config['DEFAULTS']['TIMEOUT']
+# directories
+TMP_DIR = config['DIRECTORIES']['temp directory']
+NETMHCPAN = config['DIRECTORIES']['NetMHCpan path']
+NETMHCPAN_VERSION = config['DIRECTORIES']['NetMHCpan version']
+NETMHCIIPAN = config['DIRECTORIES']['NetMHCIIpan path']
+GIBBSCLUSTER = config['DIRECTORIES']['GibbsCluster path']
+
+# server
+HOSTNAME = config['SERVER']['HOSTNAME']
+PORT = config['SERVER']['PORT']
+TIMEOUT = config['SERVER']['TIMEOUT']
+
+# analysis options
+HOBOHM = config['ANALYSIS']['hobohm clustering']
+THRESHOLD = config['ANALYSIS']['clustering threshold']
+WEIGHTONPRIOR = config['ANALYSIS']['weight on prior']
