@@ -16,7 +16,7 @@ from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
 from sys import argv
 from urllib.parse import quote as urlquote
-from MhcVizPipe.defaults import ROOT_DIR, TMP_DIR, HOSTNAME, PORT, TIMEOUT
+from MhcVizPipe.defaults import ROOT_DIR, TMP_DIR, HOSTNAME, PORT, TIMEOUT, config_file, default_config_file
 import gunicorn.app.base
 from time import sleep
 
@@ -71,9 +71,35 @@ app.layout = html.Div(children=[
             html.P(
                 'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
             html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
+            html.Button('Settings', id='settings-btn', className='btn btn-secondary', style={"float": "right"})
         ])
     ]),
 
+    dbc.Modal(
+        [
+            dbc.ModalHeader('Settings'),
+            dbc.ModalBody(
+                [
+                    html.P('Edit the contents of the text box below to change MVP settings.'),
+                    html.P('NOTE: Do not change the contents of section headers (e.g. [DIRECTORIES])'),
+                    dcc.Textarea(style={'width': '100%', 'height': '480px'}, id='settings-area', spellCheck=False),
+                    html.Div(
+                        [],
+                        id='settings-problem',
+                        style={'margin-left': '10px'}
+                    ),
+                    dbc.Button('Done', id='settings-done', style={'margin-right': '5px'}),
+                    dbc.Button('Cancel', id='settings-cancel'),
+                    dbc.Button('Load defaults', id='settings-defaults', style={'float': 'right'})
+                ]
+            )
+        ],
+        id='settings-modal',
+        is_open=False,
+        centered=True,
+        backdrop='static',
+        style={'max-width': '800px'}
+    ),
 
     html.Hr(),
 
@@ -412,12 +438,60 @@ app.layout = html.Div(children=[
 ], style={'padding': '20px', 'max-width': '800px'}, id='main-contents')
 
 
+@app.callback([Output('settings-modal', 'is_open'),
+               Output('settings-area', 'value'),
+               Output('settings-problem', 'children')],
+              [Input('settings-defaults', 'n_clicks'),
+               Input('settings-done', 'n_clicks'),
+               Input('settings-cancel', 'n_clicks'),
+               Input('settings-btn', 'n_clicks')],
+              [State('settings-area', 'value')])
+def update_settings(defaults, done, cancel, open_settings, settings):
+    ctx = dash.callback_context
+    triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_by == 'settings-btn':
+        with open(config_file, 'r') as f:
+            settings = ''.join(f.readlines())
+        return True, settings, []
+
+    elif triggered_by == 'settings-done':
+        for line in settings.split('\n'):
+            if line \
+                    and not line.startswith('#') \
+                    and not line.startswith('[') \
+                    and '=' not in line\
+                    or (line.startswith('[') and not line.endswith(']')):
+                message = [html.P(f'There is a formatting issue. Please check that the following line contains an '
+                                  f'equal sign (i.e. =), or if you want the line to be a comment then ensure it '
+                                  f'starts with #. If it is a section header it must start with [ and end with ]:'),
+                           html.P(f'{line}')]
+                problem = dbc.Alert(id=str(uniform(0, 1)), color='danger',
+                                     children=message,
+                                     style={'margin-top': '2px', 'width': '100%'}),
+                return True, settings, problem
+
+        with open(config_file, 'w') as f:
+            f.write(settings)
+        return False, '', []
+
+    elif triggered_by == 'settings-defaults':
+        with open(default_config_file, 'r') as f:
+            settings = ''.join(f.readlines())
+        return True, settings, []
+
+    elif triggered_by == 'settings-cancel':
+        return False, settings, []
+
+    else:
+        raise PreventUpdate
+
 @app.callback([Output('resources', 'is_open')],
               [Input('open-info-modal', 'n_clicks'),
                Input('close-info-modal', 'n_clicks')])
-def open_close_info_modal(open, close):
+def open_close_info_modal(open_modal, close_modal):
     ctx = dash.callback_context
-    triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if triggered_by == 'open-info-modal':
         return [True]
@@ -425,6 +499,7 @@ def open_close_info_modal(open, close):
         return [False]
     else:
         raise PreventUpdate
+
 
 @app.callback([Output('peptide-list-area', 'value'),
                Output('modal', 'is_open'),
@@ -685,7 +760,7 @@ if __name__ == '__main__':
      ========================================
     '''
     if 'debug' in argv or '-debug' in argv or '--debug' in argv:
-        app.run_server(debug=True, port=int(PORT), host=HOSTNAME)
+        app.run_server(debug=True, port=8971, host=HOSTNAME)
     else:
         print(welcome)
         sleep(0.5)
