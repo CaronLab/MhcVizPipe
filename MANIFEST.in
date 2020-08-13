@@ -1,2 +1,2 @@
 graft MhcVizPipe/assets
-include MhcVizPipe/mhcvizpipe.config
+include MhcVizPipe/*.config
