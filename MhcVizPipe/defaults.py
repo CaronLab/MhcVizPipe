@@ -6,6 +6,12 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 config_file = str(os.path.expanduser('~/.mhcvizpipe.config'))
 default_config_file = str(Path(ROOT_DIR)/'mhcvizpipe_defaults.config')
 
+if not Path(config_file).is_file():
+    with open(default_config_file, 'r') as f:
+        settings = ''.join(f.readlines())
+    with open(str(config_file), 'w') as f:
+        f.write(settings)
+
 class Parameters():
 
     def config(self):

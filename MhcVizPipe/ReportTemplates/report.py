@@ -18,7 +18,6 @@ from dominate import document
 import PlotlyLogo.logo as pl
 from MhcVizPipe.defaults import ROOT_DIR
 
-
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
     if 'px' in width:
         fig = fig.to_html(include_plotlyjs=False, full_html=False, default_height=height, default_width=width)

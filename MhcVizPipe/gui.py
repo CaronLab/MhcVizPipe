@@ -21,11 +21,6 @@ from MhcVizPipe.defaults import Parameters
 import gunicorn.app.base
 from time import sleep
 
-if not Path(config_file).is_file():
-    with open(default_config_file, 'r') as f:
-        settings = ''.join(f.readlines())
-    with open(str(config_file), 'w') as f:
-        f.write(settings)
 
 Parameters = Parameters()
 
