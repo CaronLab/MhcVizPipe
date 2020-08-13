@@ -855,8 +855,13 @@ class mhc_report:
                         self.sample_overview_table(className='col-6')
                 hr()
                 h3("Annotation Results")
-                p(f'Binding predictions made for all peptides between {self.results.min_length} & '
-                  f'{self.results.max_length} mers, inclusive.')
+                pan = 'NetMHCpan' if self.mhc_class == 'I' else 'NetMHCIIpan'
+                sb = '0.5' if self.mhc_class == 'I' else '2.0'
+                wb = '2.0' if self.mhc_class == 'I' else '10.0'
+                p(f'{pan} eluted ligand predictions made for all peptides between {self.results.min_length} & '
+                  f'{self.results.max_length} mers, inclusive.\n'
+                  f'Percent rank cutoffs for strong and weak binders: {sb} and {wb}.',
+                  style='white-space: pre')
                 with div(className='row'):
                     self.gen_peptide_tables(className='col-6')
                     self.gen_binding_histogram(className='col-6')

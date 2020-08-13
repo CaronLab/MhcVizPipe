@@ -6,7 +6,14 @@ import numpy as np
 from pathlib import Path
 from MhcVizPipe.Tools.unmodify_peptides import remove_modifications
 from typing import List
-from MhcVizPipe.defaults import GIBBSCLUSTER, NETMHCPAN, NETMHCIIPAN, NETMHCPAN_VERSION
+from MhcVizPipe.defaults import Parameters
+
+Parameters = Parameters()
+GIBBSCLUSTER = Parameters.GIBBSCLUSTER
+NETMHCPAN = Parameters.NETMHCPAN
+NETMHCIIPAN = Parameters.NETMHCIIPAN
+NETMHCPAN_VERSION = Parameters.NETMHCPAN_VERSION
+
 
 class MhcPeptides:
     def __init__(self,

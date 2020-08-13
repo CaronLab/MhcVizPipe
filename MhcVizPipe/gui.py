@@ -16,9 +16,19 @@ from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 import flask
 from sys import argv
 from urllib.parse import quote as urlquote
-from MhcVizPipe.defaults import ROOT_DIR, TMP_DIR, HOSTNAME, PORT, TIMEOUT, config_file, default_config_file
+from MhcVizPipe.defaults import ROOT_DIR, default_config_file, config_file
+from MhcVizPipe.defaults import Parameters
 import gunicorn.app.base
 from time import sleep
+
+Parameters = Parameters()
+
+if not Path(config_file).is_file():
+    with open(default_config_file, 'r') as f:
+        settings = ''.join(f.readlines())
+    with open(str(config_file), 'w') as f:
+        f.write(settings)
+
 
 external_stylesheets = [dbc.themes.BOOTSTRAP,
                         #'https://codepen.io/chriddyp/pen/bWLwgP.css',
@@ -81,7 +91,8 @@ app.layout = html.Div(children=[
             dbc.ModalBody(
                 [
                     html.P('Edit the contents of the text box below to change MVP settings.'),
-                    html.P('NOTE: Do not change the contents of section headers (e.g. [DIRECTORIES])'),
+                    html.P('NOTE: Do not change the contents of section headers (e.g. [DIRECTORIES]) or anything '
+                           'to the left of an equals sign.'),
                     dcc.Textarea(style={'width': '100%', 'height': '480px'}, id='settings-area', spellCheck=False),
                     html.Div(
                         [],
@@ -172,7 +183,7 @@ app.layout = html.Div(children=[
             html.Div(children=[
                 html.Button(
                     id='add-peptides',
-                    children='Load data',
+                    children='Load Data',
                     className='btn btn-secondary',
                     style={'margin-top': '10px', 'width': '50%', 'font-size': '14pt'})
             ], style={'text-align': 'center'}),
@@ -696,7 +707,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                             peptides=peps)
             )
         time = str(datetime.now()).replace(' ', '_')
-        analysis_location = str(Path(TMP_DIR)/time)
+        analysis_location = str(Path(Parameters.TMP_DIR)/time)
         if mhc_class == 'I':
             min_length = 8
             max_length = 12
@@ -722,7 +733,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
 
 @app.server.route("/download/<path:path>")
 def get_report(path):
-    return flask.send_from_directory(TMP_DIR, path)
+    return flask.send_from_directory(Parameters.TMP_DIR, path)
 
 
 def make_app():
@@ -750,7 +761,7 @@ if __name__ == '__main__':
      MhcVizPipe v0.0.1
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
-     in your web browser (also found below): http://{HOSTNAME}:{PORT}
+     in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}
 
      For a brief introduction to using the GUI, click the link to
      "help and resources" near the top of the GUI. For more information
@@ -760,12 +771,12 @@ if __name__ == '__main__':
      ========================================
     '''
     if 'debug' in argv or '-debug' in argv or '--debug' in argv:
-        app.run_server(debug=True, port=8971, host=HOSTNAME)
+        app.run_server(debug=True, port=8971, host=Parameters.HOSTNAME)
     else:
         print(welcome)
         sleep(0.5)
         options = {
-            'bind': f'{HOSTNAME}:{PORT}',
-            'timeout': TIMEOUT
+            'bind': f'{Parameters.HOSTNAME}:{Parameters.PORT}',
+            'timeout': Parameters.TIMEOUT
         }
         StandaloneApplication(app.server, options).run()
