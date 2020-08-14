@@ -112,7 +112,6 @@ class MhcToolHelper:
                     command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -xls -xlsfile {fout}'.split(' ')
                 else:
                     command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -xls -xlsfile {fout}'.split(' ')
-                    print(command)
                 jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
             # finish jobs and check return values
             for job in jobs:
