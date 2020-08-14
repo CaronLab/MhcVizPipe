@@ -21,6 +21,7 @@ setup(
         'upsetplot',
         'seaborn',
         'plotly-logo',
+        'gunicorn'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
