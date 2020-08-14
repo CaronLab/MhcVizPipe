@@ -8,11 +8,7 @@ from MhcVizPipe.Tools.unmodify_peptides import remove_modifications
 from typing import List
 from MhcVizPipe.defaults import Parameters
 
-Parameters = Parameters()
-GIBBSCLUSTER = Parameters.GIBBSCLUSTER
-NETMHCPAN = Parameters.NETMHCPAN
-NETMHCIIPAN = Parameters.NETMHCIIPAN
-NETMHCPAN_VERSION = Parameters.NETMHCPAN_VERSION
+
 
 
 class MhcPeptides:
@@ -50,6 +46,12 @@ class MhcToolHelper:
                  alleles: List[str] = ('HLA-A03:02', 'HLA-A02:02'),
                  min_length: int = 8,
                  max_length: int = 12):
+
+        self.Parameters = Parameters()
+        self.GIBBSCLUSTER = Parameters.GIBBSCLUSTER
+        self.NETMHCPAN = Parameters.NETMHCPAN
+        self.NETMHCIIPAN = Parameters.NETMHCIIPAN
+        self.NETMHCPAN_VERSION = Parameters.NETMHCPAN_VERSION
 
         if isinstance(alleles, str):
             if ',' in alleles:
@@ -109,9 +111,9 @@ class MhcToolHelper:
                 job_number += 1
                 # run netMHCpan
                 if self.mhc_class == 'I':
-                    command = f'{NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -BA -xls -xlsfile {fout}'.split(' ')
+                    command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -BA -xls -xlsfile {fout}'.split(' ')
                 else:
-                    command = f'{NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -BA -xls -xlsfile {fout}'.split(' ')
+                    command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -BA -xls -xlsfile {fout}'.split(' ')
                 jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
             # finish jobs and check return values
             for job in jobs:
@@ -128,7 +130,7 @@ class MhcToolHelper:
                 alleles = [a.strip() for a in lines[0].split('\t') if a != '']
                 headers = lines[1].split('\t')
                 if self.mhc_class == 'I':
-                    if NETMHCPAN_VERSION == '4.1':
+                    if self.NETMHCPAN_VERSION == '4.1':
                         rank_header = f'{score}_Rank'
                     else:
                         rank_header = 'Rank'
@@ -185,10 +187,10 @@ class MhcToolHelper:
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
-                command = f'{GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k {k} ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k {k} ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
             else:
-                command = f'{GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k {k} ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k {k} ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -G'.split(' ')
 
             #jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
@@ -231,10 +233,10 @@ class MhcToolHelper:
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
-                command = f'{GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 24 ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 24 ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
             else:
-                command = f'{GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 24 ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 24 ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -G'.split(' ')
 
             jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
@@ -281,10 +283,10 @@ class MhcToolHelper:
                             length = 8
                         else:
                             length = 9
-                        command = f'{GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k 24 -l {str(length)} ' \
+                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k 24 -l {str(length)} ' \
                                   f'-g {g} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
                     else:
-                        command = f'{GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k 24 ' \
+                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k 24 ' \
                                   f'-g {g} -T -j 2 -G'.split(' ')
 
                     jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
@@ -346,10 +348,10 @@ class MhcToolHelper:
                             length = 8
                         else:
                             length = 9
-                        command = f'{GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} -l {str(length)} ' \
+                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} -l {str(length)} ' \
                                   f'-g {g} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
                     else:
-                        command = f'{GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} ' \
+                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} ' \
                                   f'-g {g} -T -j 2 -G'.split(' ')
 
                     jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
