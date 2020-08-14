@@ -408,7 +408,7 @@ app.layout = html.Div(children=[
                             dbc.Row(
                                 dbc.Col(
                                     html.P('Your report is ready! Click the following link to open it in a new '
-                                           'tab.. To download it, right-click and choose "save link as" '
+                                           'tab. To download it, right-click and choose "save link as" '
                                            '(or something similar to that). If you wish to run another analysis, '
                                            'click the "Reset" button to reset the form.'),
                                 )
