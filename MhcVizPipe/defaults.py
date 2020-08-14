@@ -13,44 +13,54 @@ if not Path(config_file).is_file():
         f.write(settings)
 
 class Parameters():
-
-    def config(self):
+    def __init__(self):
         c = ConfigParser()
-        c.read(config_file)
-        return c
+        self.config = c
+
     @property
     def TMP_DIR(self) -> str:
-        return self.config()['DIRECTORIES']['temp directory']
+        self.config.read(config_file)
+        return self.config['DIRECTORIES']['temp directory']
     @property
     def NETMHCPAN(self) -> str:
-        return self.config()['DIRECTORIES']['NetMHCpan path']
+        self.config.read(config_file)
+        return self.config['DIRECTORIES']['NetMHCpan path']
     @property
     def NETMHCPAN_VERSION(self) -> str:
-        return self.config()['DIRECTORIES']['NetMHCpan version']
+        self.config.read(config_file)
+        return self.config['DIRECTORIES']['NetMHCpan version']
     @property
     def NETMHCIIPAN(self) -> str:
-        return self.config()['DIRECTORIES']['NetMHCIIpan path']
+        self.config.read(config_file)
+        return self.config['DIRECTORIES']['NetMHCIIpan path']
     @property
     def GIBBSCLUSTER(self) -> str:
-        return self.config()['DIRECTORIES']['GibbsCluster path']
+        self.config.read(config_file)
+        return self.config['DIRECTORIES']['GibbsCluster path']
     @property
     def HOSTNAME(self) -> str:
-        return self.config()['SERVER']['HOSTNAME']
+        self.config.read(config_file)
+        return self.config['SERVER']['HOSTNAME']
     @property
     def PORT(self) -> str:
-        return self.config()['SERVER']['PORT']
+        self.config.read(config_file)
+        return self.config['SERVER']['PORT']
     @property
     def TIMEOUT(self) -> str:
-        return self.config()['SERVER']['TIMEOUT']
+        self.config.read(config_file)
+        return self.config['SERVER']['TIMEOUT']
     @property
     def HOBOHM(self) -> str:
-        return self.config()['ANALYSIS']['hobohm clustering']
+        self.config.read(config_file)
+        return self.config['ANALYSIS']['hobohm clustering']
     @property
     def THRESHOLD(self) -> str:
-        return self.config()['ANALYSIS']['clustering threshold']
+        self.config.read(config_file)
+        return self.config['ANALYSIS']['clustering threshold']
     @property
     def WEIGHTONPRIOR(self) -> str:
-        return self.config()['ANALYSIS']['weight on prior']
+        self.config.read(config_file)
+        return self.config['ANALYSIS']['weight on prior']
     '''
     # directories
     TMP_DIR = property(_tmp_dir)

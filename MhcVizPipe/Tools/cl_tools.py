@@ -6,9 +6,6 @@ import numpy as np
 from pathlib import Path
 from MhcVizPipe.Tools.unmodify_peptides import remove_modifications
 from typing import List
-from MhcVizPipe.defaults import Parameters
-
-
 
 
 class MhcPeptides:
@@ -47,11 +44,12 @@ class MhcToolHelper:
                  min_length: int = 8,
                  max_length: int = 12):
 
+        from MhcVizPipe.defaults import Parameters
         self.Parameters = Parameters()
-        self.GIBBSCLUSTER = Parameters.GIBBSCLUSTER
-        self.NETMHCPAN = Parameters.NETMHCPAN
-        self.NETMHCIIPAN = Parameters.NETMHCIIPAN
-        self.NETMHCPAN_VERSION = Parameters.NETMHCPAN_VERSION
+        self.GIBBSCLUSTER = self.Parameters.GIBBSCLUSTER
+        self.NETMHCPAN = self.Parameters.NETMHCPAN
+        self.NETMHCIIPAN = self.Parameters.NETMHCIIPAN
+        self.NETMHCPAN_VERSION = self.Parameters.NETMHCPAN_VERSION
 
         if isinstance(alleles, str):
             if ',' in alleles:
@@ -76,7 +74,7 @@ class MhcToolHelper:
         self.supervised_gibbs_directories = {}
         self.gibbs_cluster_lengths = {}
 
-    def make_binding_predictions(self, score: str = 'EL'):
+    def make_binding_predictions(self):
         n = int(os.cpu_count())
 
         # split peptide list into chunks
@@ -111,62 +109,19 @@ class MhcToolHelper:
                 job_number += 1
                 # run netMHCpan
                 if self.mhc_class == 'I':
-                    command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -BA -xls -xlsfile {fout}'.split(' ')
+                    command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -xls -xlsfile {fout}'.split(' ')
                 else:
-                    command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -BA -xls -xlsfile {fout}'.split(' ')
+                    command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -xls -xlsfile {fout}'.split(' ')
+                    print(command)
                 jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
             # finish jobs and check return values
             for job in jobs:
                 stdout, stderr = job.communicate()
-                out = stdout.split(b'\n')[-2]
-                if b'error' in out:
-                    raise subprocess.SubprocessError(f"Error in running: {job.args}\n\n{out}")
+                self.parse_netmhc_output(stdout.decode('utf-8'), sample.sample_name)
 
-            for f in results:
-                sample_name = str(Path(f).stem).split('_netmhcpan_results_')[0]
-                rows = []
-                with open(f, 'r', encoding='utf-8') as file:
-                    lines = file.readlines()
-                alleles = [a.strip() for a in lines[0].split('\t') if a != '']
-                headers = lines[1].split('\t')
-                if self.mhc_class == 'I':
-                    if self.NETMHCPAN_VERSION == '4.1':
-                        rank_header = f'{score}_Rank'
-                    else:
-                        rank_header = 'Rank'
-                else:
-                    if score == 'BA':
-                        rank_header = 'Rank_BA'
-                    else:
-                        rank_header = 'Rank'
-                rank_indices = [i for i in range(len(headers)) if headers[i] == rank_header]
-                for line in lines[2:]:
-                    line = line.split('\t')
-                    for a in self.alleles:
-                        pep = line[1]
-                        allele = a
-                        rank = line[rank_indices[alleles.index(a)]]
-                        if self.mhc_class == 'I':
-                            if float(rank) <= 0.5:
-                                binder = 'Strong'
-                            elif float(rank) <= 2.0:
-                                binder = 'Weak'
-                            else:
-                                binder = 'Non-binder'
-                        else:
-                            if float(rank) <= 2:
-                                binder = 'Strong'
-                            elif float(rank) <= 10:
-                                binder = 'Weak'
-                            else:
-                                binder = 'Non-binder'
-                        rows.append((sample_name, pep, allele, rank, binder))
-
-                self.predictions = self.predictions.append(
-                    pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
-                    ignore_index=True
-                )
-            #self.predictions.to_csv(str(Path(self.tmp_folder)/'predictions.csv'))
+            self.predictions.to_csv(str(Path(self.tmp_folder)/f'{sample.sample_name}_netMHC'
+                                                              f'{"II" if self.mhc_class == "II" else ""}'
+                                                              f'pan_predictions.csv'))
 
     def cluster_with_gibbscluster(self):
         n_cpus = int(os.cpu_count())
@@ -367,3 +322,42 @@ class MhcToolHelper:
                 for f in ls:
                     if Path(f).is_dir():
                         self.supervised_gibbs_directories[sample.sample_name][allele] = f
+
+    def parse_netmhc_output(self, stdout: str, sample: str):
+        rows = []
+        lines = stdout.split('\n')
+        if self.mhc_class == 'I':  # works for 4.0 and 4.1, will need to keep an eye on future releases
+            allele_idx = 1
+            peptide_idx = 2
+            rank_idx = 12
+        else:  # works for NetMHCIIpan4.0
+            allele_idx = 1
+            peptide_idx = 2
+            rank_idx = 8
+        for line in lines:
+            line = line.strip()
+            line = line.split()
+            if not line or line[0] == '#' or not line[0].isnumeric():
+                continue
+            allele = line[allele_idx].replace('*', '')
+            peptide = line[peptide_idx]
+            rank = line[rank_idx]
+            if self.mhc_class == 'I':
+                if float(rank) <= 0.5:
+                    binder = 'Strong'
+                elif float(rank) <= 2.0:
+                    binder = 'Weak'
+                else:
+                    binder = 'Non-binder'
+            else:
+                if float(rank) <= 2:
+                    binder = 'Strong'
+                elif float(rank) <= 10:
+                    binder = 'Weak'
+                else:
+                    binder = 'Non-binder'
+            rows.append((sample, peptide, allele, rank, binder))
+        self.predictions = self.predictions.append(
+            pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
+            ignore_index=True
+        )
