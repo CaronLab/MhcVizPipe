@@ -109,9 +109,9 @@ class MhcToolHelper:
                 job_number += 1
                 # run netMHCpan
                 if self.mhc_class == 'I':
-                    command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -xls -xlsfile {fout}'.split(' ')
+                    command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)}'.split(' ')
                 else:
-                    command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -xls -xlsfile {fout}'.split(' ')
+                    command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)}'.split(' ')
                 jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
             # finish jobs and check return values
             for job in jobs:
