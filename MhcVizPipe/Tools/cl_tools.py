@@ -74,6 +74,11 @@ class MhcToolHelper:
         self.supervised_gibbs_directories = {}
         self.gibbs_cluster_lengths = {}
 
+        for sample in self.samples:
+            with open(str(self.tmp_folder / f'{sample.sample_name}.peptides')) as f:
+                for pep in sample.peptides:
+                    f.write(pep + '\n')
+
     def make_binding_predictions(self):
         n = int(os.cpu_count())
 
