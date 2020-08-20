@@ -34,7 +34,11 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=serv
 app.title = "MhcVizPipe"
 
 class_i_alleles = []
-with open(Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')) as f:
+if Parameters.NETMHCPAN_VERSION == '4.0':
+    allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')
+else:
+    allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')
+with open(allele_file) as f:
     for allele in f.readlines():
         allele = allele.strip()
         class_i_alleles.append({'label': allele, 'value': allele})
@@ -445,20 +449,24 @@ app.layout = html.Div(children=[
 
 @app.callback([Output('settings-modal', 'is_open'),
                Output('settings-area', 'value'),
-               Output('settings-problem', 'children')],
+               Output('settings-problem', 'children'),
+               Output('mhc-class', 'value')],
               [Input('settings-defaults', 'n_clicks'),
                Input('settings-done', 'n_clicks'),
                Input('settings-cancel', 'n_clicks'),
                Input('settings-btn', 'n_clicks')],
-              [State('settings-area', 'value')])
-def update_settings(defaults, done, cancel, open_settings, settings):
+              [State('settings-area', 'value'),
+               State('mhc-class', 'value')])
+def update_settings(defaults, done, cancel, open_settings, settings, mhc_class):
+    # we pass out the state of mhc-class to force the allele list to get updated. This is necessary if
+    # the version of netMHCpan has been changed.
     ctx = dash.callback_context
     triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if triggered_by == 'settings-btn':
         with open(config_file, 'r') as f:
             settings = ''.join(f.readlines())
-        return True, settings, []
+        return True, settings, [], mhc_class
 
     elif triggered_by == 'settings-done':
         for line in settings.split('\n'):
@@ -474,20 +482,41 @@ def update_settings(defaults, done, cancel, open_settings, settings):
                 problem = dbc.Alert(id=str(uniform(0, 1)), color='danger',
                                      children=message,
                                      style={'margin-top': '2px', 'width': '100%'}),
-                return True, settings, problem
+                return True, settings, problem, mhc_class
 
         with open(config_file, 'w') as f:
             f.write(settings)
-        return False, '', []
+        return False, '', [], mhc_class
 
     elif triggered_by == 'settings-defaults':
         with open(default_config_file, 'r') as f:
             settings = ''.join(f.readlines())
-        return True, settings, []
+        return True, settings, [], mhc_class
 
     elif triggered_by == 'settings-cancel':
-        return False, settings, []
+        return False, settings, [], mhc_class
 
+    else:
+        raise PreventUpdate
+
+
+@app.callback([Output('mhc-alleles', 'options'),
+               Output('mhc-alleles', 'value')],
+              [Input('mhc-class', 'value')])
+def change_mhc_class_alleles(mhc_class):
+    if mhc_class == 'I':
+        class_i_alleles = []
+        if Parameters.NETMHCPAN_VERSION == '4.0':
+            allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')
+        else:
+            allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')
+        with open(allele_file) as f:
+            for allele in f.readlines():
+                allele = allele.strip()
+                class_i_alleles.append({'label': allele, 'value': allele})
+        return [class_i_alleles, []]
+    elif mhc_class == 'II':
+        return [class_ii_alleles, []]
     else:
         raise PreventUpdate
 
@@ -642,18 +671,6 @@ def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, s
             loaded_data += [html.P(f'{sample_name}', style={'margin': '2px'})]
         return '', False, [], '', peptide_data, '', '', loaded_data, []
 
-    else:
-        raise PreventUpdate
-
-
-@app.callback([Output('mhc-alleles', 'options'),
-               Output('mhc-alleles', 'value')],
-              [Input('mhc-class', 'value')])
-def change_mhc_class_alleles(mhc_class):
-    if mhc_class == 'I':
-        return [class_i_alleles, []]
-    elif mhc_class == 'II':
-        return [class_ii_alleles, []]
     else:
         raise PreventUpdate
 

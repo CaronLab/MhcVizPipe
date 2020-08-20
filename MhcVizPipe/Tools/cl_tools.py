@@ -75,7 +75,7 @@ class MhcToolHelper:
         self.gibbs_cluster_lengths = {}
 
         for sample in self.samples:
-            with open(str(self.tmp_folder / f'{sample.sample_name}.peptides')) as f:
+            with open(str(self.tmp_folder / f'{sample.sample_name}.peptides'), 'w') as f:
                 for pep in sample.peptides:
                     f.write(pep + '\n')
 
@@ -365,3 +365,5 @@ class MhcToolHelper:
             pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
             ignore_index=True
         )
+        if len(rows) == 0:
+            print(stdout)
