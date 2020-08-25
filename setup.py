@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='MhcVizPipe',
-    version='0.1.5',
+    version='0.1.6',
     packages=find_packages(),
     url='https://github.com/kevinkovalchik/MhcVizPipe',
     license='MIT',
