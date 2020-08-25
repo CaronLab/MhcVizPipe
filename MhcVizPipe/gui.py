@@ -87,8 +87,8 @@ app.layout = html.Div(children=[
                 'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
             html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
             dbc.Button('Settings', className='btn btn-secondary', style={"float": "right"}, id='settings-btn'),
-            html.Button('First-time setup', id='initial-setup', className='btn btn-secondary',
-                        style={"float": "right", 'margin-right': '5px'})
+            dbc.Button('First-time setup', id='initial-setup', className='btn btn-secondary',
+                       style={"float": "right", 'margin-right': '5px'})
         ])
     ]),
 
@@ -593,7 +593,7 @@ def setup_tools(initial_setup_nclicks,
                                                  className='blink_me',
                                                  color='danger'), True, False, no_update
         for file in files_filename:
-            if not file.endswith('.tar.gz'):
+            if not (file.endswith('.tar.gz') or file.endswith('.tar')):
                 return True, True, [], dbc.Alert(f'WARNING: Unrecognized filetype {"".join(Path(file).suffixes)} for '
                                                  f'file: {file}. Please make sure you have not decompressed the '
                                                  f'downloaded archives or selected an incorrect file by mistake.',
@@ -974,7 +974,7 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.0.1
+     MhcVizPipe v0.1.6
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}
