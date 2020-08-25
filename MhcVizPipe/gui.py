@@ -983,7 +983,7 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.1.7
+     MhcVizPipe v0.1.8
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}
