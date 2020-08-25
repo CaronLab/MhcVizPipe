@@ -100,7 +100,8 @@ app.layout = html.Div(children=[
                     html.P('Welcome to MhcVizPipe! It looks like this might be the first time you have '
                            'run the program. If you do not already have existing installations of GibbsCluster and '
                            'NetMHCpan or NetMHCIIpan on your system, please use this utility to help you '
-                           'install them and get everything set up.'),
+                           'install them and get everything set up. You can access this utility again at any '
+                           'time by clicking the "First-Time Setup" button in the upper-right corner of the GUI.'),
                     html.P('If you have not yet done so, you need to download GibbsCluster and NetMHCpan and/or '
                                     'NetMHCIIpan. Downloading the tools requires an academic email address.'),
                     html.H6('Downloading Tools'),
