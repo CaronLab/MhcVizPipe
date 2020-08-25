@@ -21,10 +21,14 @@ if not Path(config_file).is_file():
 def extract_targz(directory: str):
     d = Path(directory)
     os.chdir(str(d))
-    files = d.glob('*.tar.gz')
+
+    files = list(d.glob('*.tar.gz')) + list(d.glob('*.tar'))
 
     for file in files:
-        tar = tarfile.open(file, 'r:gz')
+        if str(file).endswith('.gz'):
+            tar = tarfile.open(file, 'r:gz')
+        else:
+            tar = tarfile.open(file, 'r')
         tar.extractall()
         tar.close()
 
