@@ -6,6 +6,7 @@ import urllib.request
 from platform import system as sys_platform
 from typing import Tuple, List
 import base64
+from subprocess import Popen
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 config_file = str(Path.home()/'.mhcvizpipe.config')
@@ -130,6 +131,16 @@ def update_tool_scripts_and_config():
 
         #if four_point_zero and four_point_one:
         #    update_config('NetMHCpan version', '4.0')
+
+
+def associate_files_for_mac():
+    install_brew = Popen(['ruby', '-e',
+                          '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'])
+    _ = install_brew.communicate()
+    install_duti = Popen(['brew', 'install', 'duti'])
+    _ = install_duti.communicate()
+    Popen('duti -s com.apple.Terminal .Darwin_x86_64 all')
+    Popen('duti -s com.apple.Terminal .freq_rownorm')
 
 
 def run_all(files: List[Tuple[str, bytes]]):
