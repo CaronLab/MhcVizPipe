@@ -20,6 +20,8 @@ from MhcVizPipe.defaults import ROOT_DIR, default_config_file, config_file
 from MhcVizPipe.defaults import Parameters
 import gunicorn.app.base
 from time import sleep
+from platform import system as platform_sys
+from MhcVizPipe.Tools.install_tools import run_all
 
 
 Parameters = Parameters()
@@ -56,6 +58,11 @@ def lab_logo():
                     style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px', 'opacity': '95%'})
 
 
+if not Parameters.GIBBSCLUSTER or not (Parameters.NETMHCPAN or Parameters.NETMHCIIPAN):
+    need_to_run_setup = True
+else:
+    need_to_run_setup = False
+
 app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),
     html.Div('', id='tmp-folder', hidden=True),
@@ -79,9 +86,110 @@ app.layout = html.Div(children=[
             html.P(
                 'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
             html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
-            html.Button('Settings', id='settings-btn', className='btn btn-secondary', style={"float": "right"})
+            dbc.Button('Settings', className='btn btn-secondary', style={"float": "right"}, id='settings-btn'),
+            html.Button('First-time setup', id='initial-setup', className='btn btn-secondary',
+                        style={"float": "right", 'margin-right': '5px'})
         ])
     ]),
+
+    dbc.Modal(
+        [
+            dbc.ModalHeader('First-time setup'),
+            dbc.ModalBody(
+                [
+                    html.P('Welcome to MhcVizPipe! It looks like this might be the first time you have '
+                           'run the program. If you do not already have existing installations of GibbsCluster and '
+                           'NetMHCpand or NetMHCIIpan on your system, please use this utility to help you '
+                           'install them and get everything set up.'),
+                    html.P('If you have not yet done so, you need to download GibbsCluster and NetMHCpan and/or '
+                                    'NetMHCIIpan. Downloading the tools requires an academic email address.'),
+                    html.H6('Downloading Tools'),
+                    html.Ul(
+                        [
+                            html.Li('On the download pages linked below, you will have the option for different '
+                                    'versions and for "Linux" or "Darwin". Choose the version indicated below. '
+                                    'If your OS is any Linux distribution (e.g. Ubuntu, Linux Mint, Fedora, '
+                                    'Cent OS, etc.) choose "Linux". If you have a Mac, choose "Darwin".'),
+                            html.Li('Note that you will have to agree to the EUL prior to downloading.')
+                        ]
+                    ),
+                    html.P('The programs can be downloaded by following the "Downloads" tabs on the following pages:'),
+                    html.Div(
+                        [
+                            html.P(['GibbsCluster2.0: ',
+                                    html.A('https://services.healthtech.dtu.dk/service.php?GibbsCluster-2.0',
+                                           style={'color': 'blue'})]),
+                            html.P(['NetMHCpan (choose version 4.0a or 4.1b): ',
+                                    html.A('https://services.healthtech.dtu.dk/service.php?NetMHCpan-4.1',
+                                           style={'color': 'blue'})]),
+                            html.P(['NetMHCIIpan4.0: ',
+                                    html.A('https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-4.0',
+                                           style={'color': 'blue'})])
+                        ],
+                        style={'margin-left': '20px'}
+                    ),
+                    html.H6('Installing'),
+                    html.Ol(
+                        [
+                            html.Li('Once you have downloaded everything, make a new folder somewhere (anywhere, '
+                                    'it doesn\'t matter where) and place the downloaded files in it. '
+                                    'Do not decompress/unzip them.'),
+                            html.Li('Click the "Select Files" button and select ALL of the downloaded files '
+                                    'in the folder.'),
+                            html.Li('Click the "Install" button.')
+                        ]
+                    ),
+                    html.P('During the installation, the compressed archive files you downloaded will be extracted '
+                           'into a new folder in you "Home" directory called "mhcvizpipe_tools". Each tool will be '
+                           'appropriately configured to run in its new location and any required additional files '
+                           'will be automatically downloaded. Finially, the MhcVizPipe settings will be updated to '
+                           'use the newly installed tools. This might all take a few minutes depending on the '
+                           'speed of your internet connection.'),
+                    html.Div(dcc.Upload(
+                        dbc.Button('Select Files',
+                                   style={'width': '50%', 'font-size': '12pt'},
+                                   id='choose-tool-files-btn'),
+                        style={'text-align': 'center'},
+                        id='choose-tool-files',
+                        multiple=True)
+                    ),
+                    html.Div(
+                        [
+                            html.B('Loaded files:'),
+                            html.Div(id='loaded-tool-files')
+                        ],
+                        id='loaded-tool-div',
+                        hidden=True
+                    ),
+                    html.Div(id='setup-status', style={'margin-top': '5px'}),
+                    html.Div(dbc.Button('Install',
+                                        id='install-tools',
+                                        style={'width': '50%', 'font-size': '12pt'},
+                                        disabled=True),
+                             style={'text-align': 'center', 'margin-top': '5px'}),
+                    dbc.Button('Cancel', id='setup-cancel', style={'font-size': '10pt'}),
+                    dcc.Loading(html.P('', id='installing-stuff', hidden=True), type='circle', fullscreen=True)
+                ]
+            )
+        ],
+        id='setup-modal',
+        is_open=need_to_run_setup,
+        centered=True,
+        backdrop='static',
+        style={'max-width': '800px'}
+    ),
+
+    dbc.Modal(
+        [
+            dbc.ModalHeader('Setup successful!'),
+            dbc.ModalBody(
+                'Click anywhere outside this box to continue.'
+            )
+        ],
+        id='setup-successful',
+        is_open=False,
+        centered=True
+    ),
 
     dbc.Modal(
         [
@@ -97,7 +205,7 @@ app.layout = html.Div(children=[
                         id='settings-problem',
                         style={'margin-left': '10px'}
                     ),
-                    dbc.Button('Done', id='settings-done', style={'margin-right': '5px'}),
+                    dbc.Button('Done', color='primary', id='settings-done', style={'margin-right': '5px'}),
                     dbc.Button('Cancel', id='settings-cancel'),
                     dbc.Button('Load defaults', id='settings-defaults', style={'float': 'right'})
                 ]
@@ -446,6 +554,103 @@ app.layout = html.Div(children=[
 
 ], style={'padding': '20px', 'max-width': '800px'}, id='main-contents')
 
+
+@app.callback([Output('setup-modal', 'is_open'),
+               Output('loaded-tool-div', 'hidden'),
+               Output('loaded-tool-files', 'children'),
+               Output('setup-status', 'children'),
+               Output('install-tools', 'disabled'),
+               Output('setup-successful', 'is_open'),
+               Output('installing-stuff', 'children')],
+              [Input('initial-setup', 'n_clicks'),
+               Input('choose-tool-files', 'contents'),
+               Input('install-tools', 'n_clicks'),
+               Input('setup-cancel', 'n_clicks')],
+              [State('choose-tool-files', 'filename')])
+def setup_tools(initial_setup_nclicks,
+                files_contents,
+                install_nclicks,
+                setup_cancel_nclicks,
+                files_filename):
+    ctx = dash.callback_context
+    triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_by == 'initial-setup':
+        return True, True, [], [], True, False, no_update
+    elif triggered_by == 'choose-tool-files':
+        loaded = {}
+        for file in files_filename:
+            if platform_sys() == 'Linux' and 'Darwin' in file:
+                return True, True, [], dbc.Alert(f'WARNING: Your operating system is Linux but you have downloaded '
+                                                 f'a Mac OS tool: {file}. Please ensure all files match your '
+                                                 f'operating system.',
+                                                 className='blink_me',
+                                                 color='danger'), True, False, no_update
+            elif platform_sys() == 'Darwin' and 'Linux' in file:
+                return True, True, [], dbc.Alert(f'WARNING: Your operating system is Mac OS but you have downloaded '
+                                                 f'a Linux tool: {file}. Please ensure all files match your '
+                                                 f'operating system.',
+                                                 className='blink_me',
+                                                 color='danger'), True, False, no_update
+        for file in files_filename:
+            if not file.endswith('.tar.gz'):
+                return True, True, [], dbc.Alert(f'WARNING: Unrecognized filetype {"".join(Path(file).suffixes)} for '
+                                                 f'file: {file}. Please make sure you have not decompressed the '
+                                                 f'downloaded archives or selected an incorrect file by mistake.',
+                                                 className='blink_me',
+                                                 color='danger'), True, False, no_update
+            elif 'netmhcpan-4.0' in file.lower():
+                loaded['NetMHCpan4.0'] = file
+            elif 'netmhcpan-4.1' in file.lower():
+                loaded['NetMHCpan4.1'] = file
+            elif 'netmhciipan-4.0' in file.lower():
+                loaded['NetMHCIIpan4.0'] = file
+            elif 'gibbscluster-2.0' in file.lower():
+                loaded['GibbsCluster2.0'] = file
+            else:
+                return True, True, [], dbc.Alert(f'WARNING: Unrecognized file: {file}. Please make sure all the files '
+                                                 f'you have selected are from the above list.',
+                                                 className='blink_me',
+                                                 color='danger'), True, False, no_update
+        loaded_files = html.Div(
+            [
+                html.P(f'{tool}: {filename}') for tool, filename in loaded.items()
+            ],
+            style={'margin-left': '20px'}
+        )
+
+        not_loaded = [x for x in ['NetMHCpan4.0', 'NetMHCpan4.1', 'NetMHCIIpan4.0', 'GibbsCluster2.0']
+                      if x not in loaded.keys()]
+
+        if 'GibbsCluster2.0' not in list(loaded.keys()) or \
+            ('NetMHCpan4.0' not in list(loaded.keys()) and
+             'NetMHCpan4.1' not in list(loaded.keys()) and
+             'NetMHCIIpan4.0' not in list(loaded.keys())):
+            return True, False, loaded_files, dbc.Alert(f'WARNING: Please select all necessary files for installation. You '
+                                             f'need GibbsCluster and at least one of the other tools on the above '
+                                             f'list.',
+                                             className='blink_me',
+                                             color='danger'), True, False, no_update
+        if not_loaded:
+            return True, False, loaded_files, dbc.Alert(f'NOTE: You have not chosen files for {not_loaded}. You may '
+                                                        f'proceed, but these tools will not be available as part '
+                                                        f'of MhcVizPipe. Click "Install" to continue. Note that '
+                                                        f'this might take a while depending on the speed of '
+                                                        f'your internet connection.',
+                                                        className='blink_me'), False, False, no_update
+        else:
+            return True, False, loaded_files, dbc.Alert(f'All files recognized. Click "Install" to continue. Note that '
+                                                        f'this might take a while depending on the speed of '
+                                                        f'your internet connection.',
+                                                        className='blink_me'), False, False, no_update
+    elif triggered_by == 'install-tools':
+        files = list(zip(files_filename, files_contents))
+        run_all(files)
+        return False, False, [], [], False, True, 'done!'
+    elif triggered_by == 'setup-cancel':
+        return False, False, [], [], False, False, no_update
+    else:
+        raise PreventUpdate
 
 @app.callback([Output('settings-modal', 'is_open'),
                Output('settings-area', 'value'),
