@@ -99,7 +99,7 @@ app.layout = html.Div(children=[
                 [
                     html.P('Welcome to MhcVizPipe! It looks like this might be the first time you have '
                            'run the program. If you do not already have existing installations of GibbsCluster and '
-                           'NetMHCpand or NetMHCIIpan on your system, please use this utility to help you '
+                           'NetMHCpan or NetMHCIIpan on your system, please use this utility to help you '
                            'install them and get everything set up.'),
                     html.P('If you have not yet done so, you need to download GibbsCluster and NetMHCpan and/or '
                                     'NetMHCIIpan. Downloading the tools requires an academic email address.'),
@@ -110,7 +110,7 @@ app.layout = html.Div(children=[
                                     'versions and for "Linux" or "Darwin". Choose the version indicated below. '
                                     'If your OS is any Linux distribution (e.g. Ubuntu, Linux Mint, Fedora, '
                                     'Cent OS, etc.) choose "Linux". If you have a Mac, choose "Darwin".'),
-                            html.Li('Note that you will have to agree to the EUL prior to downloading.')
+                            html.Li('Note that you will have to agree to the EULA prior to downloading.')
                         ]
                     ),
                     html.P('The programs can be downloaded by following the "Downloads" tabs on the following pages:'),
@@ -118,22 +118,30 @@ app.layout = html.Div(children=[
                         [
                             html.P(['GibbsCluster2.0: ',
                                     html.A('https://services.healthtech.dtu.dk/service.php?GibbsCluster-2.0',
+                                           href='https://services.healthtech.dtu.dk/service.php?GibbsCluster-2.0',
+                                           target='_blank',
                                            style={'color': 'blue'})]),
                             html.P(['NetMHCpan (choose version 4.0a or 4.1b): ',
                                     html.A('https://services.healthtech.dtu.dk/service.php?NetMHCpan-4.1',
+                                           href='https://services.healthtech.dtu.dk/service.php?NetMHCpan-4.1',
+                                           target='_blank',
                                            style={'color': 'blue'})]),
                             html.P(['NetMHCIIpan4.0: ',
                                     html.A('https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-4.0',
+                                           href='https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-4.0',
+                                           target='_blank',
                                            style={'color': 'blue'})])
                         ],
                         style={'margin-left': '20px'}
                     ),
+                    html.P('You do not need both NetMHCpan4.0 and NetMHCpan4.1. MhcVizPipe is compatible with both '
+                           'of them, so you can choose one or both. In our lab we are using 4.0.'),
                     html.H6('Installing'),
                     html.Ol(
                         [
                             html.Li('Once you have downloaded everything, make a new folder somewhere (anywhere, '
-                                    'it doesn\'t matter where) and place the downloaded files in it. '
-                                    'Do not decompress/unzip them.'),
+                                    'it doesn\'t matter where) and place the downloaded files in it to keep track '
+                                    'of them. Do not decompress/unzip them.'),
                             html.Li('Click the "Select Files" button and select ALL of the downloaded files '
                                     'in the folder.'),
                             html.Li('Click the "Install" button.')
