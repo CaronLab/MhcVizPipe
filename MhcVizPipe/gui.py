@@ -631,6 +631,12 @@ def setup_tools(initial_setup_nclicks,
         not_loaded = [x for x in ['NetMHCpan4.0', 'NetMHCpan4.1', 'NetMHCIIpan4.0', 'GibbsCluster2.0']
                       if x not in loaded.keys()]
 
+        if 'NetMHCpan4.0' in list(loaded.keys()) and 'NetMHCpan4.0' in list(loaded.keys()):
+            return True, False, loaded_files, dbc.Alert(
+                f'WARNING: You have selected both NetMHCpan version 4.0 and 4.1. These are both compatible, but you',
+                className='blink_me',
+                color='danger'), True, False, no_update
+
         if 'GibbsCluster2.0' not in list(loaded.keys()) or \
             ('NetMHCpan4.0' not in list(loaded.keys()) and
              'NetMHCpan4.1' not in list(loaded.keys()) and
@@ -983,7 +989,7 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.1.8
+     MhcVizPipe v0.1.9
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}

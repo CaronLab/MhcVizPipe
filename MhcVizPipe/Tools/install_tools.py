@@ -26,10 +26,11 @@ def extract_targz(directory: str):
     files = list(d.glob('*.tar.gz')) + list(d.glob('*.tar'))
 
     for file in files:
-        if str(file).endswith('.gz'):
+        '''if str(file).endswith('.gz'):
             tar = tarfile.open(file, 'r:gz')
         else:
-            tar = tarfile.open(file, 'r')
+            tar = tarfile.open(file, 'r')'''
+        tar = tarfile.open(file, 'r:gz')
         tar.extractall()
         tar.close()
 
