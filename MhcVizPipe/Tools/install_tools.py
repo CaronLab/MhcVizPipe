@@ -7,8 +7,9 @@ from platform import system as sys_platform
 from typing import Tuple, List
 import base64
 from subprocess import Popen
+from MhcVizPipe.defaults import ROOT_DIR
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 config_file = str(Path.home()/'.mhcvizpipe.config')
 default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_defaults.config')
 mhc_tool_dir = str(Path.home()/'mhcvizpipe_tools')
@@ -19,18 +20,23 @@ if not Path(config_file).is_file():
     with open(str(config_file), 'w') as f:
         f.write(settings)
 
-def extract_targz(directory: str):
+
+def extract_targz(directory: str, archive_type: str = 'auto'):
     d = Path(directory)
     os.chdir(str(d))
 
     files = list(d.glob('*.tar.gz')) + list(d.glob('*.tar'))
 
     for file in files:
-        '''if str(file).endswith('.gz'):
+        if archive_type == 'auto':
+            if str(file).endswith('.gz'):
+                tar = tarfile.open(file, 'r:gz')
+            else:
+                tar = tarfile.open(file, 'r')
+        elif archive_type == '.tar.gz':
             tar = tarfile.open(file, 'r:gz')
         else:
-            tar = tarfile.open(file, 'r')'''
-        tar = tarfile.open(file, 'r:gz')
+            tar = tarfile.open(file, 'r')
         tar.extractall()
         tar.close()
 
@@ -80,6 +86,23 @@ def update_config(setting: str, value: str):
         parser.write(f)
 
 
+def copy_extract_data_file(tool: str, destination_dir: str):
+    root = Path(ROOT_DIR)
+    if tool == 'netMHCIIpan':
+        location = str(root/'assets/data/NetMHCIIpan/data.tar.gz')
+    elif tool == 'netMHCpan4.1':
+        location = str(root/'assets/data/NetMHCpan4.1/data.tar.gz')
+    elif tool == 'netMHCpan4.0' and sys_platform() == 'Linux':
+        location = str(root/'assets/data/NetMHCpan4.0/data.Linux.tar.gz')
+    elif tool == 'netMHCpan4.0' and sys_platform() == 'Darwin':
+        location = str(root/'assets/data/NetMHCpan4.0/data.Darwin.tar.gz')
+    else:
+        raise ValueError('tool must be one of [netMHCIIpan, netMHCpan4.1, netMHCpan4.0]')
+    tar = tarfile.open(location, 'r:gz')
+    tar.extractall(destination_dir)
+    tar.close()
+
+
 def download_data_file(tool: str, destination_dir: str):
     os.chdir(destination_dir)
     if tool == 'netMHCIIpan':
@@ -111,16 +134,16 @@ def update_tool_scripts_and_config():
             if 'netmhciipan' in directory.lower():
                 script = str(Path(directory) / 'netMHCIIpan')
                 update_config('NetMHCIIpan path', script)
-                download_data_file('netMHCIIpan', directory)
+                copy_extract_data_file('netMHCIIpan', directory)
             else:
                 script = str(Path(directory) / 'netMHCpan')
                 update_config('NetMHCpan path', script)
             if '4.0' in Path(directory).name:
                 update_config('NetMHCpan version', '4.0')
-                download_data_file('netMHCpan4.0', directory)
+                copy_extract_data_file('netMHCpan4.0', directory)
             if '4.1' in Path(directory).name:
                 update_config('NetMHCpan version', '4.1')
-                download_data_file('netMHCpan4.1', directory)
+                copy_extract_data_file('netMHCpan4.1', directory)
             new_value = f'setenv NMHOME {directory}'
             update_variable_in_file(script, 'setenv NMHOME', new_value)
             update_variable_in_file(script, 'setenv TMPDIR', '\tsetenv TMPDIR $NMHOME/tmp')
