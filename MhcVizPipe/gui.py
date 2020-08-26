@@ -18,10 +18,10 @@ from sys import argv
 from urllib.parse import quote as urlquote
 from MhcVizPipe.defaults import ROOT_DIR, default_config_file, config_file
 from MhcVizPipe.defaults import Parameters
-import gunicorn.app.base
 from time import sleep
 from platform import system as platform_sys
 from MhcVizPipe.Tools.install_tools import run_all
+from waitress import serve
 
 
 Parameters = Parameters()
@@ -135,8 +135,8 @@ app.layout = html.Div(children=[
                         ],
                         style={'margin-left': '20px'}
                     ),
-                    html.P('You do not need both NetMHCpan4.0 and NetMHCpan4.1. MhcVizPipe is compatible with both '
-                           'of them, so you can choose one or both. In our lab we are using 4.0.'),
+                    html.P('Only choose one of NetMHCpan4.0 and NetMHCpan4.1. MhcVizPipe is compatible with both, '
+                           'but only one can be connected to the pipeline at a time.'),
                     html.H6('Installing'),
                     html.Ol(
                         [
@@ -635,15 +635,13 @@ def setup_tools(initial_setup_nclicks,
                 className='blink_me',
                 color='danger'), True, False, no_update
 
-        if 'GibbsCluster2.0' not in list(loaded.keys()) or \
+        if 'GibbsCluster2.0' not in list(loaded.keys()) or 'NetMHCIIpan4.0' not in list(loaded.keys()) or \
             ('NetMHCpan4.0' not in list(loaded.keys()) and
-             'NetMHCpan4.1' not in list(loaded.keys()) and
-             'NetMHCIIpan4.0' not in list(loaded.keys())):
-            return True, False, loaded_files, dbc.Alert(f'WARNING: Please select all necessary files for installation. You '
-                                             f'need GibbsCluster and at least one of the other tools on the above '
-                                             f'list.',
-                                             className='blink_me',
-                                             color='danger'), True, False, no_update
+             'NetMHCpan4.1' not in list(loaded.keys())):
+            return True, False, loaded_files, dbc.Alert(f'WARNING: Please select all necessary files for installation. '
+                                                        f'You need GibbsCluster, NetMHCpan and NetMHCIIpan.',
+                                                        className='blink_me',
+                                                        color='danger'), True, False, no_update
         else:
             return True, False, loaded_files, dbc.Alert(f'All files recognized. Click "Install" to continue. Note that '
                                                         f'this might take a while depending on the speed of '
@@ -961,6 +959,7 @@ def get_report(path):
 def make_app():
     return app
 
+'''
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
 
     def __init__(self, app, options=None):
@@ -976,11 +975,12 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 
     def load(self):
         return self.application
+'''
 
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.1.11
+     MhcVizPipe v0.2.0
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}
@@ -996,9 +996,9 @@ if __name__ == '__main__':
         app.run_server(debug=True, port=8971, host=Parameters.HOSTNAME)
     else:
         print(welcome)
-        sleep(0.5)
+
         options = {
             'bind': f'{Parameters.HOSTNAME}:{Parameters.PORT}',
             'timeout': Parameters.TIMEOUT
         }
-        StandaloneApplication(app.server, options).run()
+        serve(app.server, host=Parameters.HOSTNAME, port=int(Parameters.PORT))

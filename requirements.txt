@@ -6,4 +6,5 @@ numpy
 dominate
 upsetplot
 seaborn
-#plotly-logo
+waitress
+plotly-logo

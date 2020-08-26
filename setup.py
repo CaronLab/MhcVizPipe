@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='MhcVizPipe',
-    version='0.1.11',
+    version='0.2.0',
     packages=find_packages(),
     url='https://github.com/kevinkovalchik/MhcVizPipe',
     license='MIT',
@@ -21,7 +21,7 @@ setup(
         'upsetplot',
         'seaborn',
         'plotly-logo',
-        'gunicorn'
+        'waitress'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
