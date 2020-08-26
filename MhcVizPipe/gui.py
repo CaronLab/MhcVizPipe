@@ -628,12 +628,10 @@ def setup_tools(initial_setup_nclicks,
             style={'margin-left': '20px'}
         )
 
-        not_loaded = [x for x in ['NetMHCpan4.0', 'NetMHCpan4.1', 'NetMHCIIpan4.0', 'GibbsCluster2.0']
-                      if x not in loaded.keys()]
-
-        if 'NetMHCpan4.0' in list(loaded.keys()) and 'NetMHCpan4.0' in list(loaded.keys()):
+        if 'NetMHCpan4.0' in list(loaded.keys()) and 'NetMHCpan4.1' in list(loaded.keys()):
             return True, False, loaded_files, dbc.Alert(
-                f'WARNING: You have selected both NetMHCpan version 4.0 and 4.1. These are both compatible, but you',
+                f'WARNING: You have selected both NetMHCpan version 4.0 and 4.1. These are both compatible with MVP, but '
+                f'only one can be connected with the pipeline at a time. Please select just one of them.',
                 className='blink_me',
                 color='danger'), True, False, no_update
 
@@ -646,13 +644,6 @@ def setup_tools(initial_setup_nclicks,
                                              f'list.',
                                              className='blink_me',
                                              color='danger'), True, False, no_update
-        if not_loaded:
-            return True, False, loaded_files, dbc.Alert(f'NOTE: You have not chosen files for {not_loaded}. You may '
-                                                        f'proceed, but these tools will not be available as part '
-                                                        f'of MhcVizPipe. Click "Install" to continue. Note that '
-                                                        f'this might take a while depending on the speed of '
-                                                        f'your internet connection.',
-                                                        className='blink_me'), False, False, no_update
         else:
             return True, False, loaded_files, dbc.Alert(f'All files recognized. Click "Install" to continue. Note that '
                                                         f'this might take a while depending on the speed of '
@@ -989,7 +980,7 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.1.9
+     MhcVizPipe v0.1.11
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}
