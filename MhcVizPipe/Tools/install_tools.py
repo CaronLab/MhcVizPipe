@@ -134,16 +134,16 @@ def update_tool_scripts_and_config():
             if 'netmhciipan' in directory.lower():
                 script = str(Path(directory) / 'netMHCIIpan')
                 update_config('NetMHCIIpan path', script)
-                copy_extract_data_file('netMHCIIpan', directory)
+                download_data_file('netMHCIIpan', directory)
             else:
                 script = str(Path(directory) / 'netMHCpan')
                 update_config('NetMHCpan path', script)
             if '4.0' in Path(directory).name:
                 update_config('NetMHCpan version', '4.0')
-                copy_extract_data_file('netMHCpan4.0', directory)
+                download_data_file('netMHCpan4.0', directory)
             if '4.1' in Path(directory).name:
                 update_config('NetMHCpan version', '4.1')
-                copy_extract_data_file('netMHCpan4.1', directory)
+                download_data_file('netMHCpan4.1', directory)
             new_value = f'setenv NMHOME {directory}'
             update_variable_in_file(script, 'setenv NMHOME', new_value)
             update_variable_in_file(script, 'setenv TMPDIR', '\tsetenv TMPDIR $NMHOME/tmp')
