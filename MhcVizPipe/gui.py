@@ -983,7 +983,11 @@ if __name__ == '__main__':
      MhcVizPipe v0.2.0
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
-     in your web browser (also found below): http://{Parameters.HOSTNAME}:{Parameters.PORT}
+     in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
+
+     If this is you very first time running MVP, when you open the 
+     link a window should appear which will help you install GibbsCluster,
+     NetMHCpan and NetMHCIIpan if you have not already.
 
      For a brief introduction to using the GUI, click the link to
      "help and resources" near the top of the GUI. For more information
