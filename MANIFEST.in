@@ -1,6 +1,2 @@
 graft MhcVizPipe/assets
-graft MhcVizPipe/assets/data
-graft MhcVizPipe/assets/data/NetMHCpan4.0
-graft MhcVizPipe/assets/data/NetMHCpan4.1
-graft MhcVizPipe/assets/data/NetMHCIIpan
 include MhcVizPipe/mhcvizpipe_defaults.config
