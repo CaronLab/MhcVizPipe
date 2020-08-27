@@ -956,27 +956,6 @@ def get_report(path):
     return flask.send_from_directory(Parameters.TMP_DIR, path)
 
 
-def make_app():
-    return app
-
-'''
-class StandaloneApplication(gunicorn.app.base.BaseApplication):
-
-    def __init__(self, app, options=None):
-        self.options = options or {}
-        self.application = app
-        super().__init__()
-
-    def load_config(self):
-        config = {key: value for key, value in self.options.items()
-                  if key in self.cfg.settings and value is not None}
-        for key, value in config.items():
-            self.cfg.set(key.lower(), value)
-
-    def load(self):
-        return self.application
-'''
-
 if __name__ == '__main__':
     welcome = f'''
      ========================================
@@ -984,6 +963,9 @@ if __name__ == '__main__':
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
+     (To do this, most likely right click the link and choose something
+     like "Open URL" or "Open in browser". If that doesn't work,
+     copy and paste it into your browser.)
 
      If this is you very first time running MVP, when you open the 
      link a window should appear which will help you install GibbsCluster,
@@ -995,14 +977,23 @@ if __name__ == '__main__':
      https://github.com/kevinkovalchik/MhcVizPipe.
 
      ========================================
+
     '''
+    debug_welcome = f'''
+    ========================================
+    MhcVizPipe - DEBUGGING MODE
+
+    You are running MhcVizPipe in debugging mode. This uses the
+    development server shipped with Flask.
+    
+    The GUI running here: http://{Parameters.HOSTNAME}:{Parameters.PORT}
+
+    ========================================
+    '''
+
     if 'debug' in argv or '-debug' in argv or '--debug' in argv:
+        print(debug_welcome)
         app.run_server(debug=True, port=8971, host=Parameters.HOSTNAME)
     else:
         print(welcome)
-
-        options = {
-            'bind': f'{Parameters.HOSTNAME}:{Parameters.PORT}',
-            'timeout': Parameters.TIMEOUT
-        }
         serve(app.server, host=Parameters.HOSTNAME, port=int(Parameters.PORT))
