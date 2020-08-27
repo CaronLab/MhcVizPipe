@@ -140,9 +140,9 @@ app.layout = html.Div(children=[
                     html.H6('Installing'),
                     html.Ol(
                         [
-                            html.Li('Once you have downloaded everything, make a new folder somewhere (anywhere, '
-                                    'it doesn\'t matter where) and place the downloaded files in it to keep track '
-                                    'of them. Do not decompress/unzip them.'),
+                            html.Li(['Once you have downloaded everything, make a new folder somewhere (anywhere, '
+                                     'it doesn\'t matter where) and place the downloaded files in it to keep track '
+                                     'of them. ', html.B('Do not decompress/unzip them or rename them!')]),
                             html.Li('Click the "Select Files" button and select ALL of the downloaded files '
                                     'in the folder.'),
                             html.Li('Click the "Install" button.')
@@ -643,7 +643,7 @@ def setup_tools(initial_setup_nclicks,
                                                         className='blink_me',
                                                         color='danger'), True, False, no_update
         else:
-            return True, False, loaded_files, dbc.Alert(f'All files recognized. Click "Install" to continue. Note that '
+            return True, False, loaded_files, dbc.Alert(f'All files recognized! Click "Install" to continue. Note that '
                                                         f'this might take a while depending on the speed of '
                                                         f'your internet connection.',
                                                         className='blink_me'), False, False, no_update
@@ -950,6 +950,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
         download_href = f'/download/{urlquote(time+"/"+"report.html")}'
 
         return 'Link to report', download_href, [], '', True
+
 
 @app.server.route("/download/<path:path>")
 def get_report(path):
