@@ -7,6 +7,7 @@ from typing import Tuple, List
 import base64
 from subprocess import Popen
 from MhcVizPipe.defaults import ROOT_DIR
+import shutil
 
 
 config_file = str(Path.home()/'.mhcvizpipe.config')
@@ -183,6 +184,7 @@ if __name__ == "__main__":
     directory = Path(".")
     file_list = list(directory.glob('*.tar.gz')) + list(directory.glob('*.tar'))
     for file in file_list:
-        file.rename(Path(mhc_tool_dir)/file.name)
+        dest = Path(mhc_tool_dir)/file.name
+        shutil.copy2(str(file), str(dest))
     extract_targz(mhc_tool_dir)
     update_tool_scripts_and_config()
