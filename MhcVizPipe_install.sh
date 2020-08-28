@@ -59,7 +59,7 @@ done
 
 printf "\n\nMhcVizPipe will be installed with the following options:\n\n"
 echo " Installation directory: $INSTALL_DIR"
-echo " Add MhcVizPipe to path: $MHCVIZPIPE_TO_PATH"
+echo " Add MhcVizPipe to PATH: $MHCVIZPIPE_TO_PATH"
 echo " Add NetMHCpan, NetMHCIIpan and GibbsCluster to PATH: $TOOLS_TO_PATH"
 echo " NetMHCpan version: $NETMHCPAN_VERSION"
 printf "\n"
@@ -166,12 +166,14 @@ cd ./MhcVizPipe/python/install/bin/ || echo "ERROR! ./MhcVizPipe/python/install/
 echo "Would you like to run MhcVizPipe now?"
 read -rp "[y/n]: " RUNMVP
 if [[ "$RUNMVP" == 'y' ]]; then
-  ./python3 -m MhcVizPipe.gui
+  "$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.gui
 elif [[ "$RUNMVP" == 'Y' ]]; then
-  ./python3 -m MhcVizPipe.gui
+  "$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.gui
 elif [[ "$RUNMVP" == 'yes' ]]; then
-  ./python3 -m MhcVizPipe.gui
+  "$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.gui
 else
+  printf "\n"
   echo "Goodbye!"
+  printf "\n"
   exit 0
 fi
