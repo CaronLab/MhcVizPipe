@@ -80,10 +80,10 @@ INSTALL_DIR="${INSTALL_DIR//\\//}"
 
 # set URLs for downloading the compiled Python distribution
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  URL="https://github.com/indygreg/python-build-standalone/releases/download/20200822/cpython-3.7.9-x86_64-unknown-linux-gnu-pgo-20200823T0036.tar.zst"
+  URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20200822-20200823/cpython-3.7.9-x86_64-unknown-linux-gnu-pgo-20200823T0036.tar.gz"
 elif
   [[ "$OSTYPE" == "darwin"* ]]; then
-  URL="https://github.com/indygreg/python-build-standalone/releases/download/20200823/cpython-3.7.9-x86_64-apple-darwin-pgo-20200823T2228.tar.zst"
+  URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20200822-20200823/cpython-3.7.9-x86_64-apple-darwin-pgo-20200823T2228.tar.gz"
 else
   echo "ERROR! MhcVizPipe is only compatible with Linux and Mac OS. Sorry!"
   exit 1
@@ -92,33 +92,16 @@ fi
 # make directories
 mkdir ./temp
 mkdir "$INSTALL_DIR"
+mkdir "$HOME/mhcvizpipe_tools"
 
 # download python
 printf "\n##### Downloading Python bundle #####\n\n"
-curl -L -o ./temp/python.tar.zst "$URL"
+curl -L -o ./temp/python.tar.gz "$URL"
 printf "\n##### Done! #####\n"
-
-# download zstd
-printf "\n##### Downloading zstandard decompression utility #####\n\n"
-curl -L -o ./temp/zstd-1.4.5.tar.gz "https://github.com/facebook/zstd/releases/download/v1.4.5/zstd-1.4.5.tar.gz"
-printf "\n##### Done! #####\n"
-
-# extract zstd
-cd ./temp || echo "ERROR! ./temp does not exist!"
-tar -xzf ./zstd-1.4.5.tar.gz
-cd ./zstd-1.4.5 || echo "ERROR! ./zstd-1.4.5 does not exist!"
-
-# make zstd
-printf "\n##### Building zstandard decompression utility #####\n\n"
-make
-printf "\n##### Done! #####\n"
-
-cd ../..
 
 # extract python
 printf "\n##### Extracting Python bundle #####\n\n"
-./temp/zstd-1.4.5/zstd -d ./temp/python.tar.zst
-tar -xf ./temp/python.tar --directory "$INSTALL_DIR"
+tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR"
 printf "\n##### Done! #####\n"
 
 # the shebangs in the pyhton/install/bin folder are bad, so we need to replace them
@@ -133,12 +116,13 @@ printf "\n##### Installing and configuring third-party tools #####\n\n"
 "$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.Tools.install_tools
 printf "##### Done! #####\n\n"
 
-printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.gui
-chmod +x "$INSTALL_DIR"/MhcVizPipe.gui
+printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.sh
+chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   echo "##### Placing MhcVizPipe in PATH #####"
-  sudo cp "$INSTALL_DIR"/MhcVizPipe.gui /usr/local/bin/MhcVizPipe
+  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe
+  sudo chmod +x /usr/local/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   printf "\n"
