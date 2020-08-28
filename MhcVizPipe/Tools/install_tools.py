@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
 import tarfile
-from configparser import SafeConfigParser
-import urllib.request
+from configparser import ConfigParser
 from platform import system as sys_platform
 from typing import Tuple, List
 import base64
@@ -79,7 +78,7 @@ def update_config(setting: str, value: str):
     :return:
     """
 
-    parser = SafeConfigParser()
+    parser = ConfigParser()
     parser.read(config_file)
     parser.set('DIRECTORIES', setting, value)
     with open(config_file, 'w') as f:
@@ -115,10 +114,16 @@ def download_data_file(tool: str, destination_dir: str):
         url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Darwin.tar.gz'
     else:
         raise ValueError('tool must be one of [netMHCIIpan, netMHCpan4.1, netMHCpan4.0]')
-    urllib.request.urlretrieve(url, './data.tar.gz')
+    print(f"\n##### Downloading data files for {tool} #####\n")
+    command = f'curl -L -o ./data.tar.gz {url}'.split()
+    download = Popen(command)
+    _ = download.communicate()
+    #urllib.request.urlretrieve(url, './data.tar.gz')
+    print('\nExtracting archive')
     tar = tarfile.open('./data.tar.gz', 'r:gz')
     tar.extractall()
     tar.close()
+    print("##### Done #####")
 
 
 def update_tool_scripts_and_config():
@@ -138,12 +143,12 @@ def update_tool_scripts_and_config():
             else:
                 script = str(Path(directory) / 'netMHCpan')
                 update_config('NetMHCpan path', script)
-            if '4.0' in Path(directory).name:
-                update_config('NetMHCpan version', '4.0')
-                download_data_file('netMHCpan4.0', directory)
-            if '4.1' in Path(directory).name:
-                update_config('NetMHCpan version', '4.1')
-                download_data_file('netMHCpan4.1', directory)
+                if '4.0' in Path(directory).name:
+                    update_config('NetMHCpan version', '4.0')
+                    download_data_file('netMHCpan4.0', directory)
+                if '4.1' in Path(directory).name:
+                    update_config('NetMHCpan version', '4.1')
+                    download_data_file('netMHCpan4.1', directory)
             new_value = f'setenv NMHOME {directory}'
             update_variable_in_file(script, 'setenv NMHOME', new_value)
             update_variable_in_file(script, 'setenv TMPDIR', '\tsetenv TMPDIR $NMHOME/tmp')
@@ -170,5 +175,14 @@ def associate_files_for_mac():
 def run_all(files: List[Tuple[str, bytes]]):
     for file in files:
         move_file_to_tool_location(*file)
+    extract_targz(mhc_tool_dir)
+    update_tool_scripts_and_config()
+
+
+if __name__ == "__main__":
+    directory = Path(".")
+    file_list = list(directory.glob('*.tar.gz')) + list(directory.glob('*.tar'))
+    for file in file_list:
+        file.rename(Path(mhc_tool_dir)/file.name)
     extract_targz(mhc_tool_dir)
     update_tool_scripts_and_config()
