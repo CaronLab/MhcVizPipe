@@ -148,10 +148,6 @@ if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster
 fi
 
-printf "\nCongratulations! MhcVizPipe has been successfully installed!\n\n"
-echo "If you had MhcVizPipe placed in your PATH, you may start it from the terminal by entering the command: MhcVizPipe"
-printf "\n"
-
 echo "Would you like to delete the temporary files leftover from the installation?"
 read -rp "[y/n]: " DELTEMP
 if [[ "$DELTEMP" == 'y' ]]; then
@@ -162,7 +158,8 @@ elif [[ "$DELTEMP" == 'yes' ]]; then
 rm -R ./temp
 fi
 
-cd ./MhcVizPipe/python/install/bin/ || echo "ERROR! ./MhcVizPipe/python/install/bin/ does not exist!"
+printf "\nCongratulations! MhcVizPipe has been successfully installed!\n"
+echo "If you had MhcVizPipe placed in your PATH, you may start it from any terminal by entering the command: MhcVizPipe"
 echo "Would you like to run MhcVizPipe now?"
 read -rp "[y/n]: " RUNMVP
 if [[ "$RUNMVP" == 'y' ]]; then
