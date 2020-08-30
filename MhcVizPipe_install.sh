@@ -64,7 +64,6 @@ echo " Add NetMHCpan, NetMHCIIpan and GibbsCluster to PATH: $TOOLS_TO_PATH"
 echo " NetMHCpan version: $NETMHCPAN_VERSION"
 printf "\n"
 
-echo "The installation should only take a few minutes, but might be longer depending on the speed of your internet connection. Please check that the above settings are correct. Then, To proceed, enter y. To cancel, enter any other character."
 read -rp "Procced? [y/n]:" PROCEED
 if [[ "$PROCEED" == "y" ]]; then
   true
