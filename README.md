@@ -5,6 +5,9 @@ Some more information will go here soon!
 
 ## Installation and usage
 
+Below you will find a brief overview of the installation steps and usage of the tool. For
+more details please [visit the wiki](https://github.com/kevinkovalchik/MhcVizPipe/wiki).
+
 #### Quick installation
 1. Download [this file](https://github.com/kevinkovalchik/MhcVizPipe/raw/master/MhcVizPipe_install.sh) and place
 it in the same directory as the [NetMHCpan, NetMHCIIpan and GibbsCluster downloads](https://github.com/kevinkovalchik/MhcVizPipe/wiki/Downloading-third-party-software).
