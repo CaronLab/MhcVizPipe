@@ -22,6 +22,7 @@ From any terminal, enter the following command:
 MhcVizPipe
 ```
 You should see the following message:
+
      ========================================
      MhcVizPipe v0.3.1
 
