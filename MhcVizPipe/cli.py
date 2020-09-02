@@ -30,8 +30,6 @@ parser.add_argument('-p', '--publish_directory', type=str, required=False, defau
                     help='The directory where you want the report published. It should be an absolute path.')
 parser.add_argument('--f_out', type=str, required=False, default='report',
                     help='The filename you want for the report. Defaults to "report".')
-parser.add_argument('-s', '--score', type=str, required=False, default='BA', choices=['BA', 'EL'],
-                    help='Which score to use from NetMHCpan. Default is binding affinity (BA).')
 parser.add_argument('-v', '--version', type=str, required=False, default='4.1', choices=['4.0', '4.1'],
                     help='Which version of NetMHCpan to use. For internal use during development.')
 
@@ -98,7 +96,7 @@ if __name__ == '__main__':
         alleles=args.alleles,
         tmp_directory=analysis_location,
     )
-    cl_tools.make_binding_predictions(score=args.score)
+    cl_tools.make_binding_predictions()
     cl_tools.cluster_with_gibbscluster()
     cl_tools.cluster_with_gibbscluster_by_allele()
     analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name)
