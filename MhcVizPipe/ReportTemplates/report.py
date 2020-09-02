@@ -246,6 +246,7 @@ class mhc_report:
         n_peps_fig.update_xaxes(title_text='Binding strength')
         n_peps_fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
         n_peps_fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
+        n_peps_fig.update_xaxes(fixedrange=True)
         card = div(div(b('Binding Affinities'), className='card-header'), className='card')
         card.add(div(raw(n_peps_fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
 
@@ -316,6 +317,8 @@ class mhc_report:
         fig.update_yaxes(range=[0, ymax],
                          title_text='Number of peptides')
         fig.update_xaxes(title_text='Allele')
+        fig.update_xaxes(fixedrange=True)
+        fig.update_yaxes(fixedrange=True)
 
         return fig
 
@@ -368,6 +371,8 @@ class mhc_report:
             fig.update_xaxes(title_text='Allele')
             fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
             fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
+            fig.update_xaxes(fixedrange=True)
+            fig.update_yaxes(fixedrange=True)
 
             heatmaps.add(
                 div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='col-4',
