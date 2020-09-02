@@ -235,7 +235,8 @@ app.layout = html.Div(children=[
                 id='upload-data',
                 children=html.Div([
                     'Drag and Drop or ',
-                    html.A('Select a File', style={'text-decoration': 'underline', 'color': 'blue'})
+                    html.A('Select a File', style={'text-decoration': 'underline', 'color': 'blue'}),
+                    ' (.txt, .csv, .tsv)'
                 ]),
                 style={
                     'height': '60px',
