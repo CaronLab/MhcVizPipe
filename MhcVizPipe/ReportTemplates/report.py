@@ -274,6 +274,7 @@ class mhc_report:
         len_dist.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
         len_dist.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
         len_dist.layout.xaxis.dtick = 1
+        len_dist.update_xaxes(fixedrange=True)
         card = div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)'], className='card-header'),
                    className='card')
         card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
