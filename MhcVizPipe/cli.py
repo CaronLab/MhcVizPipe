@@ -88,7 +88,7 @@ if __name__ == '__main__':
                         peptides=peptide_data[sample_name]['peptides'])
         )
     time = str(datetime.now()).replace(' ', '_')
-    analysis_location = str(TMP_DIR / time)
+    analysis_location = str(Path(TMP_DIR) / time)
 
     cl_tools = MhcToolHelper(
         samples=samples,
