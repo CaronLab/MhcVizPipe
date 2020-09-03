@@ -146,10 +146,10 @@ class MhcToolHelper:
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
-                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k {k} ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 5 ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
             else:
-                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k {k} ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 5 ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -G'.split(' ')
 
             #jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
@@ -192,10 +192,10 @@ class MhcToolHelper:
 
             peps.tofile(str(fname), '\n', '%s')
             if self.mhc_class == 'I':
-                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 24 ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 5 ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
             else:
-                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 24 ' \
+                command = f'{self.GIBBSCLUSTER} -f {fname} -P {sample.sample_name} -k 5 ' \
                           f'-g 1-{n if n>5 else 5} -T -j 2 -G'.split(' ')
 
             jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
@@ -307,10 +307,10 @@ class MhcToolHelper:
                             length = 8
                         else:
                             length = 9
-                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} -l {str(length)} ' \
+                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {5 if allele == "unannotated" else 1} -l {str(length)} ' \
                                   f'-g {g} -T -j 2 -C -D 4 -I 1 -G'.split(' ')
                     else:
-                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {n_cpus} ' \
+                        command = f'{self.GIBBSCLUSTER} -f {fname} -P {allele}_{sample.sample_name} -k {5 if allele == "unannotated" else 1} ' \
                                   f'-g {g} -T -j 2 -G'.split(' ')
 
                     jobs.append(subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT))
