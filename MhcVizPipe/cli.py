@@ -97,8 +97,8 @@ if __name__ == '__main__':
         tmp_directory=analysis_location,
     )
     cl_tools.make_binding_predictions()
-    cl_tools.cluster_with_gibbscluster()
-    cl_tools.cluster_with_gibbscluster_by_allele()
+    cl_tools.make_cluster_with_gibbscluster_jobs()
+    cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
     analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name)
     _ = analysis.make_report()
     report = Path(analysis_location) / 'report.html'

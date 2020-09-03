@@ -61,6 +61,14 @@ class Parameters():
     def WEIGHTONPRIOR(self) -> str:
         self.config.read(config_file)
         return self.config['ANALYSIS']['weight on prior']
+
+    @property
+    def THREADS(self) -> int:
+        self.config.read(config_file)
+        threads = int(self.config['ANALYSIS']['max threads'])
+        if threads < 1 or threads > os.cpu_count():
+            threads = os.cpu_count()
+        return threads
     '''
     # directories
     TMP_DIR = property(_tmp_dir)

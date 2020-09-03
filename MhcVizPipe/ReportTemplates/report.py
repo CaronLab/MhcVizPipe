@@ -462,212 +462,74 @@ class mhc_report:
         card.add(plot_body)
         return div(card, className=className)
 
-    def logo_order(self):
-        def cosine_similarity(x, y) -> int:
-            x = np.array(x).flatten()
-            y = np.array(y).flatten()
-            return np.dot(x, y) / (np.sqrt(np.dot(x, x)) * np.sqrt(np.dot(y, y)))
-
-        first_set = {}
-        n_motifs = {}
-        gibbs_peps = {}
-        ordered_logos = {}
-        for sample in self.samples:
-            report = str(list(self.results.tmp_folder.glob(f'./{sample}_*/*_report.html'))[0])
-            with open(report, 'r') as f:
-                lines = ' '.join(f.readlines())
-            n_motifs[sample] = (re.search('Identified ([0-9]*) sequence motifs', lines)[1])
-            pep_groups_file = str(list(self.results.tmp_folder.glob(
-                f'./{sample}_*/res/gibbs.{n_motifs[sample]}g.ds.out'))[0])
-            with open(pep_groups_file, 'r') as f:
-                pep_lines = f.readlines()[1:]
-            gibbs_peps[sample] = {x: [] for x in range(int(n_motifs[sample]))}
-            for line in pep_lines:
-                line = [x for x in line.split(' ') if x != '']
-                group = int(line[1])
-                pep = line[3]
-                gibbs_peps[sample][group].append(pep)
-        ordered_logos['max_n_logos'] = np.max([int(n) for n in n_motifs.values()])
-        sorted_samples = self.samples
-        sorted_samples.sort(key=lambda x: int(n_motifs[x]), reverse=True)
-
-        for sample in sorted_samples:
-            matrices = list(self.results.tmp_folder.glob(f'./{sample}_*/matrices/gibbs*.mat'))
-            matrices = [str(m) for m in matrices if f'of{n_motifs[sample]}' in str(m)]
-            matrices.sort()
-
-            np_matrices = [np.loadtxt(matrix, dtype=float, delimiter=' ', skiprows=2, usecols=range(2, 22)) for
-                           matrix in matrices]
-            if sample == sorted_samples[0]:
-                first_set[0] = np_matrices.copy()
-                order = range(len(first_set[0]))
-            else:
-                indices = list(range(len(np_matrices)))
-                for i in range(len(first_set[0]) - len(np_matrices)):
-                    indices += [None]
-                possible_orders = list(itertools.permutations(indices))
-                best_score = 0
-                best_order = possible_orders[0]
-                for order in possible_orders:
-                    score = 0
-                    for i in range(len(first_set[0])):
-                        if order[i] is not None:
-                            score += cosine_similarity(first_set[0][i], np_matrices[order[i]])
-                    if score > best_score:
-                        best_order = order
-                        best_score = score
-                order = best_order
-            ordered_logos[sample] = order
-        return ordered_logos, gibbs_peps
-
-    def sequence_logos2(self, className=None):
-        def cosine_similarity(x, y) -> int:
-            x = np.array(x).flatten()
-            y = np.array(y).flatten()
-            return np.dot(x, y) / (np.sqrt(np.dot(x, x)) * np.sqrt(np.dot(y, y)))
-
-        motifs = div(className=className)
-        n_motifs = {}
-        for sample in self.samples:
-            kld_file = str(list(self.results.tmp_folder.glob(f'./{sample}_*/images/gibbs.KLDvsClusters.tab'))[0])
-            with open(kld_file, 'r') as f:
-                klds = [l.strip().split('\t') for l in f.readlines()[1:]]
-            max_kld = -1e6
-            for i in range(len(klds)):
-                kld = np.sum(np.array(klds[i][1:], dtype=float))
-                if kld > max_kld:
-                    max_kld = kld
-                    n = klds[i][0]
-                    idx = i
-                    good_groups = np.array(klds[i][1:], dtype=float) > 0
-            logos = list(self.results.tmp_folder.glob(f'./{sample}_*/cores/gibbs.*.core'))
-            logos = [str(l) for l in logos if f'of{n}' in str(l)]
-            logos.sort()
-            logos = [make_logo(x) for x in logos]
-            np_matrices = [l[1] for l in logos]
-
     def sequence_logos(self, className=None):
-        def cosine_similarity(x, y) -> int:
-            x = np.array(x).flatten()
-            y = np.array(y).flatten()
-            return np.dot(x, y) / (np.sqrt(np.dot(x, x)) * np.sqrt(np.dot(y, y)))
-
         motifs = div(className=className)
-        first_set = {}
-        n_motifs = {}
         gibbs_peps = {}
+
+        # get the peptides in each group
         for sample in self.samples:
-            kld_file = str(list(self.results.tmp_folder.glob(f'./{sample}_*/images/gibbs.KLDvsClusters.tab'))[0])
-            with open(kld_file, 'r') as f:
-                klds = [l.strip().split('\t') for l in f.readlines()[1:]]
-            n = 1
-            max_kld = 0
-            for scores in klds:
-                kld = np.sum(np.array(scores[1:], dtype=float))
-                if kld > max_kld:
-                    max_kld = kld
-                    n = scores[0]
-                    n_not_empty = np.argwhere(np.array(scores[1:], dtype=float) != 0)
-            n = n
-            n_motifs[sample] = len(n_not_empty)
-            pep_groups_file = str(list(self.results.tmp_folder.glob(
-                f'./{sample}_*/res/gibbs.{n_motifs[sample]}g.ds.out'))[0])
+            pep_groups_file = self.results.gibbs_files[sample]['unsupervised']['pep_groups_file']
             with open(pep_groups_file, 'r') as f:
                 pep_lines = f.readlines()[1:]
-            gibbs_peps[sample] = {x: [] for x in range(int(n_motifs[sample]))}  # <---- there is a problem here because gibbcluster can find weird groups (like 2of2 but no 1of2) so we need to account for this somehow
+            n_motifs = self.results.gibbs_files[sample]['unsupervised']['n_groups']
+            gibbs_peps[sample] = {str(x): [] for x in range(1, int(n_motifs)+1)}  # <---- there is a problem here because gibbcluster can find weird groups (like 2of2 but no 1of2) so we need to account for this somehow
 
             for line in pep_lines:
                 line = [x for x in line.split(' ') if x != '']
-                group = int(line[1])
+                group = str(int(line[1]) + 1)
                 pep = line[3]
                 gibbs_peps[sample][group].append(pep)
 
-        sorted_samples = self.samples
-        sorted_samples.sort(key=lambda x: int(n_motifs[x]), reverse=True)
-
-        for sample in sorted_samples:
+        for sample in self.samples:
             motifs_row = div(className='row')
-            logos = list(self.results.tmp_folder.glob(f'./{sample}_*/cores/gibbs.*.core'))
-            logos = [str(l) for l in logos if f'of{n_motifs[sample]}' in str(l)]
-            logos.sort()
-            logos = [make_logo(x) for x in logos]
-            np_matrices = [l[1] for l in logos]
-
-            if sample == sorted_samples[0]:
-                first_set[0] = np_matrices.copy()
-                order = range(len(first_set[0]))
-            else:
-                indices = list(range(len(np_matrices)))
-                for i in range(len(first_set[0]) - len(np_matrices)):
-                    indices += [None]
-                possible_orders = list(itertools.permutations(indices))
-                best_score = 0
-                best_order = possible_orders[0]
-                for order in possible_orders:
-                    score = 0
-                    for i in range(len(first_set[0])):
-                        if order[i] is not None:
-                            score += cosine_similarity(first_set[0][i], np_matrices[order[i]])
-                    if score > best_score:
-                        best_order = order
-                        best_score = score
-                order = best_order
-
+            cores = self.results.gibbs_files[sample]['unsupervised']['cores']
+            logos = [make_logo(x) for x in cores]
+            pep_groups = []
+            for x in range(len(cores)):
+                pep_groups.append(cores[x].name.replace('gibbs.', '')[0])
             p_df: pd.DataFrame = self.pep_binding_dict[sample]
             width = 160 + 50*len(self.alleles)
             motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), width=f'{width}px', height='360px'))
             logos_for_row = div(className="row")
             motifs_row.add(div(logos_for_row, className="col"))
-            for i in order:
-                if i is not None and len(gibbs_peps[sample][i]) > 0:
-                    g_peps = set(gibbs_peps[sample][i])
-                    strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
-                                                    len(g_peps)) for allele in self.alleles}
-                    non_binding_peps = [set(p_df[(p_df[allele] == "Non-binder") | (p_df[allele] == "Weak")].index) for allele in self.alleles]
-                    non_binding_set = non_binding_peps[0]
-                    for x in non_binding_peps[1:]:
-                        non_binding_set = non_binding_set & x
-                    top_binder = np.max(list(strong_binders.values()))
+            for i in range(len(logos)):
+                g_peps = set(gibbs_peps[sample][pep_groups[i]])
+                strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
+                                                len(g_peps)) for allele in self.alleles}
+                non_binding_peps = [set(p_df[(p_df[allele] == "Non-binder") | (p_df[allele] == "Weak")].index) for allele in self.alleles]
+                non_binding_set = non_binding_peps[0]
+                for x in non_binding_peps[1:]:
+                    non_binding_set = non_binding_set & x
+                top_binder = np.max(list(strong_binders.values()))
 
-                    composition = []
-                    for key in list(strong_binders.keys()):
-                        text = f'{key}: {strong_binders[key]}%, '
-                        if key == list(strong_binders.keys())[-1]:
-                            text = text[:-2]
-                        style_str = "display: inline-block; white-space: pre; margin: 0"
-                        if (strong_binders[key] == top_binder) & (strong_binders[key] != 0):
-                            composition.append(b(text, style=style_str))
-                        else:
-                            composition.append(p(text, style=style_str))
+                composition = []
+                for key in list(strong_binders.keys()):
+                    text = f'{key}: {strong_binders[key]}%, '
+                    if key == list(strong_binders.keys())[-1]:
+                        text = text[:-2]
+                    style_str = "display: inline-block; white-space: pre; margin: 0"
+                    if (strong_binders[key] == top_binder) & (strong_binders[key] != 0):
+                        composition.append(b(text, style=style_str))
+                    else:
+                        composition.append(p(text, style=style_str))
 
-                    logos_for_row.add(
-                        div(
-                            [
-                                wrap_plotly_fig(logos[i][0], height="300px", width="100%"),
-                                p(f'Peptides in group: {len(g_peps)}\n',
-                                  style='text-align: center; white-space: pre; margin: 0'),
-                                div([*composition], style="width: 100%; text-align: center")
-                            ],
-                            className='col',
-                            style=f'max-width: 400px;'
-                                  f'min-width: 260px'
-                                  f'height: 100%;'
-                                  f'display: block;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 11pt'
-                        ),
-                    )
-                else:
-                    logos_for_row.add(
-                        div([],
-                            className='col',
-                            style=f'max-width: 400px;'
-                                  f'min-width: 260px'
-                                  f'display: block;'
-                                  f'margin-right: auto;'
-                                  f'font-size: 11pt'
-                            )
-                    )
+                logos_for_row.add(
+                    div(
+                        [
+                            wrap_plotly_fig(logos[i][0], height="300px", width="100%"),
+                            p(f'Peptides in group: {len(g_peps)}\n',
+                              style='text-align: center; white-space: pre; margin: 0'),
+                            div([*composition], style="width: 100%; text-align: center")
+                        ],
+                        className='col',
+                        style=f'max-width: 400px;'
+                              f'min-width: 260px'
+                              f'height: 100%;'
+                              f'display: block;'
+                              f'margin-right: auto;'
+                              f'font-size: 11pt'
+                    ),
+                )
             motifs.add(
                 div(
                     [
@@ -687,44 +549,29 @@ class mhc_report:
         gibbs_peps = {}
         for sample in self.samples:
             for allele in self.alleles + ['unannotated']:
-                if self.results.supervised_gibbs_directories[sample][allele] is not None:
-                    kld_file = str(
-                        list(self.results.tmp_folder.glob(f'./{allele}_{sample}_*/images/gibbs.KLDvsClusters.tab'))[0])
-                    with open(kld_file, 'r') as f:
-                        klds = [l.strip().split('\t') for l in f.readlines()[1:]]
-                    n = 1
-                    max_kld = 0
-                    for scores in klds:
-                        kld = np.sum(np.array(scores[1:], dtype=float))
-                        if kld > max_kld:
-                            max_kld = kld
-                            n = scores[0]
-                            n_not_empty = np.argwhere(np.array(scores[1:], dtype=float) != 0)
-                    n_motifs[f'{allele}_{sample}'] = n
-                    pep_groups_file = str(list(self.results.tmp_folder.glob(
-                        f'./{allele}_{sample}_*/res/gibbs.{n_motifs[f"{allele}_{sample}"]}g.ds.out'))[0])
+                if self.results.gibbs_files[sample][allele] is not None:
+                    pep_groups_file = self.results.gibbs_files[sample][allele]['pep_groups_file']
                     with open(pep_groups_file, 'r') as f:
                         pep_lines = f.readlines()[1:]
-                    gibbs_peps[f'{allele}_{sample}'] = {x: [] for x in range(int(n_motifs[f"{allele}_{sample}"]))}
+                    n_motifs = self.results.gibbs_files[sample][allele]['n_groups']
+                    gibbs_peps[f'{allele}_{sample}'] = {str(x): [] for x in range(1, int(n_motifs)+1)}
                     for line in pep_lines:
                         line = [x for x in line.split(' ') if x != '']
-                        group = int(line[1])
+                        group = str(int(line[1]) + 1)
                         pep = line[3]
                         gibbs_peps[f'{allele}_{sample}'][group].append(pep)
 
-        max_n_motifs = np.max([int(n) for n in n_motifs.values()])
         for sample in self.samples:
             motifs_row = div(className='row')
             for allele in self.alleles:
-                if self.results.supervised_gibbs_directories[sample][allele]:
-                    logo = str(Path(self.results.supervised_gibbs_directories[sample][allele]) / 'cores' /
-                               'gibbs.1of1.core')
+                if self.results.gibbs_files[sample][allele] is not None:
+                    logo = self.results.gibbs_files[sample][allele]['cores']
                     motifs_row.add(
                         div(
                             [
                                 b(f'{allele}'),
                                 wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
-                                p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"][0])}\n'),
+                                p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"]["1"])}\n'),
                             ],
                             className='col',
                             style=f'max-width: 400px;'
@@ -752,32 +599,29 @@ class mhc_report:
                         )
                     )
             # now the unannotated peptides
-            if self.results.supervised_gibbs_directories[sample]['unannotated']:
-                logos = list((Path(self.results.supervised_gibbs_directories[sample]['unannotated'])/'cores')
-                             .glob(f'*of{n_motifs["unannotated_"+sample]}.core'))
-                logos = [str(x) for x in logos]
-                logos.sort()
-                group = 1
-                for x in range(max_n_motifs):
-                    if (x < len(logos)) and (len(gibbs_peps[f"unannotated_{sample}"][x]) > 0):
-                        logo = logos[x]
-                        motifs_row.add(
-                            div(
-                                [
-                                    b(f'Non-binders group {group}'),
-                                    wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
-                                    p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][x])}\n'),
-                                ],
-                                className='col',
-                                style=f'max-width: 400px;'
-                                      f'min-width: 260px'
-                                      f'display: block;'
-                                      f'margin-right: auto;'
-                                      f'font-size: 11pt;'
-                                      f'text-align: center'
-                            )
+            if self.results.gibbs_files[sample]['unannotated'] is not None:
+                logos = self.results.gibbs_files[sample]['unannotated']['cores']
+                pep_groups = []
+                for logo in logos:
+                    pep_groups.append(logo.name.replace('gibbs.', '')[0])
+                for x in range(len(logos)):
+                    logo = logos[x]
+                    motifs_row.add(
+                        div(
+                            [
+                                b(f'Non-binders group {pep_groups[x]}'),
+                                wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
+                                p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][pep_groups[x]])}\n'),
+                            ],
+                            className='col',
+                            style=f'max-width: 400px;'
+                                  f'min-width: 260px'
+                                  f'display: block;'
+                                  f'margin-right: auto;'
+                                  f'font-size: 11pt;'
+                                  f'text-align: center'
                         )
-                        group += 1
+                    )
             motifs.add(
                 div(
                     [
