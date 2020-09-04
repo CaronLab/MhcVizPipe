@@ -9,10 +9,14 @@ Below you will find a brief overview of the installation steps and usage of the 
 more details please [visit the wiki](https://github.com/kevinkovalchik/MhcVizPipe/wiki).
 
 #### Quick installation
-1. Download [this file](https://github.com/kevinkovalchik/MhcVizPipe/raw/master/MhcVizPipe_install.sh) and place
-it in the same directory as the [NetMHCpan, NetMHCIIpan and GibbsCluster downloads](https://github.com/kevinkovalchik/MhcVizPipe/wiki/Downloading-third-party-software).
+Below is a quick overview of the installation steps. For more details, [visit the wiki](https://github.com/kevinkovalchik/MhcVizPipe/wiki).
+1. Right-click and choose "save link as" to download 
+[this file](https://github.com/kevinkovalchik/MhcVizPipe/raw/master/MhcVizPipe_install.sh) and place
+it in the same directory as the 
+[NetMHCpan, NetMHCIIpan and GibbsCluster downloads](https://github.com/kevinkovalchik/MhcVizPipe/wiki/Downloading-third-party-software)
+(do not extract the downloads).
 2. Open a terminal and navigate to this directory
-3. Invoke this command: `chmod +x ./MhcVizPipe_install.sh`
+3. Invoke this command (i.e. type it in and hit enter): `chmod +x ./MhcVizPipe_install.sh`
 4. Invoke this command: `./MhcVizPipe_install.sh`
 5. During installation, choose to add MhcVizPipe to you PATH
 
