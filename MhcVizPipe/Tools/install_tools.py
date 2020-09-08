@@ -14,11 +14,11 @@ from sys import argv
 config_file = str(Path.home()/'.mhcvizpipe.config')
 default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_defaults.config')
 
-if not Path(config_file).is_file():
-    with open(default_config_file, 'r') as f:
-        settings = ''.join(f.readlines())
-    with open(str(config_file), 'w') as f:
-        f.write(settings)
+# this is a fresh installation, so we are going to clear out any existing config files
+with open(default_config_file, 'r') as f:
+    settings = ''.join(f.readlines())
+with open(str(config_file), 'w') as f:
+    f.write(settings)
 
 
 def extract_targz(directory: str, archive_type: str = 'auto'):
