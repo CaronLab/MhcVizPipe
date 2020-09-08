@@ -200,9 +200,9 @@ fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   printf "\n"
   echo "##### Placing NetMHCpan, NetMHCIIpan and GibbsCluster in PATH #####"
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || (echo "WARNING: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || (echo "WARNING: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan")
-  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || (echo "WARNING: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster")
+  sudo cp "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || (echo "WARNING: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
+  sudo cp "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || (echo "WARNING: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan")
+  sudo cp "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || (echo "WARNING: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster")
 fi
 
 echo "Would you like to delete the temporary files leftover from the installation?"
