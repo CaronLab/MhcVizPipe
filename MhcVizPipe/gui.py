@@ -21,10 +21,9 @@ from MhcVizPipe.defaults import Parameters
 from platform import system as platform_sys
 from MhcVizPipe.Tools.install_tools import run_all
 from waitress import serve
-from warnings import simplefilter
+from warnings import simplefilter, catch_warnings
 
 
-simplefilter('ignore')
 Parameters = Parameters()
 
 external_stylesheets = [dbc.themes.BOOTSTRAP,
@@ -1000,4 +999,10 @@ if __name__ == '__main__':
         app.run_server(debug=True, port=8971, host=Parameters.HOSTNAME)
     else:
         print(welcome)
-        serve(app.server, host=Parameters.HOSTNAME, port=int(Parameters.PORT))
+        with catch_warnings():
+            simplefilter('ignore')
+            serve(app.server,
+                  host=Parameters.HOSTNAME,
+                  port=int(Parameters.PORT),
+                  threads=6,
+                  _quiet=True)
