@@ -31,8 +31,10 @@ gibbsclusterDarwin=false
 if [[ "$OSTYPE" == "darwin"* ]]; then
   if [[ -f  "./netMHCpan-4.0a.Darwin.tar" ]]; then
     netMHCpanDarwin=true
+    NETMHCPAN_VERSION="4.0"
   elif [[ -f "./netMHCpan-4.1b.Darwin.tar" ]]; then
     netMHCpanDarwin=true
+    NETMHCPAN_VERSION="4.1"
   fi
 
   if [[ -f "./gibbscluster-2.0f.Darwin.tar" ]]; then
@@ -47,8 +49,10 @@ fi
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   if [[ -f "./netMHCpan-4.0a.Linux.tar.gz" ]]; then
     netMHCpanLinux=true
+    NETMHCPAN_VERSION="4.0"
   elif [[ -f "./netMHCpan-4.1b.Linux.tar.gz" ]]; then
     netMHCpanLinux=true
+    NETMHCPAN_VERSION="4.1"
   fi
 
   if [[ -f "./gibbscluster-2.0f.Linux.tar.gz" ]]; then
@@ -60,10 +64,9 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   fi
 fi
 
-echo "$netMHCIIpanDarwin $netMHCpanDarwin $gibbsclusterDarwin $netMHCIIpanLinux $netMHCpanLinux $gibbsclusterLinux"
-
 if [[ "$OSTYPE" == "darwin"* ]] && [[ "$netMHCpanDarwin" == false || "$netMHCIIpanDarwin" == false || "$gibbsclusterDarwin" == false ]]; then
-  echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name):"
+  echo " "
+  echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name) and that you have one each of NetMHCpan, NetMHCIIpan and GibbsCluster:"
   echo " netMHCpan4.0a.Darwin.tar OR netMHCpan4.1b.Darwin.tar, gibbscluster-2.0f.Darwin.tar, netMHCIIpan4.0.Darwin.tar"
   echo " "
   echo "For help downloading the correct files, visit https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software"
@@ -71,8 +74,10 @@ if [[ "$OSTYPE" == "darwin"* ]] && [[ "$netMHCpanDarwin" == false || "$netMHCIIp
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]] && [[ "$netMHCpanLinux" == false || "$netMHCIIpanLinux" == false || "$gibbsclusterLinux" == false ]]; then
-  echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name):"
+  echo " "
+  echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name) and that you have one each of NetMHCpan, NetMHCIIpan and GibbsCluster:"
   echo " netMHCpan4.0a.Linux.tar.gz OR netMHCpan4.1b.Linux.tar.gz, gibbscluster-2.0f.Linux.tar.gz, netMHCIIpan4.0.Linux.tar.gz"
+  echo " "
   echo "For help downloading the correct files, visit https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software"
   exit 1
 fi
@@ -80,7 +85,7 @@ fi
 
 # set installation directory
 INSTALL_DIR="$HOME/MhcVizPipe"
-printf "MhcVizPipe Installation Utility\n\n"
+printf "\nMhcVizPipe Installation Utility\n\n"
 printf "This utility will help you install and set up MhcVizPipe on your Mac or Linux computer.\n\n"
 printf "\n##### Installation Options #####\n\n"
 echo "The default installation directory for MhcVizPipe is:"
@@ -118,15 +123,6 @@ else
 fi
 
 printf "\n"
-
-echo "Which version of NetMHCpan are you installing? Please enter 4.0 or 4.1."
-read -rp "[4.0/4.1]: " NETMHCPAN_VERSION
-while [[ "$NETMHCPAN_VERSION" != "4.0" && "$NETMHCPAN_VERSION" != "4.1" ]]; do
-  if [[ "$NETMHCPAN_VERSION" != "4.0" && "$NETMHCPAN_VERSION" != "4.1" ]]; then
-    read -rp "You entered $NETMHCPAN_VERSION. Please enter 4.0 or 4.1: " NETMHCPAN_VERSION
-  fi
-done
-
 
 printf "\n\nMhcVizPipe will be installed with the following options:\n\n"
 echo " Installation directory: $INSTALL_DIR"
