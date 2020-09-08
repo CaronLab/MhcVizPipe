@@ -186,6 +186,7 @@ chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   echo "##### Placing MhcVizPipe in PATH #####"
+  echo "Enter your user password to add MhcVizPipe to your PATH (Note that the password will not be visible as you type):"
   sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || (echo "ERROR: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
   sudo chmod +x /usr/local/bin/MhcVizPipe
 fi
