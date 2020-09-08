@@ -1,11 +1,80 @@
 #!/bin/bash
 
+function contains() {
+    local n=$#
+    local value=${!n}
+    for ((i=1;i < $#;i++)) {
+        if [ "${!i}" == "${value}" ]; then
+            echo "y"
+            return 0
+        fi
+    }
+    echo "n"
+    return 1
+}
+
 # get tar and tar.gz files in directory
 ARCHIVES=(./*.tar*)
 if [[ ${#ARCHIVES[@]} -ne 3 ]]; then
   echo "ERROR! There must be exactly three .tar or .tar.gz archives in the current directory. These correspond to NetMHCpan(4.0 or 4.1), NetMHCIIpan4.1, and GibbsCluster2.0"
   exit 1
 fi
+
+# check that they are the correct files
+netMHCpanLinux=false
+netMHCpanDarwin=false
+netMHCIIpanLinux=false
+netMHCIIpanDarwin=false
+gibbsclusterLinux=false
+gibbsclusterDarwin=false
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  if [ "$(contains "${ARCHIVES[@]}" "netMHCpan4.0a.Darwin.tar")" == "y" ]; then
+    netMHCpanDarwin=true
+  elif [ "$(contains "${ARCHIVES[@]}" "netMHCpan4.1b.Darwin.tar")" == "y" ]; then
+    netMHCpanDarwin=true
+  fi
+
+  if [ "$(contains "${ARCHIVES[@]}" "gibbscluster-2.0f.Darwin.tar")" == "y" ]; then
+    gibbsclusterDarwin=true
+  fi
+
+  if [ "$(contains "${ARCHIVES[@]}" "netMHCIIpan4.0.Darwin.tar")" == "y" ]; then
+    netMHCIIpanDarwin=true
+  fi
+fi
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  if [ "$(contains "${ARCHIVES[@]}" "netMHCpan4.0a.Linux.tar.gz")" == "y" ]; then
+    netMHCpanLinux=true
+  elif [ "$(contains "${ARCHIVES[@]}" "netMHCpan4.1b.Linux.tar.gz")" == "y" ]; then
+    netMHCpanLinux=true
+  fi
+
+  if [ "$(contains "${ARCHIVES[@]}" "gibbscluster-2.0f.Linux.tar.gz")" == "y" ]; then
+    gibbsclusterLinux=true
+  fi
+
+  if [ "$(contains "${ARCHIVES[@]}" "netMHCIIpan4.0.Linux.tar.gz")" == "y" ]; then
+    netMHCIIpanLinux=true
+  fi
+fi
+
+if [[ "$OSTYPE" == "darwin" &&  ("$netMHCpanDarwin" == false || "$netMHCIIpanDarwin" == false || "$gibbsclusterDarwin" == false) ]]; then
+  echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name):"
+  echo " netMHCpan4.0a.Darwin.tar OR netMHCpan4.1b.Darwin.tar, gibbscluster-2.0f.Darwin.tar, netMHCIIpan4.0.Darwin.tar"
+  echo " "
+  echo "For help downloading the correct files, visit https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software"
+  exit 1
+fi
+
+if [[ "$OSTYPE" == "linux-gnu" &&  ("$netMHCpanLinux" == false || "$netMHCIIpanLinux" == false || "$gibbsclusterLinux" == false) ]]; then
+  echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name):"
+  echo " netMHCpan4.0a.Linux.tar.gz OR netMHCpan4.1b.Linux.tar.gz, gibbscluster-2.0f.Linux.tar.gz, netMHCIIpan4.0.Linux.tar.gz"
+  echo "For help downloading the correct files, visit https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software"
+  exit 1
+fi
+
 
 # set installation directory
 INSTALL_DIR="$HOME/MhcVizPipe"
@@ -80,8 +149,7 @@ INSTALL_DIR="${INSTALL_DIR//\\//}"
 # set URLs for downloading the compiled Python distribution
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20200822-20200823/cpython-3.7.9-x86_64-unknown-linux-gnu-pgo-20200823T0036.tar.gz"
-elif
-  [[ "$OSTYPE" == "darwin"* ]]; then
+elif [[ "$OSTYPE" == "darwin"* ]]; then
   URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20200822-20200823/cpython-3.7.9-x86_64-apple-darwin-pgo-20200823T2228.tar.gz"
 else
   echo "ERROR! MhcVizPipe is only compatible with Linux and Mac OS. Sorry!"
@@ -95,24 +163,24 @@ mkdir "$HOME/mhcvizpipe_tools"
 
 # download python
 printf "\n##### Downloading Python bundle #####\n\n"
-curl -L -o ./temp/python.tar.gz "$URL"
+curl -L -o ./temp/python.tar.gz "$URL" || echo "ERROR: An error occurred while downloading Python! Please try again. If the problem persists, contact the developers." && exit 1
 printf "\n##### Done! #####\n"
 
 # extract python
 printf "\n##### Extracting Python bundle #####\n\n"
-tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR"
+tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR" || echo "ERROR: Python was not extracted successfully... Please try again. If the problem persists, contact the developers." && exit 1
 printf "\n##### Done! #####\n"
 
 # the shebangs in the pyhton/install/bin folder are bad, so we need to replace them
 find "$INSTALL_DIR"/python/install/bin/ -type f -exec sed -i "1 s/^#!.*python.*/#!$INSTALL_DIR/python/install/bin\/python3/" {} \;
 
 printf "\n##### Installing MhcVizPipe #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel  || echo "ERROR: An error occurred while installing Wheel... Please try again. If the problem persists, contact the developers." && exit 1
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe  || echo "ERROR: An error occurred while installing MhcVizPipe through Pip... Please try again. If the problem persists, contact the developers." && exit 1
 printf "\n##### Done! #####\n"
 
 printf "\n##### Installing and configuring third-party tools #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.Tools.install_tools
+"$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.Tools.install_tools || echo "ERROR: An error occurred while installing the MhcVizPipe tools... Please try again. If the problem persists, contact the developers." && exit 1
 printf "##### Done! #####\n\n"
 
 printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.sh
@@ -120,15 +188,15 @@ chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   echo "##### Placing MhcVizPipe in PATH #####"
-  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe
+  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || echo "ERROR: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh"
   sudo chmod +x /usr/local/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   printf "\n"
   echo "##### Placing NetMHCpan, NetMHCIIpan and GibbsCluster in PATH #####"
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan
-  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster
+  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || echo "ERROR: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan"
+  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || echo "ERROR: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan"
+  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || echo "ERROR: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster"
 fi
 
 echo "Would you like to delete the temporary files leftover from the installation?"
