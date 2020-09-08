@@ -180,6 +180,10 @@ def run_all(files: List[Tuple[str, bytes]]):
     update_tool_scripts_and_config()
 
 
+def remove_mac_quarantine():
+    command = [f'xattr -dr com.apple.quarantine {mhc_tool_dir}']
+
+
 if __name__ == "__main__":
     directory = Path(".")
     file_list = list(directory.glob('*.tar.gz')) + list(directory.glob('*.tar'))
@@ -187,4 +191,6 @@ if __name__ == "__main__":
         dest = Path(mhc_tool_dir)/file.name
         shutil.copy2(str(file), str(dest))
     extract_targz(mhc_tool_dir)
+    if sys_platform() == 'Darwin':
+        remove_mac_quarantine()
     update_tool_scripts_and_config()
