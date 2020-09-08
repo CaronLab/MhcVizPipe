@@ -62,7 +62,7 @@ fi
 
 echo "$netMHCIIpanDarwin $netMHCpanDarwin $gibbsclusterDarwin $netMHCIIpanLinux $netMHCpanLinux $gibbsclusterLinux"
 
-if [[ "$OSTYPE" == "darwin" ]] && [[ "$netMHCpanDarwin" == false || "$netMHCIIpanDarwin" == false || "$gibbsclusterDarwin" == false ]]; then
+if [[ "$OSTYPE" == "darwin"* ]] && [[ "$netMHCpanDarwin" == false || "$netMHCIIpanDarwin" == false || "$gibbsclusterDarwin" == false ]]; then
   echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name):"
   echo " netMHCpan4.0a.Darwin.tar OR netMHCpan4.1b.Darwin.tar, gibbscluster-2.0f.Darwin.tar, netMHCIIpan4.0.Darwin.tar"
   echo " "
@@ -70,7 +70,7 @@ if [[ "$OSTYPE" == "darwin" ]] && [[ "$netMHCpanDarwin" == false || "$netMHCIIpa
   exit 1
 fi
 
-if [[ "$OSTYPE" == "linux-gnu" ]] && [[ "$netMHCpanLinux" == false || "$netMHCIIpanLinux" == false || "$gibbsclusterLinux" == false ]]; then
+if [[ "$OSTYPE" == "linux-gnu"* ]] && [[ "$netMHCpanLinux" == false || "$netMHCIIpanLinux" == false || "$gibbsclusterLinux" == false ]]; then
   echo "ERROR: You are missing one or more of the correct files. Make sure that the files from DTU Health Tech you have downloaded are in the following list (check version numbers and Linux vs Darwin in the name):"
   echo " netMHCpan4.0a.Linux.tar.gz OR netMHCpan4.1b.Linux.tar.gz, gibbscluster-2.0f.Linux.tar.gz, netMHCIIpan4.0.Linux.tar.gz"
   echo "For help downloading the correct files, visit https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software"
