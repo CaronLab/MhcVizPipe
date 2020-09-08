@@ -22,6 +22,7 @@ from platform import system as platform_sys
 from MhcVizPipe.Tools.install_tools import run_all
 from waitress import serve
 from warnings import simplefilter, catch_warnings
+import traceback
 
 
 Parameters = Parameters()
@@ -61,6 +62,28 @@ def lab_logo():
 app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),
     html.Div('', id='tmp-folder', hidden=True),
+
+    dbc.Modal(
+        [
+            dbc.ModalHeader(html.H3('Error!')),
+            dbc.ModalBody(
+                [
+                    html.P(
+                        'An exception occurred during analysis. If this persists, please report this to the '
+                        'developers.'),
+                    html.P('Error message:'),
+                    dcc.Textarea(id='runtime-error-textarea',
+                                 style={'width': '640px',
+                                        'height': '480px'}),
+                    html.P('Click outside this box to close it, or refresh your browser to reset the whole application.')
+                ]
+            )
+        ],
+        is_open=False,
+        centered=True,
+        id='runtime-errors',
+        style={'max-width': '800px'}
+    ),
 
     dbc.Row([
         dbc.Col([
@@ -888,7 +911,9 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
                Output('link-to-report', 'href'),
                Output('is-there-a-problem', 'children'),
                Output('loading', 'children'),
-               Output('modal2', 'is_open')],
+               Output('modal2', 'is_open'),
+               Output('runtime-error-textarea', 'value'),
+               Output('runtime-errors', 'is_open')],
               [Input('run-analysis', 'n_clicks')],
               [State('peptides', 'data'),
                State('submitter-name', 'value'),
@@ -904,7 +929,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                                                 children='You need to load some data first.',
                                                 style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
-                False)
+                False, '', False)
     elif (alleles in [None, [], ['']]) and (n_clicks is not None):
         return (no_update,
                 no_update,
@@ -912,51 +937,56 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                                                 children='Please select one or more alleles.',
                                                 style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
-                False)
+                False, '', False)
 
     else:
         if n_clicks is None:
             raise PreventUpdate
 
         samples = []
-        for sample_name in peptides.keys():
-            peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
-            samples.append(
-                MhcPeptides(sample_name=sample_name,
-                            sample_description=peptides[sample_name]['description'],
-                            peptides=peps)
+        try:
+            for sample_name in peptides.keys():
+                peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
+                samples.append(
+                    MhcPeptides(sample_name=sample_name,
+                                sample_description=peptides[sample_name]['description'],
+                                peptides=peps)
+                )
+            time = str(datetime.now()).replace(' ', '_')
+            analysis_location = str(Path(Parameters.TMP_DIR)/time)
+            if mhc_class == 'I':
+                min_length = 8
+                max_length = 12
+            else:
+                min_length = 9
+                max_length = 22
+            cl_tools = MhcToolHelper(
+                samples=samples,
+                mhc_class=mhc_class,
+                alleles=alleles,
+                tmp_directory=analysis_location,
+                min_length=min_length,
+                max_length=max_length
             )
-        time = str(datetime.now()).replace(' ', '_')
-        analysis_location = str(Path(Parameters.TMP_DIR)/time)
-        if mhc_class == 'I':
-            min_length = 8
-            max_length = 12
-        else:
-            min_length = 9
-            max_length = 22
-        cl_tools = MhcToolHelper(
-            samples=samples,
-            mhc_class=mhc_class,
-            alleles=alleles,
-            tmp_directory=analysis_location,
-            min_length=min_length,
-            max_length=max_length
-        )
-        cl_tools.make_binding_prediction_jobs()
-        cl_tools.run_jubs()
-        cl_tools.aggregate_netmhcpan_results()
-        cl_tools.clear_jobs()
+            cl_tools.make_binding_prediction_jobs()
+            cl_tools.run_jubs()
+            cl_tools.aggregate_netmhcpan_results()
+            cl_tools.clear_jobs()
 
-        cl_tools.make_cluster_with_gibbscluster_jobs()
-        cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
-        cl_tools.order_gibbs_runs()
-        cl_tools.run_jubs()
-        cl_tools.find_best_files()
-        analysis = report.mhc_report(cl_tools, mhc_class, description, submitter_name, exp_info)
-        _ = analysis.make_report()
-        download_href = f'/download/{urlquote(time+"/"+"report.html")}'
+            cl_tools.make_cluster_with_gibbscluster_jobs()
+            cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
+            cl_tools.order_gibbs_runs()
+            cl_tools.run_jubs()
+            cl_tools.find_best_files()
+            analysis = report.mhc_report(cl_tools, mhc_class, description, submitter_name, exp_info)
+            _ = analysis.make_report()
+            download_href = f'/download/{urlquote(time+"/"+"report.html")}'
+        except Exception:
+            error = traceback.format_exc()
 
-        return 'Link to report', download_href, [], '', True
+            return no_update, no_update, [], no_update, False, error, True
+
+        return 'Link to report', download_href, [], '', True, '', False
 
 
 @app.server.route("/download/<path:path>")
@@ -993,7 +1023,7 @@ if __name__ == '__main__':
     You are running MhcVizPipe in debugging mode. This uses the
     development server shipped with Flask.
     
-    The GUI running here: http://{Parameters.HOSTNAME}:{Parameters.PORT}
+    The GUI running here: http://{Parameters.HOSTNAME}:8971
 
     ========================================
     '''
