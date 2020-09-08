@@ -29,33 +29,33 @@ gibbsclusterLinux=false
 gibbsclusterDarwin=false
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  if [ "$(contains "${ARCHIVES[@]}" "netMHCpan-4.0a.Darwin.tar")" == "y" ]; then
+  if [[ $(contains "${ARCHIVES[@]}" "netMHCpan-4.0a.Darwin.tar") == "y" ]]; then
     netMHCpanDarwin=true
-  elif [ "$(contains "${ARCHIVES[@]}" "netMHCpan-4.1b.Darwin.tar")" == "y" ]; then
+  elif [[ $(contains "${ARCHIVES[@]}" "netMHCpan-4.1b.Darwin.tar") == "y" ]]; then
     netMHCpanDarwin=true
   fi
 
-  if [ "$(contains "${ARCHIVES[@]}" "gibbscluster-2.0f.Darwin.tar")" == "y" ]; then
+  if [[ $(contains "${ARCHIVES[@]}" "gibbscluster-2.0f.Darwin.tar") == "y" ]]; then
     gibbsclusterDarwin=true
   fi
 
-  if [ "$(contains "${ARCHIVES[@]}" "netMHCIIpan-4.0.Darwin.tar")" == "y" ]; then
+  if [[ $(contains "${ARCHIVES[@]}" "netMHCIIpan-4.0.Darwin.tar") == "y" ]]; then
     netMHCIIpanDarwin=true
   fi
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  if [ "$(contains "${ARCHIVES[@]}" "netMHCpan-4.0a.Linux.tar.gz")" == "y" ]; then
+  if [[ $(contains "${ARCHIVES[@]}" "netMHCpan-4.0a.Linux.tar.gz") == "y" ]]; then
     netMHCpanLinux=true
-  elif [ "$(contains "${ARCHIVES[@]}" "netMHCpan-4.1b.Linux.tar.gz")" == "y" ]; then
+  elif [[ $(contains "${ARCHIVES[@]}" "netMHCpan-4.1b.Linux.tar.gz") == "y" ]]; then
     netMHCpanLinux=true
   fi
 
-  if [ "$(contains "${ARCHIVES[@]}" "gibbscluster-2.0f.Linux.tar.gz")" == "y" ]; then
+  if [[ $(contains "${ARCHIVES[@]}" "gibbscluster-2.0f.Linux.tar.gz") == "y" ]]; then
     gibbsclusterLinux=true
   fi
 
-  if [ "$(contains "${ARCHIVES[@]}" "netMHCIIpan-4.0.Linux.tar.gz")" == "y" ]; then
+  if [[ $(contains "${ARCHIVES[@]}" "netMHCIIpan-4.0.Linux.tar.gz") == "y" ]]; then
     netMHCIIpanLinux=true
   fi
 fi
