@@ -18,12 +18,13 @@ from sys import argv
 from urllib.parse import quote as urlquote
 from MhcVizPipe.defaults import ROOT_DIR, default_config_file, config_file
 from MhcVizPipe.defaults import Parameters
-from time import sleep
 from platform import system as platform_sys
 from MhcVizPipe.Tools.install_tools import run_all
 from waitress import serve
+from warnings import simplefilter
 
 
+simplefilter('ignore')
 Parameters = Parameters()
 
 external_stylesheets = [dbc.themes.BOOTSTRAP,
@@ -58,11 +59,6 @@ def lab_logo():
                     style={'max-width': '100%', 'max-height': '55px', 'margin-left':  '10px', 'margin-bottom': '8px', 'opacity': '95%'})
 
 
-if not Parameters.GIBBSCLUSTER or not (Parameters.NETMHCPAN or Parameters.NETMHCIIPAN):
-    need_to_run_setup = True
-else:
-    need_to_run_setup = False
-
 app.layout = html.Div(children=[
     dcc.Store(id='peptides', data={}),
     html.Div('', id='tmp-folder', hidden=True),
@@ -87,8 +83,7 @@ app.layout = html.Div(children=[
                 'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
             html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
             dbc.Button('Settings', className='btn btn-secondary', style={"float": "right"}, id='settings-btn'),
-            dbc.Button('First-time setup', id='initial-setup', className='btn btn-secondary',
-                       style={"float": "right", 'margin-right': '5px'})
+            html.Button('First-time setup', id='initial-setup', className='btn btn-secondary', style={"float": "right", 'margin-right': '5px'}, hidden=True)
         ])
     ]),
 
@@ -182,7 +177,7 @@ app.layout = html.Div(children=[
             )
         ],
         id='setup-modal',
-        is_open=need_to_run_setup,
+        is_open=False,
         centered=True,
         backdrop='static',
         style={'max-width': '800px'}
