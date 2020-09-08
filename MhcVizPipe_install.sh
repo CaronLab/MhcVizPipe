@@ -161,24 +161,24 @@ mkdir "$HOME/mhcvizpipe_tools"
 
 # download python
 printf "\n##### Downloading Python bundle #####\n\n"
-curl -L -o ./temp/python.tar.gz "$URL" || echo "ERROR: An error occurred while downloading Python! Please try again. If the problem persists, contact the developers." && exit 1
+curl -L -o ./temp/python.tar.gz "$URL" || (echo "ERROR: An error occurred while downloading Python! Please try again. If the problem persists, contact the developers." && exit 1)
 printf "\n##### Done! #####\n"
 
 # extract python
 printf "\n##### Extracting Python bundle #####\n\n"
-tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR" || echo "ERROR: Python was not extracted successfully... Please try again. If the problem persists, contact the developers." && exit 1
+tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR" || (echo "ERROR: Python was not extracted successfully... Please try again. If the problem persists, contact the developers." && exit 1)
 printf "\n##### Done! #####\n"
 
 # the shebangs in the pyhton/install/bin folder are bad, so we need to replace them
 find "$INSTALL_DIR"/python/install/bin/ -type f -exec sed -i "1 s/^#!.*python.*/#!$INSTALL_DIR/python/install/bin\/python3/" {} \;
 
 printf "\n##### Installing MhcVizPipe #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel  || echo "ERROR: An error occurred while installing Wheel... Please try again. If the problem persists, contact the developers." && exit 1
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe  || echo "ERROR: An error occurred while installing MhcVizPipe through Pip... Please try again. If the problem persists, contact the developers." && exit 1
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel  || (echo "ERROR: An error occurred while installing Wheel... Please try again. If the problem persists, contact the developers." && exit 1)
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe  || (echo "ERROR: An error occurred while installing MhcVizPipe through Pip... Please try again. If the problem persists, contact the developers." && exit 1)
 printf "\n##### Done! #####\n"
 
 printf "\n##### Installing and configuring third-party tools #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.Tools.install_tools || echo "ERROR: An error occurred while installing the MhcVizPipe tools... Please try again. If the problem persists, contact the developers." && exit 1
+"$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.Tools.install_tools || (echo "ERROR: An error occurred while installing the MhcVizPipe tools... Please try again. If the problem persists, contact the developers." && exit 1)
 printf "##### Done! #####\n\n"
 
 printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.sh
@@ -186,15 +186,15 @@ chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   echo "##### Placing MhcVizPipe in PATH #####"
-  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || echo "ERROR: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh"
+  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || (echo "ERROR: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
   sudo chmod +x /usr/local/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   printf "\n"
   echo "##### Placing NetMHCpan, NetMHCIIpan and GibbsCluster in PATH #####"
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || echo "ERROR: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan"
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || echo "ERROR: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan"
-  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || echo "ERROR: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster"
+  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || (echo "ERROR: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
+  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || (echo "ERROR: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan")
+  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || (echo "ERROR: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster")
 fi
 
 echo "Would you like to delete the temporary files leftover from the installation?"
