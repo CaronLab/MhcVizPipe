@@ -417,7 +417,8 @@ app.layout = html.Div(children=[
                                    'Select the header for the column which contains the peptide list:'),
                             dbc.RadioItems(
                                 id='column-header-choices'),
-                            dbc.Button('Done', id='done-selecting-column')
+                            dbc.Button('Done', id='done-selecting-column'),
+                            dbc.Button('Cancel', id='cancel-selecting-column', style={'float': 'right'})
                         ]
                     )
                 ]
@@ -751,6 +752,7 @@ def open_close_info_modal(open_modal, close_modal):
                ],
               [Input('upload-data', 'contents'),
                Input('done-selecting-column', 'n_clicks'),
+               Input('cancel-selecting-column', 'n_clicks'),
                Input('add-peptides', 'n_clicks')],
               [State('upload-data', 'filename'),
                State('column-header-choices', 'value'),
@@ -760,7 +762,7 @@ def open_close_info_modal(open_modal, close_modal):
                State('loaded-data', 'children'),
                State('peptides', 'data')
                ])
-def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, selected_column, sample_name,
+def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_clicks, filename, selected_column, sample_name,
                        sample_description, peptide_list_state, loaded_data, peptide_data):
 
     ctx = dash.callback_context
@@ -847,6 +849,9 @@ def parse_peptide_file(contents, select_n_clicks, add_peps_n_clicks, filename, s
                 peptide_data[file] = {'description': file, 'peptides': peps, 'total_peps': total_n}
                 loaded_data += [html.P(f'{file}', style={'margin': '2px'})]
             return '', False, [], '', peptide_data, '', '', loaded_data, []
+
+    elif triggered_by == 'cancel-selecting-column':
+        return '', False, [], '', no_update, '', '', no_update, []
 
     elif triggered_by == 'add-peptides':
         if peptide_list_state in ['', None]:
@@ -980,7 +985,6 @@ if __name__ == '__main__':
      https://github.com/kevinkovalchik/MhcVizPipe.
 
      ========================================
-
     '''
     debug_welcome = f'''
     ========================================
