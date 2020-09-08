@@ -8,11 +8,11 @@ import base64
 from subprocess import Popen
 from MhcVizPipe.defaults import ROOT_DIR
 import shutil
+from sys import argv
 
 
 config_file = str(Path.home()/'.mhcvizpipe.config')
 default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_defaults.config')
-mhc_tool_dir = str(Path.home()/'mhcvizpipe_tools')
 
 if not Path(config_file).is_file():
     with open(default_config_file, 'r') as f:
@@ -120,17 +120,15 @@ def download_data_file(tool: str, destination_dir: str):
     download = Popen(command)
     _ = download.communicate()
     #urllib.request.urlretrieve(url, './data.tar.gz')
-    print('\nExtracting archive')
+    print('\nExtracting archive... ', end="", flush=True)
     tar = tarfile.open('./data.tar.gz', 'r:gz')
     tar.extractall()
     tar.close()
-    print("##### Done #####")
+    print('done')
 
 
 def update_tool_scripts_and_config():
     dlist = [x for x in Path(mhc_tool_dir).glob('*') if x.is_dir()]
-    #four_point_zero = False
-    #four_point_one = False
     for directory in dlist:
         directory = str(directory)
         if 'netmhc' in directory.lower():
@@ -159,11 +157,9 @@ def update_tool_scripts_and_config():
             update_variable_in_file(script, 'setenv GIBBS', new_value)
             update_config('GibbsCluster path', script)
 
-        #if four_point_zero and four_point_one:
-        #    update_config('NetMHCpan version', '4.0')
-
 
 def associate_files_for_mac():
+    # NOT USED, BUT MAYBE USEFUL LATER?
     install_brew = Popen(['ruby', '-e',
                           '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'])
     _ = install_brew.communicate()
@@ -180,17 +176,12 @@ def run_all(files: List[Tuple[str, bytes]]):
     update_tool_scripts_and_config()
 
 
-def remove_mac_quarantine():
-    command = [f'xattr -dr com.apple.quarantine {mhc_tool_dir}']
-
-
 if __name__ == "__main__":
+    mhc_tool_dir = str(Path(argv[1]))
     directory = Path(".")
     file_list = list(directory.glob('*.tar.gz')) + list(directory.glob('*.tar'))
     for file in file_list:
         dest = Path(mhc_tool_dir)/file.name
         shutil.copy2(str(file), str(dest))
     extract_targz(mhc_tool_dir)
-    if sys_platform() == 'Darwin':
-        remove_mac_quarantine()
     update_tool_scripts_and_config()

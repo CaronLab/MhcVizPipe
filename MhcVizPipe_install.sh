@@ -157,7 +157,7 @@ fi
 # make directories
 mkdir ./temp
 mkdir "$INSTALL_DIR"
-mkdir "$HOME/mhcvizpipe_tools"
+mkdir "$INSTALL_DIR/tools"
 
 # download python
 printf "\n##### Downloading Python bundle #####\n\n"
@@ -178,8 +178,15 @@ printf "\n##### Installing MhcVizPipe #####\n\n"
 printf "\n##### Done! #####\n"
 
 printf "\n##### Installing and configuring third-party tools #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m MhcVizPipe.Tools.install_tools || (echo "ERROR: An error occurred while installing the MhcVizPipe tools... Please try again. If the problem persists, contact the developers." && exit 1)
+"$INSTALL_DIR/python/install/bin/python3" -m MhcVizPipe.Tools.install_tools "$INSTALL_DIR/tools" || (echo "ERROR: An error occurred while installing the MhcVizPipe tools... Please try again. If the problem persists, contact the developers." && exit 1)
 printf "##### Done! #####\n\n"
+
+# remove com.apple.quarantine from xattr of all the tool files
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  printf "\n##### Removing quarantine attribute from third-party tools #####\n\n"
+  xattr "-dr com.apple.quarantine $INSTALL_DIR/tools"
+  printf "##### Done! #####\n\n"
+fi
 
 printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.sh
 chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
@@ -187,15 +194,15 @@ chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   echo "##### Placing MhcVizPipe in PATH #####"
   echo "Enter your user password to add MhcVizPipe to your PATH (Note that the password will not be visible as you type):"
-  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || (echo "ERROR: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
+  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || (echo "WARNING: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
   sudo chmod +x /usr/local/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   printf "\n"
   echo "##### Placing NetMHCpan, NetMHCIIpan and GibbsCluster in PATH #####"
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || (echo "ERROR: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
-  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || (echo "ERROR: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan")
-  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || (echo "ERROR: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster")
+  sudo cp "$HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || (echo "WARNING: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
+  sudo cp "$HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || (echo "WARNING: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/netMHCIIpan-4.0/netMHCIIpan")
+  sudo cp "$HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || (echo "WARNING: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $HOME/mhcvizpipe_tools/gibbscluster-2.0/gibbscluster")
 fi
 
 echo "Would you like to delete the temporary files leftover from the installation?"
