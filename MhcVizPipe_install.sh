@@ -184,7 +184,7 @@ printf "##### Done! #####\n\n"
 # remove com.apple.quarantine from xattr of all the tool files
 if [[ "$OSTYPE" == "darwin"* ]]; then
   printf "\n##### Removing quarantine attribute from third-party tools #####\n\n"
-  xattr -dr com.apple.quarantine "$INSTALL_DIR"/tools
+  xattr -dr com.apple.quarantine "$INSTALL_DIR/tools"
   printf "##### Done! #####\n\n"
 fi
 
