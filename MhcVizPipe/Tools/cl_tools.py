@@ -200,7 +200,6 @@ class MhcToolHelper:
             self.gibbs_files[sample.sample_name] = {}
             for run in ['unannotated', 'unsupervised']:
                 sample_dirs = list(Path(self.tmp_folder/'gibbs'/sample.sample_name/run).glob('*'))
-                print(sample_dirs)
                 high_score = 0
                 best_grouping = ''
                 best_n_motifs = 0
