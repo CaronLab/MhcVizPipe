@@ -440,8 +440,8 @@ app.layout = html.Div(children=[
                                    'Select the header for the column which contains the peptide list:'),
                             dbc.RadioItems(
                                 id='column-header-choices'),
-                            dbc.Button('Done', id='done-selecting-column'),
-                            dbc.Button('Cancel', id='cancel-selecting-column', style={'float': 'right'})
+                            dbc.Button('Done', color='primary', id='done-selecting-column', style={'float': 'left'}),
+                            dbc.Button('Cancel', id='cancel-selecting-column', style={'float': 'left', 'margin-left': '5px'})
                         ]
                     )
                 ]
@@ -926,19 +926,27 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
         return (no_update,
                 no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
-                                                children='You need to load some data first.',
-                                                style={'width': '360px', 'margin-top': '2px'})],
+                           children='You need to load some data first.',
+                           style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
                 False, '', False)
     elif (alleles in [None, [], ['']]) and (n_clicks is not None):
         return (no_update,
                 no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
-                                                children='Please select one or more alleles.',
-                                                style={'width': '360px', 'margin-top': '2px'})],
+                           children='Please select one or more alleles.',
+                           style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
                 False, '', False)
-
+    elif alleles and len(alleles) > 9:
+        return (no_update,
+                no_update,
+                [dbc.Alert(id=str(uniform(0, 1)), color='danger',
+                           children='Sorry, you cannot analyze more than 9 alleles at a time. '
+                                    'Please remove some from the list.',
+                           style={'width': '360px', 'margin-top': '2px'})],
+                no_update,
+                False, '', False)
     else:
         if n_clicks is None:
             raise PreventUpdate
