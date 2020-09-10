@@ -105,6 +105,7 @@ app.layout = html.Div(children=[
                 'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
             html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
             dbc.Button('Settings', className='btn btn-secondary', style={"float": "right"}, id='settings-btn'),
+            dbc.Button('Check for Upgrades', className='btn btn-secondary', style={"float": "right", 'margin-right': '5px'}, id='check-upgrade-btn'),
             html.Button('First-time setup', id='initial-setup', className='btn btn-secondary', style={"float": "right", 'margin-right': '5px'}, hidden=True)
         ])
     ]),
@@ -578,7 +579,29 @@ app.layout = html.Div(children=[
         is_open=False,
         centered=True,
         backdrop='static'
-        ),
+    ),
+
+    dbc.Modal(
+        [
+            dbc.ModalHeader(id='upgrade-header'),
+            dbc.ModalBody(
+                [
+                    html.Div(id='upgrade-text'),
+                    html.Div(
+                        [
+                            dbc.Button('Yes', id='upgrade-yes', color='primary', style={'float': 'left'}),
+                            dbc.Button('No', id='upgrade-no', color='primary', style={'float': 'left', 'margin-left': '5px'})
+                        ],
+                        id='upgrade-buttons',
+                        hidden=True
+                    )
+                ]
+            )
+        ],
+        id='upgrade-modal',
+        centered=True,
+        is_open=False,
+    )
 
 ], style={'padding': '20px', 'max-width': '800px'}, id='main-contents')
 
@@ -995,6 +1018,76 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
             return no_update, no_update, [], no_update, False, error, True
 
         return 'Link to report', download_href, [], '', True, '', False
+
+
+@app.callback([Output('upgrade-modal', 'is_open'),
+               Output('upgrade-header', 'children'),
+               Output('upgrade-text', 'children'),
+               Output('upgrade-buttons', 'hidden')],
+              [Input('check-upgrade-btn', 'n_clicks'),
+               Input('upgrade-yes', 'n_clicks'),
+               Input('upgrade-no', 'n_clicks')])
+def check_mvp_version_and_update(a, b, c):
+    ctx = dash.callback_context
+    triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if triggered_by == 'check-upgrade-btn':
+        uptodate, current, latest = check('MhcVizPipe')
+        if uptodate:
+            header = 'MhcVizPipe is up-to-date!'
+            body = f'The installed version of MhcVizPipe is {current}, which is up-to-date. ' \
+                   f'You can exit this window by clicking outside of it.'
+            return True, header, body, True
+        else:
+            header = 'MhcVizPipe needs to be upgraded'
+            body = [
+                html.P('A new version of MhcVizPipe is available:'),
+                html.P(f'  Current: {current}'),
+                html.P(f'  Latest: {latest}'),
+                html.P(f'Would you like to upgrade?', style={'margin-top': '20px'})
+            ]
+            return True, header, body, False
+    elif triggered_by == 'upgrade-no':
+        return False, no_update, no_update, no_update
+    elif triggered_by == 'upgrade-yes':
+        from subprocess import check_output, CalledProcessError
+        from sys import executable
+        try:
+            _ = check_output([executable, '-m', 'pip', 'install', '--upgrade', 'MhcVizPipe'])
+            header = 'Upgrade successful!'
+            body = 'MhcVizPipe is now up to date. You can exit this window by clicking outside of it.'
+            return True, header, body, False
+        except CalledProcessError as e:
+            header = 'Upgrade unsuccessful'
+            body = f'An error occurred during the upgrade process (see below). Please try again. If the problem ' \
+                   f'persists, please contact the developers. You can exit this window by clicking outside outside ' \
+                   f'of it\n\n{e.output}'
+            return True, header, body, False
+    else:
+        raise PreventUpdate
+
+
+def check(name: str) -> (bool, str, str):
+    """
+    Checks if a package is up-to-date
+    :param name:
+    :return: (up-to-date: bool, current_version: str, latest_version: str)
+    """
+    from subprocess import run
+    from sys import executable
+    latest_version = str(run([executable, '-m', 'pip', 'install', '{}==random'.format(name)], capture_output=True, text=True))
+    latest_version = latest_version[latest_version.find('(from versions:')+15:]
+    latest_version = latest_version[:latest_version.find(')')]
+    latest_version = latest_version.replace(' ','').split(',')[-1]
+
+    current_version = str(run([executable, '-m', 'pip', 'show', '{}'.format(name)], capture_output=True, text=True))
+    current_version = current_version[current_version.find('Version:')+8:]
+    current_version = current_version[:current_version.find('\\n')].replace(' ','')
+
+    if latest_version == current_version:
+        return True, current_version, latest_version
+    else:
+        return False, current_version, latest_version
 
 
 @app.server.route("/download/<path:path>")
