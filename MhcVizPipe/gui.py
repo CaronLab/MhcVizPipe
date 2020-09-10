@@ -74,7 +74,8 @@ app.layout = html.Div(children=[
                     html.P('Error message:'),
                     dcc.Textarea(id='runtime-error-textarea',
                                  style={'width': '640px',
-                                        'height': '480px'}),
+                                        'height': '480px'},
+                                 contentEditable=False),
                     html.P('Click outside this box to close it, or refresh your browser to reset the whole application.')
                 ]
             )
@@ -1083,7 +1084,8 @@ def check_mvp_version_and_update(a, b, c):
                                f'please contact the developers. You can exit this window by clicking outside of '
                                f'it.', style={'margin-bottom': '10px'}),
                         dcc.Textarea(value=output.decode(),
-                                     style={'width': '600px', 'height': '400px'})]
+                                     style={'width': '400px', 'height': '400px'},
+                                     contentEditable=False)]
                 return True, header, body, True, no_update
         except CalledProcessError as e:
             header = 'Upgrade unsuccessful'
@@ -1091,7 +1093,8 @@ def check_mvp_version_and_update(a, b, c):
                            f'please contact the developers. You can exit this window by clicking outside of '
                            f'it.', style={'margin-bottom': '10px'}),
                     dcc.Textarea(value=e.output,
-                                 style={'width': '600px', 'height': '400px'})]
+                                 style={'width': '400px', 'height': '400px'},
+                                 contentEditable=False)]
             return True, header, body, True, no_update
     else:
         raise PreventUpdate
