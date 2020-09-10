@@ -105,7 +105,7 @@ app.layout = html.Div(children=[
                 'A quick and user-friendly visualization tool for mass spectrometry data of MHC class I and II peptides.'),
             html.A('Click here for help and resources', id='open-info-modal', style=dict(color='blue')),
             dbc.Button('Settings', className='btn btn-secondary', style={"float": "right"}, id='settings-btn'),
-            dbc.Button('Check for Upgrades', className='btn btn-secondary', style={"float": "right", 'margin-right': '5px'}, id='check-upgrade-btn'),
+            dbc.Button('Check for Updates', className='btn btn-secondary', style={"float": "right", 'margin-right': '5px'}, id='check-upgrade-btn'),
             html.Button('First-time setup', id='initial-setup', className='btn btn-secondary', style={"float": "right", 'margin-right': '5px'}, hidden=True)
         ])
     ]),
@@ -581,26 +581,29 @@ app.layout = html.Div(children=[
         backdrop='static'
     ),
 
-    dbc.Modal(
-        [
-            dbc.ModalHeader(id='upgrade-header'),
-            dbc.ModalBody(
-                [
-                    html.Div(id='upgrade-text'),
-                    html.Div(
-                        [
-                            dbc.Button('Yes', id='upgrade-yes', color='primary', style={'float': 'left'}),
-                            dbc.Button('No', id='upgrade-no', color='primary', style={'float': 'left', 'margin-left': '5px'})
-                        ],
-                        id='upgrade-buttons',
-                        hidden=True
-                    )
-                ]
-            )
-        ],
-        id='upgrade-modal',
-        centered=True,
-        is_open=False,
+    dcc.Loading(
+        dbc.Modal(
+            [
+                dbc.ModalHeader(id='upgrade-header'),
+                dbc.ModalBody(
+                    [
+                        html.Div(id='upgrade-text'),
+                        html.Div(
+                            [
+                                dbc.Button('Yes', id='upgrade-yes', color='primary', style={'float': 'left'}),
+                                dbc.Button('No', id='upgrade-no', color='secondary', style={'float': 'left', 'margin-left': '5px'})
+                            ],
+                            id='upgrade-buttons',
+                            hidden=True
+                        )
+                    ]
+                )
+            ],
+            id='upgrade-modal',
+            centered=True,
+            is_open=False,
+        ),
+        fullscreen=True, style={'z-index': '999999'}
     )
 
 ], style={'padding': '20px', 'max-width': '800px'}, id='main-contents')
@@ -1023,7 +1026,8 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
 @app.callback([Output('upgrade-modal', 'is_open'),
                Output('upgrade-header', 'children'),
                Output('upgrade-text', 'children'),
-               Output('upgrade-buttons', 'hidden')],
+               Output('upgrade-buttons', 'hidden'),
+               Output('upgrade-modal', 'backdrop')],
               [Input('check-upgrade-btn', 'n_clicks'),
                Input('upgrade-yes', 'n_clicks'),
                Input('upgrade-no', 'n_clicks')])
@@ -1032,42 +1036,68 @@ def check_mvp_version_and_update(a, b, c):
     triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if triggered_by == 'check-upgrade-btn':
-        uptodate, current, latest = check('MhcVizPipe')
-        if uptodate:
+        uptodate, current, latest = check_if_version_is_uptodate('MhcVizPipe')
+        if latest == 'none':
+            header = 'Error checking for updates!'
+            body = ['An error occured while checking for updates. Please check your internet connection and try again. ' \
+                    'If the problem persists, please contact the developers.',
+                    'You can exit this window by clicking outside of it.']
+            return True, header, body, True, no_update
+        elif uptodate:
             header = 'MhcVizPipe is up-to-date!'
             body = f'The installed version of MhcVizPipe is {current}, which is up-to-date. ' \
                    f'You can exit this window by clicking outside of it.'
-            return True, header, body, True
+            return True, header, body, True, no_update
         else:
             header = 'MhcVizPipe needs to be upgraded'
             body = [
                 html.P('A new version of MhcVizPipe is available:'),
-                html.P(f'  Current: {current}'),
-                html.P(f'  Latest: {latest}'),
+                html.P(f'  Current: {current}', style={'white-space': 'pre'}),
+                html.P(f'  Latest: {latest}', style={'white-space': 'pre'}),
                 html.P(f'Would you like to upgrade?', style={'margin-top': '20px'})
             ]
-            return True, header, body, False
+            return True, header, body, False, no_update
     elif triggered_by == 'upgrade-no':
-        return False, no_update, no_update, no_update
+        return False, no_update, no_update, no_update, no_update
     elif triggered_by == 'upgrade-yes':
-        from subprocess import check_output, CalledProcessError
+        from subprocess import check_output, CalledProcessError, STDOUT
         from sys import executable
         try:
-            _ = check_output([executable, '-m', 'pip', 'install', '--upgrade', 'MhcVizPipe'])
-            header = 'Upgrade successful!'
-            body = 'MhcVizPipe is now up to date. You can exit this window by clicking outside of it.'
-            return True, header, body, False
+            output = check_output([executable, '-m', 'pip', 'install', '--upgrade', 'MhcVizPipe'], stderr=STDOUT)
+            uptodate, current, latest = check_if_version_is_uptodate('MhcVizPipe')
+            if current == latest:
+                header = 'Upgrade successful!'
+                body = ['MhcVizPipe is now up to date. You will need to restart the MhcVizPipe server to start using '
+                        'the new version:',
+                        html.Ol(
+                            [
+                                html.Li('Close the terminal from which you started MhcVizPipe.'),
+                                html.Li('Close this browser tab.'),
+                                html.Li('Start MhcVizPipe as usual.')
+                            ], style={'margin-left': '10px'}
+                        )]
+                return True, header, body, True, 'static'
+            else:
+                header = 'Upgrade unsuccessful'
+                body = [html.P(f'Something went wrong (see output below). Please try again. If the problem persists, '
+                               f'please contact the developers. You can exit this window by clicking outside of '
+                               f'it.', style={'margin-bottom': '10px'}),
+                        dcc.Textarea(value=output.decode(),
+                                     style={'width': '600px', 'height': '400px'})]
+                return True, header, body, True, no_update
         except CalledProcessError as e:
             header = 'Upgrade unsuccessful'
-            body = f'An error occurred during the upgrade process (see below). Please try again. If the problem ' \
-                   f'persists, please contact the developers. You can exit this window by clicking outside outside ' \
-                   f'of it\n\n{e.output}'
-            return True, header, body, False
+            body = [html.P(f'Something went wrong (see output below). Please try again. If the problem persists, '
+                           f'please contact the developers. You can exit this window by clicking outside of '
+                           f'it.', style={'margin-bottom': '10px'}),
+                    dcc.Textarea(value=e.output,
+                                 style={'width': '600px', 'height': '400px'})]
+            return True, header, body, True, no_update
     else:
         raise PreventUpdate
 
 
-def check(name: str) -> (bool, str, str):
+def check_if_version_is_uptodate(name: str) -> (bool, str, str):
     """
     Checks if a package is up-to-date
     :param name:
