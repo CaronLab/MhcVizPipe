@@ -1131,7 +1131,7 @@ def get_report(path):
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.4.3
+     MhcVizPipe v0.4.4
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
