@@ -1135,7 +1135,7 @@ def get_report(path):
 if __name__ == '__main__':
     welcome = f'''
      ========================================
-     MhcVizPipe v0.4.4
+     MhcVizPipe v0.4.5
 
      Welcome to MhcVizPipe! To open the GUI, open the following link
      in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
@@ -1161,7 +1161,7 @@ if __name__ == '__main__':
     You are running MhcVizPipe in debugging mode. This uses the
     development server shipped with Flask.
     
-    The GUI running here: http://{Parameters.HOSTNAME}:8971
+    The GUI is running here: http://{Parameters.HOSTNAME}:8971
 
     ========================================
     '''
