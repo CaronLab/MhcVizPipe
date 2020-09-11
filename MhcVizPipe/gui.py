@@ -250,24 +250,28 @@ app.layout = html.Div(children=[
 
     dbc.Row([
         dbc.Col([
+            html.P('To load data, use the light blue area below or copy-and-paste into the following text box:'),
             dcc.Upload(
                 id='upload-data',
-                children=html.Div([
-                    'Drag and Drop or ',
-                    html.A('Select a File', style={'text-decoration': 'underline', 'color': 'blue'}),
+                children=[
+                    'Drag and drop one or more files in this area, or ',
+                    html.A('Click to Select File(s)', style={'color': 'blue', 'text-decoration': 'underline'}),
                     ' (.txt, .csv, .tsv)'
-                ]),
+                ],
                 style={
-                    'height': '60px',
                     'lineHeight': '60px',
                     'borderWidth': '1px',
                     'borderStyle': 'dashed',
                     'borderRadius': '5px',
-                    'textAlign': 'center'
+                    'textAlign': 'center',
+                    'background-color': '#d6ebff'
                 },
                 # Allow multiple files to be uploaded
                 multiple=True
             ),
+            html.P('Note: you cannot sequentially load files with identical contents (i.e. duplicates).',
+                   style={'margin-left': '20px',
+                          'margin-bottom': '20px'}),
 
             html.P(id='display-file-name'),
 
@@ -1040,7 +1044,7 @@ def check_mvp_version_and_update(a, b, c):
         uptodate, current, latest = check_if_version_is_uptodate('MhcVizPipe')
         if latest == 'none':
             header = 'Error checking for updates!'
-            body = ['An error occured while checking for updates. Please check your internet connection and try again. ' \
+            body = ['An error occured while checking for updates. Please check your internet connection and try again. '
                     'If the problem persists, please contact the developers.',
                     'You can exit this window by clicking outside of it.']
             return True, header, body, True, no_update
