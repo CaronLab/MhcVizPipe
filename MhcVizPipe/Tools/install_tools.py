@@ -14,11 +14,7 @@ from sys import argv
 config_file = str(Path.home()/'.mhcvizpipe.config')
 default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_defaults.config')
 
-# this is a fresh installation, so we are going to clear out any existing config files
-with open(default_config_file, 'r') as f:
-    settings = ''.join(f.readlines())
-with open(str(config_file), 'w') as f:
-    f.write(settings)
+
 
 
 def extract_targz(directory: str, archive_type: str = 'auto'):
@@ -46,19 +42,22 @@ def replace_tool_scripts(directory: str):
     os.chdir(str(d))
     folders = [x for x in list(d.glob('*')) if x.is_dir()]
     for f in folders:
-        if 'gibbscluster' in f:
+        if 'gibbscluster' in f.name:
             url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/gibbscluster"
             dest = "gibbscluster"
-        elif 'netMHCpan-4.0' in f:
+        elif 'netMHCpan-4.0' in f.name:
             url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/netMHCpan4.0"
             dest = "netMHCpan"
+        elif 'netMHCIIpan' in f.name:
+            url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/netMHCIIpan"
+            dest = "netMHCIIpan"
         else:
             url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/netMHCpan4.1"
             dest = "netMHCpan"
         # rename the old script
-        Path(d / dest).rename(str(d / dest) + '.bak')
+        Path(f / dest).rename(str(f / dest) + '.bak')
         # download the new script
-        command = f'curl -L -o ./{dest} {url}'.split()
+        command = f'curl -L -o {f / dest} {url}'.split()
         download = Popen(command)
         _ = download.communicate()
 
@@ -149,7 +148,7 @@ def download_data_file(tool: str, destination_dir: str):
     print('done')
 
 
-def update_tool_scripts_and_config():
+def update_tool_scripts_and_config(mhc_tool_dir):
     dlist = [x for x in Path(mhc_tool_dir).glob('*') if x.is_dir()]
     for directory in dlist:
         directory = str(directory)
@@ -199,6 +198,12 @@ def run_all(files: List[Tuple[str, bytes]]):
 
 
 if __name__ == "__main__":
+    # this is a fresh installation, so we are going to clear out any existing config files
+    with open(default_config_file, 'r') as f:
+        settings = ''.join(f.readlines())
+    with open(str(config_file), 'w') as f:
+        f.write(settings)
+
     mhc_tool_dir = str(Path(argv[1]))
     directory = Path(".")
     file_list = list(directory.glob('*.tar.gz')) + list(directory.glob('*.tar'))
@@ -207,4 +212,4 @@ if __name__ == "__main__":
         shutil.copy2(str(file), str(dest))
     extract_targz(mhc_tool_dir)
     replace_tool_scripts(mhc_tool_dir)
-    update_tool_scripts_and_config()
+    update_tool_scripts_and_config(mhc_tool_dir)
