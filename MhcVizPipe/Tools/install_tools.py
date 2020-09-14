@@ -170,12 +170,12 @@ def update_tool_scripts_and_config():
                 if '4.1' in Path(directory).name:
                     update_config('NetMHCpan version', '4.1')
                     download_data_file('netMHCpan4.1', directory)
-            new_value = f'setenv NMHOME {directory}'
+            new_value = f'NMHOME={directory}'
             update_variable_in_file(script, 'NMHOME=', new_value)
-            update_variable_in_file(script, 'TMPDIR=', '\tsetenv TMPDIR $NMHOME/tmp')
+            update_variable_in_file(script, 'TMPDIR=', '\tTMPDIR=$NMHOME/tmp')
         elif 'gibbscluster' in directory.lower():
             script = str(Path(directory) / 'gibbscluster')
-            new_value = f'setenv GIBBS {directory}'
+            new_value = f'GIBBS={directory}'
             update_variable_in_file(script, 'GIBBS=', new_value)
             update_config('GibbsCluster path', script)
 
