@@ -170,7 +170,7 @@ tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR" || (echo "ERROR: Python 
 printf "\n##### Done! #####\n"
 
 # the shebangs in the pyhton/install/bin folder are bad, so we need to replace them
-find "$INSTALL_DIR"/python/install/bin/ -type f -exec sed -i "1 s/^#!.*python.*/#!$INSTALL_DIR/python/install/bin\/python3/" {} \;
+find "$INSTALL_DIR"/python/install/bin/ -type f -exec sed -i "1 s|^#!.*python.*|#!$INSTALL_DIR/python/install/bin/python3|" {} \;
 
 printf "\n##### Installing MhcVizPipe #####\n\n"
 "$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel  || (echo "ERROR: An error occurred while installing Wheel... Please try again. If the problem persists, contact the developers." && exit 1)
