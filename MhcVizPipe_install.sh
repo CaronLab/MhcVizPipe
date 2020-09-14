@@ -191,19 +191,58 @@ fi
 printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.sh
 chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 
+# set up MhcVizPipe bin folder
+
+if [[ "$MHCVIZPIPE_TO_PATH" == "true" || "$TOOLS_TO_PATH" == "true" ]]; then
+  mkdir "$INSTALL_DIR"/bin
+  if [[ -f "$HOME"/.profile ]]; then
+    if ! grep -q "MhcVizPipe" "$HOME"/.profile; then
+      echo "PATH=$INSTALL_DIR/bin:$PATH;" >> "$HOME"/.profile
+      echo "export PATH;" >> "$HOME"/.profile
+    fi
+
+  elif [[ -f "$HOME"/.bash_profile ]]; then
+    if ! grep -q "MhcVizPipe" "$HOME"/.bash_profile; then
+      echo "PATH=$INSTALL_DIR/bin:$PATH;" >> "$HOME"/.bash_profile
+      echo "export PATH;" >> "$HOME"/.bash_profile
+    fi
+  else
+    if ! grep -q "MhcVizPipe" "$HOME"/.bashrc; then
+      echo "PATH=$INSTALL_DIR/bin:$PATH;" >> "$HOME"/.bashrc
+      echo "export PATH;" >> "$HOME"/.bashrc
+    fi
+  fi
+fi
+
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   echo "##### Placing MhcVizPipe in PATH #####"
-  echo "Enter your user password to add MhcVizPipe to your PATH (Note that the password will not be visible as you type):"
-  sudo cp "$INSTALL_DIR"/MhcVizPipe.sh /usr/local/bin/MhcVizPipe || (echo "WARNING: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
-  sudo chmod +x /usr/local/bin/MhcVizPipe
+  cp "$INSTALL_DIR"/MhcVizPipe.sh "$INSTALL_DIR"/bin/MhcVizPipe || (echo "WARNING: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
+  chmod +x "$INSTALL_DIR"/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   printf "\n"
   echo "##### Placing NetMHCpan, NetMHCIIpan and GibbsCluster in PATH #####"
-  sudo cp "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" /usr/local/bin/netMHCpan || (echo "WARNING: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
-  sudo cp "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan" /usr/local/bin/netMHCIIpan || (echo "WARNING: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan")
-  sudo cp "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster" /usr/local/bin/gibbscluster || (echo "WARNING: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster")
+  if [[ -f "$INSTALL_DIR"/bin/netMHCpan ]]; then
+    rm "$INSTALL_DIR"/bin/netMHCpan
+  fi
+  if [[ -f "$INSTALL_DIR"/bin/netMHCIIpan ]]; then
+    rm "$INSTALL_DIR"/bin/netMHCIIpan
+  fi
+  if [[ -f "$INSTALL_DIR"/bin/gibbscluster ]]; then
+    rm "$INSTALL_DIR"/bin/gibbscluster
+  fi
+  cp "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" "$INSTALL_DIR"/bin/netMHCpan || (echo "WARNING: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
+  cp "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan" "$INSTALL_DIR"/bin/netMHCIIpan || (echo "WARNING: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan")
+  cp "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster" "$INSTALL_DIR"/bin/gibbscluster || (echo "WARNING: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster")
+  chmod +x "$INSTALL_DIR"/bin/netMHCpan
+  chmod +x "$INSTALL_DIR"/bin/netMHCIIpan
+  chmod +x "$INSTALL_DIR"/bin/gibbscluster
 fi
+
+# make sure the tools run from their original scripts too
+chmod +x "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan"
+chmod +x "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan"
+chmod +x "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster"
 
 echo "Would you like to delete the temporary files leftover from the installation?"
 read -rp "[y/n]: " DELTEMP
