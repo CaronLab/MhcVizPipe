@@ -41,6 +41,28 @@ def extract_targz(directory: str, archive_type: str = 'auto'):
         tar.close()
 
 
+def replace_tool_scripts(directory: str):
+    d = Path(directory)
+    os.chdir(str(d))
+    folders = [x for x in list(d.glob('*')) if x.is_dir()]
+    for f in folders:
+        if 'gibbscluster' in f:
+            url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/gibbscluster"
+            dest = "gibbscluster"
+        elif 'netMHCpan-4.0' in f:
+            url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/netMHCpan4.0"
+            dest = "netMHCpan"
+        else:
+            url = "https://github.com/CaronLab/MhcVizPipe/raw/master/tool_scripts/netMHCpan4.1"
+            dest = "netMHCpan"
+        # rename the old script
+        Path(d / dest).rename(str(d / dest) + '.bak')
+        # download the new script
+        command = f'curl -L -o ./{dest} {url}'.split()
+        download = Popen(command)
+        _ = download.communicate()
+
+
 def move_file_to_tool_location(filename: str, contents):
     _, contents = contents.split(',')
     file_content = base64.b64decode(contents)
@@ -149,12 +171,12 @@ def update_tool_scripts_and_config():
                     update_config('NetMHCpan version', '4.1')
                     download_data_file('netMHCpan4.1', directory)
             new_value = f'setenv NMHOME {directory}'
-            update_variable_in_file(script, 'setenv NMHOME', new_value)
-            update_variable_in_file(script, 'setenv TMPDIR', '\tsetenv TMPDIR $NMHOME/tmp')
+            update_variable_in_file(script, 'NMHOME=', new_value)
+            update_variable_in_file(script, 'TMPDIR=', '\tsetenv TMPDIR $NMHOME/tmp')
         elif 'gibbscluster' in directory.lower():
             script = str(Path(directory) / 'gibbscluster')
             new_value = f'setenv GIBBS {directory}'
-            update_variable_in_file(script, 'setenv GIBBS', new_value)
+            update_variable_in_file(script, 'GIBBS=', new_value)
             update_config('GibbsCluster path', script)
 
 
@@ -184,4 +206,5 @@ if __name__ == "__main__":
         dest = Path(mhc_tool_dir)/file.name
         shutil.copy2(str(file), str(dest))
     extract_targz(mhc_tool_dir)
+    replace_tool_scripts(mhc_tool_dir)
     update_tool_scripts_and_config()
