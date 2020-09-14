@@ -30,7 +30,7 @@ class Job:
         my_env = os.environ.copy()
 
         command = self.command.split(' ') if isinstance(self.command, str) else self.command
-        p = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=my_env)
+        p = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=my_env, shell=True)
         self.stdout, self.stderr = p.communicate()
         self.time_end = str(datetime.now()).replace(' ', '')
         self.returncode = p.returncode
