@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# This the main GibbsCluster 2.0 script. It only acts as the frontend to the
+# software proper, a compiled binary.
+# It has been rewritten for bash by Kevin Kovalchik
+#
+# VERSION:  2.0e  2017, Apr 2
+# Stand-alone version
+
+###############################################################################
+#               GENERAL SETTINGS: CUSTOMIZE TO YOUR SITE
+###############################################################################
+
+# Set FULL PATH to the GibbsCluster 2.0 directory (mandatory)
+GIBBS=/home/labcaron/MhcVizPipe/tools/gibbscluster-2.0
+export GIBBS
+
+# set paths to Seq2Logo and/or R to generate graphics (optional)
+Seq2Logo=""
+Rpath=""
+
+###############################################################################
+#               NOTHING SHOULD NEED CHANGING BELOW THIS LINE!
+###############################################################################
+
+# main ========================================================================
+
+gibbs="$GIBBS"/GibbsCluster-2.0e_SA.pl
+
+if [[ -f "$gibbs" ]]; then
+    if [[ "$Seq2Logo" != "" && "$Rpath" != "" ]]; then
+   	    "$gibbs" -H "$Rpath" -G "$Seq2Logo" "$@"
+   	else
+   		if [[ "$Seq2Logo" != "" ]]; then
+   			 "$gibbs" -G $Seq2Logo "$@"
+   		elif [[ "$Rpath" != "" ]]; then
+   			 "$gibbs" -H "$Rpath" "$@"
+   		else
+   			"$gibbs" "$@"
+   		fi
+   	fi
+else
+   echo "$gibbs" not found
+fi
+
+# end of script ===============================================================

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# This the main NetMHCpan 4.0 script. It only acts as the frontend to the
+# software proper, a compiled binary.
+# It has been rewritten for bash by Kevin Kovalchik
+#
+# VERSION:	2019 Dec 9 launch
+#
+
+###############################################################################
+#               GENERAL SETTINGS: CUSTOMIZE TO YOUR SITE
+###############################################################################
+
+# full path to the NetMHCpan 4.0 directory (mandatory)
+NMHOME=/home/labcaron/MhcVizPipe/tools/netMHCpan-4.0
+export NMHOME
+
+# determine where to store temporary files (must be writable to all users)
+
+if [[ -z $TMPDIR ]]; then
+  TMPDIR="$NMHOME"/tmp
+	export TMPDIR
+fi
+
+# determine platform (do not change this unless you don't have 'uname'!)
+UNIX=$(uname -s)
+export UNIX
+AR=$(uname -m)
+export AR
+
+###############################################################################
+#               NOTHING SHOULD NEED CHANGING BELOW THIS LINE!
+###############################################################################
+
+# other settings
+PLATFORM=$(echo "$UNIX" "$AR" | awk '{print $1"_"$2}')
+NETMHCpan="$NMHOME/$PLATFORM"
+export NETMHCpan
+DTUIBSWWW=www
+export DTUIBSWWW
+NetMHCpanWWWPATH=/services/NetMHCpan/tmp/
+export NetMHCpanWWWPATH
+NetMHCpanWWWDIR=/usr/opt/www/pub/CBS/services/NetMHCpan/tmp
+export NetMHCpanWWWDIR
+
+# main ========================================================================
+if [[ -f "$NETMHCpan"/bin/netMHCpan ]]; then
+   "$NETMHCpan"/bin/netMHCpan "$@"
+else
+   echo netMHCpan: no binaries found for "$PLATFORM" "$NETMHCpan"/bin/netMHCpan
+fi
+
+# end of script ===============================================================

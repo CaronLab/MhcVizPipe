@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# This the main NetMHCIIpan 4.0 script. It only acts as the frontend to the
+# software proper, a compiled binary.
+# It has been rewritten for bash by Kevin Kovalchik
+#
+# VERSION:	April 2020
+#
+
+###############################################################################
+#               GENERAL SETTINGS: CUSTOMIZE TO YOUR SITE
+###############################################################################
+
+# full path to the NetMHCIIpan 4.0 directory (mandatory)
+NMHOME=/home/labcaron/MhcVizPipe/tools/netMHCIIpan-4.0
+export NMHOME
+
+# determine where to store temporary files (must be writable to all users)
+
+if [[ -z $TMPDIR ]]; then
+  TMPDIR="$NMHOME"/tmp
+	export TMPDIR
+fi
+
+# determine platform (do not change this unless you don't have 'uname'!)
+UNIX=$(uname -s)
+export UNIX
+AR=$(uname -m)
+export AR
+
+###############################################################################
+#               NOTHING SHOULD NEED CHANGING BELOW THIS LINE!
+###############################################################################
+
+# other settings
+PLATFORM=$(echo "$UNIX" "$AR" | awk '{print $1"_"$2}')
+NETMHCIIpan="$NMHOME"
+export NETMHCIIpan
+NetMHCIIpanPLAT=$NMHOME/"$PLATFORM"
+export NetMHCIIpanPLAT
+NetMHCIIpanWWWPATH=/services/NetMHCIIpan-4.0/tmp
+export NetMHCIIpanWWWPATH
+NetMHCIIpanWWWDIR=/usr/opt/www/pub/CBS/services/NetMHCIIpan-4.0/tmp
+export NetMHCIIpanWWWDIR
+
+
+# main ========================================================================
+if [[ -f "$NETMHCIIpan"/NetMHCIIpan-4.0.pl ]]; then
+   "$NETMHCIIpan"/NetMHCIIpan-4.0.pl "$@"
+else
+   echo "$NETMHCIIpan"/NetMHCIIpan-4.0.pl not found
+fi
+
+# end of script ===============================================================
