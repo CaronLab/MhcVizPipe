@@ -27,10 +27,8 @@ class Job:
         if self.working_directory is not None:
             os.chdir(self.working_directory)
 
-        my_env = os.environ.copy()
-
         command = self.command.split(' ') if isinstance(self.command, str) else self.command
-        p = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=my_env, shell=True)
+        p = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         self.stdout, self.stderr = p.communicate()
         self.time_end = str(datetime.now()).replace(' ', '')
         self.returncode = p.returncode
