@@ -1,17 +1,17 @@
 #!/bin/bash
 
-function contains() {
-    local n=$#
-    local value=${!n}
-    for ((i=1;i < $#;i++)) {
-        if [ "${!i}" == "${value}" ]; then
-            echo "y"
-            return 0
-        fi
-    }
-    echo "n"
-    return 1
+exit_on_error() {
+    exit_code=$1
+    last_command=${*:2}
+    if [ "$exit_code" -ne 0 ]; then
+        >&2 echo "\"${last_command}\" command failed with exit code ${exit_code}."
+        exit "$exit_code"
+    fi
 }
+
+# enable !! command completion
+set -o history -o histexpand
+
 
 # get tar and tar.gz files in directory
 ARCHIVES=(./*.tar*)
@@ -161,24 +161,29 @@ mkdir "$INSTALL_DIR/tools"
 
 # download python
 printf "\n##### Downloading Python bundle #####\n\n"
-curl -L -o ./temp/python.tar.gz "$URL" || (echo "ERROR: An error occurred while downloading Python! Please try again. If the problem persists, contact the developers." && exit 1)
+curl -L -o ./temp/python.tar.gz "$URL"
+exit_on_error $? !!
 printf "\n##### Done! #####\n"
 
 # extract python
 printf "\n##### Extracting Python bundle #####\n\n"
-tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR" || (echo "ERROR: Python was not extracted successfully... Please try again. If the problem persists, contact the developers." && exit 1)
+tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR"
+exit_on_error $? !!
 printf "\n##### Done! #####\n"
 
 # the shebangs in the pyhton/install/bin folder are bad, so we need to replace them
 find "$INSTALL_DIR"/python/install/bin/ -type f -exec sed -i "1 s|^#!.*python.*|#!$INSTALL_DIR/python/install/bin/python3|" {} \;
 
 printf "\n##### Installing MhcVizPipe #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel  || (echo "ERROR: An error occurred while installing Wheel... Please try again. If the problem persists, contact the developers." && exit 1)
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe  || (echo "ERROR: An error occurred while installing MhcVizPipe through Pip... Please try again. If the problem persists, contact the developers." && exit 1)
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel
+exit_on_error $? !!
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe
+exit_on_error $? !!
 printf "\n##### Done! #####\n"
 
 printf "\n##### Installing and configuring third-party tools #####\n\n"
-"$INSTALL_DIR/python/install/bin/python3" -m MhcVizPipe.Tools.install_tools "$INSTALL_DIR/tools" || (echo "ERROR: An error occurred while installing the MhcVizPipe tools... Please try again. If the problem persists, contact the developers." && exit 1)
+"$INSTALL_DIR/python/install/bin/python3" -m MhcVizPipe.Tools.install_tools "$INSTALL_DIR/tools"
+exit_on_error $? !!
 printf "##### Done! #####\n\n"
 
 # remove com.apple.quarantine from xattr of all the tool files
@@ -196,32 +201,45 @@ chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" || "$TOOLS_TO_PATH" == "true" ]]; then
   mkdir "$INSTALL_DIR"/bin
   if [[ -f "$HOME"/.profile ]]; then
-    if ! grep -q "MhcVizPipe" "$HOME"/.profile; then
-      echo "PATH=$INSTALL_DIR/bin:$PATH;" >> "$HOME"/.profile
+    if grep -q "MhcVizPipe" "$HOME"/.profile != 0; then
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.profile
       echo "export PATH;" >> "$HOME"/.profile
+      source "$HOME"/.profile
     fi
-
-  elif [[ -f "$HOME"/.bash_profile ]]; then
-    if ! grep -q "MhcVizPipe" "$HOME"/.bash_profile; then
-      echo "PATH=$INSTALL_DIR/bin:$PATH;" >> "$HOME"/.bash_profile
+  fi
+  if [[ -f "$HOME"/.bash_profile ]]; then
+    if grep -q "MhcVizPipe" "$HOME"/.bash_profile != 0; then
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bash_profile
       echo "export PATH;" >> "$HOME"/.bash_profile
+      source "$HOME"/.bash_profile
+    fi
+  fi
+  if [[ -f "$HOME"/.bash_login ]]; then
+    if grep -q "MhcVizPipe" "$HOME"/.bash_login != 0; then
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bash_login
+      echo "export PATH;" >> "$HOME"/.bash_login
+      source "$HOME"/.bash_login
+    fi
+  fi
+  if [[ -f "$HOME"/.bashrc ]]; then
+    if grep -q "MhcVizPipe" "$HOME"/.bashrc != 0; then
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bashrc
+      echo "export PATH;" >> "$HOME"/.bashrc
+      source "$HOME"/.bashrc
     fi
   else
-    if ! grep -q "MhcVizPipe" "$HOME"/.bashrc; then
-      echo "PATH=$INSTALL_DIR/bin:$PATH;" >> "$HOME"/.bashrc
-      echo "export PATH;" >> "$HOME"/.bashrc
-    fi
+    echo PATH="$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bashrc
+    echo "export PATH;" >> "$HOME"/.bashrc
+    source "$HOME"/.bashrc
   fi
 fi
 
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
-  echo "##### Placing MhcVizPipe in PATH #####"
-  cp "$INSTALL_DIR"/MhcVizPipe.sh "$INSTALL_DIR"/bin/MhcVizPipe || (echo "WARNING: An error occurred while placing MhcVizPipe in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/MhcVizPipe.sh")
+  cp "$INSTALL_DIR"/MhcVizPipe.sh "$INSTALL_DIR"/bin/MhcVizPipe
+  exit_on_error $? !!
   chmod +x "$INSTALL_DIR"/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
-  printf "\n"
-  echo "##### Placing NetMHCpan, NetMHCIIpan and GibbsCluster in PATH #####"
   if [[ -f "$INSTALL_DIR"/bin/netMHCpan ]]; then
     rm "$INSTALL_DIR"/bin/netMHCpan
   fi
@@ -231,9 +249,12 @@ if [[ "$TOOLS_TO_PATH" == "true" ]]; then
   if [[ -f "$INSTALL_DIR"/bin/gibbscluster ]]; then
     rm "$INSTALL_DIR"/bin/gibbscluster
   fi
-  cp "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" "$INSTALL_DIR"/bin/netMHCpan || (echo "WARNING: An error occurred while placing netMHCpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan")
-  cp "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan" "$INSTALL_DIR"/bin/netMHCIIpan || (echo "WARNING: An error occurred while placing netMHCIIpan in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan")
-  cp "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster" "$INSTALL_DIR"/bin/gibbscluster || (echo "WARNING: An error occurred while placing gibbscluster in the PATH. To do so manually copy the following file into the /usr/local/bin folder: $INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster")
+  cp "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" "$INSTALL_DIR"/bin/netMHCpan
+  exit_on_error $? !!
+  cp "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan" "$INSTALL_DIR"/bin/netMHCIIpan
+  exit_on_error $? !!
+  cp "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster" "$INSTALL_DIR"/bin/gibbscluster
+  exit_on_error $? !!
   chmod +x "$INSTALL_DIR"/bin/netMHCpan
   chmod +x "$INSTALL_DIR"/bin/netMHCIIpan
   chmod +x "$INSTALL_DIR"/bin/gibbscluster
@@ -244,7 +265,7 @@ chmod +x "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan"
 chmod +x "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan"
 chmod +x "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster"
 
-echo "Would you like to delete the temporary files leftover from the installation?"
+echo "Installation complete. Would you like to delete the temporary files leftover from the installation?"
 read -rp "[y/n]: " DELTEMP
 if [[ "$DELTEMP" == 'y' ]]; then
   rm -R ./temp
