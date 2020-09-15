@@ -1,18 +1,5 @@
 #!/bin/bash
 
-exit_on_error() {
-    exit_code=$1
-    last_command=${*:2}
-    if [ "$exit_code" -ne 0 ]; then
-        >&2 echo "\"${last_command}\" command failed with exit code ${exit_code}."
-        exit "$exit_code"
-    fi
-}
-
-# enable !! command completion
-set -o history -o histexpand
-
-
 # get tar and tar.gz files in directory
 ARCHIVES=(./*.tar*)
 if [[ ${#ARCHIVES[@]} -ne 3 ]]; then
@@ -102,6 +89,17 @@ else
   echo "MhcVizPipe will be installed into $INSTALL_DIR."
 fi
 
+if [[ -e "$INSTALL_DIR" ]]; then
+  echo " "
+  echo "$INSTALL_DIR already exists. If you continue all its contents will be deleted."
+  read -rp "Procced? [y/n]: " DELETE_OLD_INSTALLATION
+  if [[ "$DELETE_OLD_INSTALLATION" == "y" ||"$DELETE_OLD_INSTALLATION" == "Y"  || "$DELETE_OLD_INSTALLATION" == "yes" ]]; then
+    rm -Rf "$INSTALL_DIR"
+  else
+    echo "Exiting..."
+  fi
+fi
+
 printf "\n"
 
 echo "Would you like to add MhcVizPipe to your PATH? This will make it much easier to start the program in the future."
@@ -131,7 +129,7 @@ echo " Add NetMHCpan, NetMHCIIpan and GibbsCluster to PATH: $TOOLS_TO_PATH"
 echo " NetMHCpan version: $NETMHCPAN_VERSION"
 printf "\n"
 
-read -rp "Procced? [y/n]:" PROCEED
+read -rp "Proceed? [y/n]:" PROCEED
 if [[ "$PROCEED" == "y" ]]; then
   true
 else
@@ -162,35 +160,29 @@ mkdir "$INSTALL_DIR/tools"
 # download python
 printf "\n##### Downloading Python bundle #####\n\n"
 curl -L -o ./temp/python.tar.gz "$URL"
-exit_on_error $? !!
 printf "\n##### Done! #####\n"
 
 # extract python
 printf "\n##### Extracting Python bundle #####\n\n"
 tar -xf ./temp/python.tar.gz --directory "$INSTALL_DIR"
-exit_on_error $? !!
 printf "\n##### Done! #####\n"
 
 # the shebangs in the pyhton/install/bin folder are bad, so we need to replace them
 find "$INSTALL_DIR"/python/install/bin/ -type f -exec sed -i "1 s|^#!.*python.*|#!$INSTALL_DIR/python/install/bin/python3|" {} \;
 
 printf "\n##### Installing MhcVizPipe #####\n\n"
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel
-exit_on_error $? !!
-"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe
-exit_on_error $? !!
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install wheel || exit 1
+"$INSTALL_DIR"/python/install/bin/python3 -m pip install MhcVizPipe || exit 1
 printf "\n##### Done! #####\n"
 
 printf "\n##### Installing and configuring third-party tools #####\n\n"
-"$INSTALL_DIR/python/install/bin/python3" -m MhcVizPipe.Tools.install_tools "$INSTALL_DIR/tools"
-exit_on_error $? !!
-printf "##### Done! #####\n\n"
+"$INSTALL_DIR/python/install/bin/python3" -m MhcVizPipe.Tools.install_tools "$INSTALL_DIR/tools" || exit 1
+printf "\n##### Done! #####\n\n"
 
 # remove com.apple.quarantine from xattr of all the tool files
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  printf "\n##### Removing quarantine attribute from third-party tools #####\n\n"
+  printf "\nRemoving quarantine attribute from third-party tools\n\n"
   xattr -dr com.apple.quarantine "$INSTALL_DIR/tools"
-  printf "##### Done! #####\n\n"
 fi
 
 printf "#!/bin/bash\n%s/python/install/bin/python3 -m MhcVizPipe.gui" "$INSTALL_DIR"> "$INSTALL_DIR"/MhcVizPipe.sh
@@ -201,28 +193,28 @@ chmod +x "$INSTALL_DIR"/MhcVizPipe.sh
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" || "$TOOLS_TO_PATH" == "true" ]]; then
   mkdir "$INSTALL_DIR"/bin
   if [[ -f "$HOME"/.profile ]]; then
-    if grep -q "MhcVizPipe" "$HOME"/.profile != 0; then
+    if ! grep -q "MhcVizPipe" "$HOME"/.profile; then
       echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.profile
       echo "export PATH;" >> "$HOME"/.profile
       source "$HOME"/.profile
     fi
   fi
   if [[ -f "$HOME"/.bash_profile ]]; then
-    if grep -q "MhcVizPipe" "$HOME"/.bash_profile != 0; then
+    if ! grep -q "MhcVizPipe" "$HOME"/.bash_profile; then
       echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bash_profile
       echo "export PATH;" >> "$HOME"/.bash_profile
       source "$HOME"/.bash_profile
     fi
   fi
   if [[ -f "$HOME"/.bash_login ]]; then
-    if grep -q "MhcVizPipe" "$HOME"/.bash_login != 0; then
+    if ! grep -q "MhcVizPipe" "$HOME"/.bash_login; then
       echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bash_login
       echo "export PATH;" >> "$HOME"/.bash_login
       source "$HOME"/.bash_login
     fi
   fi
   if [[ -f "$HOME"/.bashrc ]]; then
-    if grep -q "MhcVizPipe" "$HOME"/.bashrc != 0; then
+    if ! grep -q "MhcVizPipe" "$HOME"/.bashrc; then
       echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bashrc
       echo "export PATH;" >> "$HOME"/.bashrc
       source "$HOME"/.bashrc
@@ -236,7 +228,6 @@ fi
 
 if [[ "$MHCVIZPIPE_TO_PATH" == "true" ]]; then
   cp "$INSTALL_DIR"/MhcVizPipe.sh "$INSTALL_DIR"/bin/MhcVizPipe
-  exit_on_error $? !!
   chmod +x "$INSTALL_DIR"/bin/MhcVizPipe
 fi
 if [[ "$TOOLS_TO_PATH" == "true" ]]; then
@@ -250,11 +241,8 @@ if [[ "$TOOLS_TO_PATH" == "true" ]]; then
     rm "$INSTALL_DIR"/bin/gibbscluster
   fi
   cp "$INSTALL_DIR/tools/netMHCpan-$NETMHCPAN_VERSION/netMHCpan" "$INSTALL_DIR"/bin/netMHCpan
-  exit_on_error $? !!
   cp "$INSTALL_DIR/tools/netMHCIIpan-4.0/netMHCIIpan" "$INSTALL_DIR"/bin/netMHCIIpan
-  exit_on_error $? !!
   cp "$INSTALL_DIR/tools/gibbscluster-2.0/gibbscluster" "$INSTALL_DIR"/bin/gibbscluster
-  exit_on_error $? !!
   chmod +x "$INSTALL_DIR"/bin/netMHCpan
   chmod +x "$INSTALL_DIR"/bin/netMHCIIpan
   chmod +x "$INSTALL_DIR"/bin/gibbscluster
