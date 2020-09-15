@@ -4,3 +4,5 @@ The scripts provided by DTU Health Tech to run NetMHCpan-(4.0 & 4.1), NetMHCIIpa
 `tcsh` scripts. Some newer operating systems do not include `tcsh` by default, so to make the installation of 
 MhcVizPipe as simple (and sudo-free) as possible we translated these scripts into Bash scipts which should work on
 nearly any system. 
+
+These scripts are automatically downloaded by the MVP installer.
