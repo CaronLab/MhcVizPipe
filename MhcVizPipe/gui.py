@@ -1144,10 +1144,6 @@ if __name__ == '__main__':
      like "Open URL" or "Open in browser". If that doesn't work,
      copy and paste it into your browser.)
 
-     If this is you very first time running MVP, when you open the 
-     link a window should appear which will help you install GibbsCluster,
-     NetMHCpan and NetMHCIIpan if you have not already.
-
      For a brief introduction to using the GUI, click the link to
      "help and resources" near the top of the GUI. For more information
      and the latest updates please visit our GitHub repository:
