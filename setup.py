@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='MhcVizPipe',
-    version='0.4.7b1',
+    version='0.4.7',
     packages=find_packages(),
     url='https://github.com/CaronLab/MhcVizPipe',
     license='MIT',
