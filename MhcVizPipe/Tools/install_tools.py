@@ -57,7 +57,7 @@ def replace_tool_scripts(directory: str):
         # rename the old script
         Path(f / dest).rename(str(f / dest) + '.bak')
         # download the new script
-        command = f'curl -L -o {f / dest} {url}'.split()
+        command = f'curl -L -s -S -o {f / dest} {url}'.split()
         download = Popen(command)
         _ = download.communicate()
 
@@ -136,7 +136,7 @@ def download_data_file(tool: str, destination_dir: str):
         url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Darwin.tar.gz'
     else:
         raise ValueError('tool must be one of [netMHCIIpan, netMHCpan4.1, netMHCpan4.0]')
-    print(f"\n##### Downloading data files for {tool} #####\n")
+    print(f"\nDownloading data files for {tool}\n")
     command = f'curl -L -o ./data.tar.gz {url}'.split()
     download = Popen(command)
     _ = download.communicate()
