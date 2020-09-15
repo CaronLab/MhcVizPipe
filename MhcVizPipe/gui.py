@@ -33,7 +33,8 @@ external_stylesheets = [dbc.themes.BOOTSTRAP,
 
 server = flask.Flask(__name__)
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
+app = dash.Dash(__name__, external_scripts=["https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"],
+                external_stylesheets=external_stylesheets, server=server)
 app.title = "MhcVizPipe"
 
 class_i_alleles = []
