@@ -194,34 +194,34 @@ if [[ "$MHCVIZPIPE_TO_PATH" == "true" || "$TOOLS_TO_PATH" == "true" ]]; then
   mkdir "$INSTALL_DIR"/bin
   if [[ -f "$HOME"/.profile ]]; then
     if ! grep -q "MhcVizPipe" "$HOME"/.profile; then
-      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.profile
-      echo "export PATH;" >> "$HOME"/.profile
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH\"" >> "$HOME"/.profile
+      echo "export PATH" >> "$HOME"/.profile
       source "$HOME"/.profile
     fi
   fi
   if [[ -f "$HOME"/.bash_profile ]]; then
     if ! grep -q "MhcVizPipe" "$HOME"/.bash_profile; then
-      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bash_profile
-      echo "export PATH;" >> "$HOME"/.bash_profile
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH\"" >> "$HOME"/.bash_profile
+      echo "export PATH" >> "$HOME"/.bash_profile
       source "$HOME"/.bash_profile
     fi
   fi
   if [[ -f "$HOME"/.bash_login ]]; then
     if ! grep -q "MhcVizPipe" "$HOME"/.bash_login; then
-      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bash_login
-      echo "export PATH;" >> "$HOME"/.bash_login
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH\"" >> "$HOME"/.bash_login
+      echo "export PATH" >> "$HOME"/.bash_login
       source "$HOME"/.bash_login
     fi
   fi
   if [[ -f "$HOME"/.bashrc ]]; then
     if ! grep -q "MhcVizPipe" "$HOME"/.bashrc; then
-      echo "PATH=$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bashrc
-      echo "export PATH;" >> "$HOME"/.bashrc
+      echo "PATH=$INSTALL_DIR/bin:\"\$PATH\"" >> "$HOME"/.bashrc
+      echo "export PATH" >> "$HOME"/.bashrc
       source "$HOME"/.bashrc
     fi
   else
-    echo PATH="$INSTALL_DIR/bin:\"\$PATH;\"" >> "$HOME"/.bashrc
-    echo "export PATH;" >> "$HOME"/.bashrc
+    echo PATH="$INSTALL_DIR/bin:\"\$PATH\"" >> "$HOME"/.bashrc
+    echo "export PATH" >> "$HOME"/.bashrc
     source "$HOME"/.bashrc
   fi
 fi
