@@ -7,6 +7,10 @@ from datetime import datetime
 from os import getcwd
 from shutil import copy
 
+"""
+NOTE: This interface is out of date. It needs to be refactored before it will work.
+"""
+
 Parameters = Parameters()
 TMP_DIR = Parameters.TMP_DIR
 
