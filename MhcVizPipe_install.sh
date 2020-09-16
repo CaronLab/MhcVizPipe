@@ -97,6 +97,7 @@ if [[ -e "$INSTALL_DIR" ]]; then
     rm -Rf "$INSTALL_DIR"
   else
     echo "Exiting..."
+    exit 1
   fi
 fi
 
