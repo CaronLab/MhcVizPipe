@@ -172,7 +172,8 @@ class mhc_report:
                         th('Sample', style="padding: 5px"),
                         th('Total peptides', style="padding: 5px"),
                         th('Strong binders', style="padding: 5px"),
-                        th('Weak binders', style="padding: 5px")
+                        th('Weak binders', style="padding: 5px"),
+                        th('Non-binders', style="padding: 5px")
                     ]
                 )
             )
@@ -195,7 +196,7 @@ class mhc_report:
                     [
                         td(f"{self.peptide_numbers[sample][allele][strength]} "
                            f"({round(self.peptide_numbers[sample][allele][strength] * 100 / self.peptide_numbers[sample]['total'], 1)}%)")
-                        for strength in ['Strong', 'Weak']
+                        for strength in ['Strong', 'Weak', 'Non-binder']
                     ]
                 )
                 tablebody.add(tablerow)
