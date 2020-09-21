@@ -206,6 +206,10 @@ if [[ "$MHCVIZPIPE_TO_PATH" == "true" || "$TOOLS_TO_PATH" == "true" ]]; then
       echo "export PATH" >> "$HOME"/.bash_profile
       source "$HOME"/.bash_profile
     fi
+  else
+    echo "PATH=$INSTALL_DIR/bin:\"\$PATH\"" >> "$HOME"/.bash_profile
+    echo "export PATH" >> "$HOME"/.bash_profile
+    source "$HOME"/.bash_profile
   fi
   if [[ -f "$HOME"/.bash_login ]]; then
     if ! grep -q "MhcVizPipe" "$HOME"/.bash_login; then
