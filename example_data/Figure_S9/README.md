@@ -1,0 +1,8 @@
+100 millions of JY  cells
+
+W6/32 antibody
+Alleles: 
+HLA-A02:01
+HLA-B07:01
+
+3 REPLICATES FOR EACH CONDITION ARE SHOWN

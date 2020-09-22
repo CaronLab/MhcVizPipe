@@ -1,0 +1,6 @@
+A20 CELLS
+
+SEPHAROSE G BEADS
+
+    H2-Iad
+    H2-IE
