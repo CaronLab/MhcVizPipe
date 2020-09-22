@@ -22,7 +22,7 @@ each sample are displayed in a single figure.
 ![](images/unsupervised_logos.png)
 
 The "Sequence Motifs" section highlights the GibbsCluster results, including motifs generated from the analysis of
-all peptides ("Unsupervised GibbsCluster") and motifs generated for each allele-specific peptide list as resulting from
+all peptides ("Unsupervised GibbsCluster") and motifs generated for each allele-specific peptide list as identified by
 NetMHCpan or NetMHCIIpan ("Allele-specific GibbsCluster").
 
 ## Installation and usage
