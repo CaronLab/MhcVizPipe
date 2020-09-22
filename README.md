@@ -6,16 +6,18 @@ Some more information will go here soon!
 ## Installation and usage
 
 Below you will find a brief overview of the installation steps and usage of the tool. For
-more details please [visit the wiki](https://github.com/kevinkovalchik/MhcVizPipe/wiki).
+more details please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
 
 #### Quick installation
-Below is a quick overview of the installation steps. For more details, [visit the wiki](https://github.com/kevinkovalchik/MhcVizPipe/wiki).
+Below is a quick overview of the installation steps. For more details, [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
 1. Right-click and choose "save link as" to download 
-[this file](https://github.com/kevinkovalchik/MhcVizPipe/raw/master/MhcVizPipe_install.sh) and place
+[this file](https://github.com/CaronLab/MhcVizPipe/raw/master/MhcVizPipe_install.sh) and place
 it in the same directory as the 
-[NetMHCpan, NetMHCIIpan and GibbsCluster downloads](https://github.com/kevinkovalchik/MhcVizPipe/wiki/Downloading-third-party-software)
+[NetMHCpan, NetMHCIIpan and GibbsCluster downloads](https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software)
 (do not extract the downloads).
 2. Open a terminal and navigate to this directory
+    - Example: Invoke the following command (i.e. type it and hit enter): `cd \Users\isoiris\Downloads\MVP_Tools`,
+    where you would replace `\Users\isoiris\Downloads\MVP_Tools` with the path to the directory on your computer.
 3. Invoke this command (i.e. type it in and hit enter): `chmod +x ./MhcVizPipe_install.sh`
 4. Invoke this command: `./MhcVizPipe_install.sh`
 5. During installation, choose to add MhcVizPipe to you PATH
@@ -49,6 +51,6 @@ You should see the following message:
 You will notice this link in the message: `http://0.0.0.0:8080`. Right click and select "Open in browser" and
 the MhcVizPipe will open up in your web browser.
 
-For detailed usage, see the [wiki usage page.](https://github.com/kevinkovalchik/MhcVizPipe/wiki/Usage)
+For detailed usage, see the [wiki usage page.](https://github.com/CaronLab/MhcVizPipe/wiki/Usage)
 
-If you need further help please [open an issue!](https://github.com/kevinkovalchik/MhcVizPipe/issues)
+If you need further help please [open an issue!](https://github.com/CaronLab/MhcVizPipe/issues)
