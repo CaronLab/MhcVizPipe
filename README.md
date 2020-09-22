@@ -1,7 +1,29 @@
 # MhcVizPipe (MVP)
 A reporting pipeline for visualization of immunopeptidomics MS data.
 
-Some more information will go here soon!
+MhcVizPipe connects the bioinformatic tools NetMHCpan, NetMHCIIpan and GibbsCluster and generates organized
+and easy-to-understand reports in HTML format. The reports are fully portable and can be viewed on any computer
+with a modern web browser. Here are some of the features of MhcVizPipe:
+
+### Sample Overview
+![](images/sample_overview.png)
+
+The "Sample Overview" sections gives you a quick look at the peptide length distributions and the overlapping sets of
+peptides between multiple samples.
+
+### Annotation Results
+![](images/annotation_results.png)
+
+The "Annotation Results" section summarizes the results of NetMHCpan(4.0 or 4.1) or NetMHCIIpan4.0. A table shows the 
+number and proportion of strong, weak and non-binders per sample per allele while overall binding characteristics of
+each sample are displayed in a single figure.
+
+### Peptide Grouping and Sequence Motifs
+![](images/unsupervised_logos.png)
+
+The "Sequence Motifs" section highlights the GibbsCluster results, including motifs generated from the analysis of
+all peptides ("Unsupervised GibbsCluster") and motifs generated for each allele-specific peptide list as resulting from
+NetMHCpan or NetMHCIIpan ("Allele-specific GibbsCluster").
 
 ## Installation and usage
 
