@@ -25,6 +25,16 @@ The "Sequence Motifs" section highlights the GibbsCluster results, including mot
 all peptides ("Unsupervised GibbsCluster") and motifs generated for each allele-specific peptide list as identified by
 NetMHCpan or NetMHCIIpan ("Allele-specific GibbsCluster").
 
+## System requirements
+
+#### Operating system
+MhcVizPipe will run natively on Linux (e.g. Ubuntu) or MacOS systems. It can also be installed on Windows 10 systems
+using the Windows Subsystem.
+
+#### Memory and processors
+There are no hard memory or CPU requirements for MhcVizPipe. However, because MhcVizPipe utilizes multi-threading you
+will see performance increases on systems with higher numbers of CPUs.
+
 ## Installation and usage
 
 Below you will find a brief overview of the installation steps and usage of the tool. For
