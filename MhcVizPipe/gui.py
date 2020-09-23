@@ -1135,21 +1135,24 @@ def get_report(path):
 
 if __name__ == '__main__':
     welcome = f'''
-     ========================================
-     MhcVizPipe v0.4.10
+    ========================================
+    MhcVizPipe v0.4.10
+    
+    Welcome to MhcVizPipe! To open the GUI, open the following link
+    in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
+    (To do this, most likely right click the link and choose something
+    like "Open URL" or "Open in browser". If that doesn't work,
+    copy and paste it into your browser.)
+    
+    For a brief introduction to using the GUI, click the link to
+    "help and resources" near the top of the GUI. For more information
+    and the latest updates please visit our GitHub repository:
+    https://github.com/kevinkovalchik/MhcVizPipe.
 
-     Welcome to MhcVizPipe! To open the GUI, open the following link
-     in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
-     (To do this, most likely right click the link and choose something
-     like "Open URL" or "Open in browser". If that doesn't work,
-     copy and paste it into your browser.)
-
-     For a brief introduction to using the GUI, click the link to
-     "help and resources" near the top of the GUI. For more information
-     and the latest updates please visit our GitHub repository:
-     https://github.com/kevinkovalchik/MhcVizPipe.
-
-     ========================================
+    To shut down this instance of MhcVizPipe, use this keyboard shortcut in the terminal:
+      ctrl+c
+    
+    ========================================
     '''
     debug_welcome = f'''
     ========================================
