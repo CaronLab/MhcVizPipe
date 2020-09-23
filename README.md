@@ -40,6 +40,10 @@ will see performance increases on systems with higher numbers of CPUs.
 Below you will find a brief overview of the installation steps and usage of the tool. For
 more details please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
 
+Note that MVP runs natively on Linux and Mac systems. If you have a Windows computer, you can follow
+[these instructions](https://github.com/CaronLab/MhcVizPipe/wiki/Windows-installation) to install it using the
+Windows Subsystem for Linux.
+
 #### Quick installation
 Below is a quick overview of the installation steps. For more details, [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
 1. Right-click and choose "save link as" to download 
