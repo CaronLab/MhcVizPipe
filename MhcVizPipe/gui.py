@@ -1134,12 +1134,14 @@ def get_report(path):
 
 
 if __name__ == '__main__':
+    import platform
+    windows = 'Microsoft' in platform.release()
     welcome = f'''
     ========================================
     MhcVizPipe v0.4.10
     
     Welcome to MhcVizPipe! To open the GUI, open the following link
-    in your web browser: http://{Parameters.HOSTNAME}:{Parameters.PORT}
+    in your web browser: http://{'localhost' if windows else Parameters.HOSTNAME}:{Parameters.PORT}
     (To do this, most likely right click the link and choose something
     like "Open URL" or "Open in browser". If that doesn't work,
     copy and paste it into your browser.)
