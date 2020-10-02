@@ -16,37 +16,37 @@ gibbsclusterLinux=false
 gibbsclusterDarwin=false
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  if [[ -f  "./netMHCpan-4.0a.Darwin.tar" ]]; then
+  if [[ -f  "./netMHCpan-4.0a.Darwin.tar" || -f  "./netMHCpan-4.0a.Darwin.tar.gz" ]]; then
     netMHCpanDarwin=true
     NETMHCPAN_VERSION="4.0"
-  elif [[ -f "./netMHCpan-4.1b.Darwin.tar" ]]; then
+  elif [[ -f "./netMHCpan-4.1b.Darwin.tar" || -f "./netMHCpan-4.1b.Darwin.tar.gz" ]]; then
     netMHCpanDarwin=true
     NETMHCPAN_VERSION="4.1"
   fi
 
-  if [[ -f "./gibbscluster-2.0f.Darwin.tar" ]]; then
+  if [[ -f "./gibbscluster-2.0f.Darwin.tar" || -f "./gibbscluster-2.0f.Darwin.tar.gz" ]]; then
     gibbsclusterDarwin=true
   fi
 
-  if [[ -f "./netMHCIIpan-4.0.Darwin.tar" ]]; then
+  if [[ -f "./netMHCIIpan-4.0.Darwin.tar" || -f "./netMHCIIpan-4.0.Darwin.tar.gz" ]]; then
     netMHCIIpanDarwin=true
   fi
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  if [[ -f "./netMHCpan-4.0a.Linux.tar.gz" ]]; then
+  if [[ -f  "./netMHCpan-4.0a.Linux.tar" || -f  "./netMHCpan-4.0a.Linux.tar.gz" ]]; then
     netMHCpanLinux=true
     NETMHCPAN_VERSION="4.0"
-  elif [[ -f "./netMHCpan-4.1b.Linux.tar.gz" ]]; then
+  elif [[ -f "./netMHCpan-4.1b.Linux.tar" || -f "./netMHCpan-4.1b.Linux.tar.gz" ]]; then
     netMHCpanLinux=true
     NETMHCPAN_VERSION="4.1"
   fi
 
-  if [[ -f "./gibbscluster-2.0f.Linux.tar.gz" ]]; then
+  if [[ -f "./gibbscluster-2.0f.Linux.tar" || -f "./gibbscluster-2.0f.Linux.tar.gz" ]]; then
     gibbsclusterLinux=true
   fi
 
-  if [[ -f "./netMHCIIpan-4.0.Linux.tar.gz" ]]; then
+  if [[ -f "./netMHCIIpan-4.0.Linux.tar" || -f "./netMHCIIpan-4.0.Linux.tar.gz" ]]; then
     netMHCIIpanLinux=true
   fi
 fi
