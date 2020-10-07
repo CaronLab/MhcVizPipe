@@ -882,7 +882,7 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
                 headers = lines[0].split('\t')
                 sep = '\t'
             i = headers.index(selected_column)
-            peps = [line.split(sep)[i].strip().replace('"', '') for line in lines[1:]]
+            peps = [line.split(sep)[i].strip().replace('"', '').upper() for line in lines[1:] if len(line) > 0]
             return '\n'.join(peps), False, [], f'File: {filename}', peptide_data, sample_name, sample_description, loaded_data, []
         else:
             if not selected_column:
