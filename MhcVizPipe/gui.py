@@ -1173,7 +1173,7 @@ if __name__ == '__main__':
     windows = 'Microsoft' in platform.release()
     welcome = f'''
     ========================================
-    MhcVizPipe v0.4.11
+    MhcVizPipe v0.4.12
     
     Welcome to MhcVizPipe! To open the GUI, open the following link
     in your web browser: http://{'localhost' if windows else Parameters.HOSTNAME}:{Parameters.PORT}
