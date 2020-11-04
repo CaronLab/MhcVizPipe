@@ -23,6 +23,8 @@ from MhcVizPipe.Tools.install_tools import run_all
 from waitress import serve
 from warnings import simplefilter, catch_warnings
 import traceback
+import zipfile
+from os import walk as os_walk
 
 
 Parameters = Parameters()
@@ -554,25 +556,44 @@ app.layout = html.Div(children=[
                         [
                             dbc.Row(
                                 dbc.Col(
-                                    html.P('Your report is ready! Click the following link to open it in a new '
-                                           'tab. To download it, right-click and choose "save link as" '
-                                           '(or something similar to that). If you wish to run another analysis, '
+                                    html.P('Your report is ready! Use the following links to open it in a new tab, '
+                                           'download it, or download a zip file containing the report plus NetMHCpan '
+                                           'and GibbsCluster results. If you wish to run another analysis, '
                                            'click the "Reset" button to reset the form.'),
                                 )
                             ),
                             dbc.Row(
                                 dbc.Col(
-                                    html.A(id='link-to-report',
-                                           # href='get_report',
-                                           target='_blank',
-                                           style={'color': 'blue',
-                                                  'text-decoration': 'underline',
-                                                  'margin-top': '1em',
-                                                  'margin-left': '1em',
-                                                  'font-size': '12pt'}
-                                           ),
+                                    html.P(
+                                        [
+                                            html.A(id='link-to-report',
+                                                   target='_blank',
+                                                   style={'color': 'blue', 'text-decoration': 'underline',
+                                                          'font-size': '12pt', 'font-weight': 'bold'}
+                                                   ),
+                                            ' - Click to open report in a new tab or right-click to save it to your '
+                                            'computer.'
+                                        ],
+                                        style={'margin-top': '1em', 'margin-left': '1em'}
+                                    )
                                 )
                             ),
+                            dbc.Row(
+                                dbc.Col(
+                                    html.P(
+                                        [
+                                            html.A('Link to analysis archive',
+                                                   id='link-to-archive',
+                                                   style={'color': 'blue', 'text-decoration': 'underline',
+                                                          'font-size': '12pt', 'font-weight': 'bold'}),
+                                            ' - Save all analysis results in a zip file. This includes NetMHCpan or '
+                                            'NetMHCIIpan predictions, GibbsCluster results and the final HTML report. '
+                                            'Note that GibbsCluster reports do not include Logos.'
+                                        ],
+                                        style={'margin-top': '1em', 'margin-left': '1em'}
+                                    )
+                                )
+                            )
                         ]
                     ),
                 ],
@@ -941,6 +962,7 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
 
 @app.callback([Output('link-to-report', 'children'),
                Output('link-to-report', 'href'),
+               Output('link-to-archive', 'href'),
                Output('is-there-a-problem', 'children'),
                Output('loading', 'children'),
                Output('modal2', 'is_open'),
@@ -957,6 +979,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
     if (peptides in [None, {}]) and (n_clicks is not None):
         return (no_update,
                 no_update,
+                no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
                            children='You need to load some data first.',
                            style={'width': '360px', 'margin-top': '2px'})],
@@ -965,6 +988,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
     elif (alleles in [None, [], ['']]) and (n_clicks is not None):
         return (no_update,
                 no_update,
+                no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
                            children='Please select one or more alleles.',
                            style={'width': '360px', 'margin-top': '2px'})],
@@ -972,6 +996,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                 False, '', False)
     elif alleles and len(alleles) > 9:
         return (no_update,
+                no_update,
                 no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
                            children='Sorry, you cannot analyze more than 9 alleles at a time. '
@@ -1021,12 +1046,22 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
             analysis = report.mhc_report(cl_tools, mhc_class, description, submitter_name, exp_info)
             _ = analysis.make_report()
             download_href = f'/download/{urlquote(time+"/"+"report.html")}'
+            with zipfile.ZipFile(f'{analysis_location}/MVP_analysis.zip', 'w', zipfile.ZIP_STORED) as zipf:
+                netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.csv')]
+                for f in netmhcpan_files:
+                    zipf.write(f, arcname=Path(f).name)
+                for root, dirs, files in os_walk(f'{analysis_location}/gibbs'):
+                    for file in files:
+                        p = Path(root, file)
+                        zipf.write(str(p), p.relative_to(analysis_location))
+                zipf.write(f'{analysis_location}/report.html', 'report.html')
+            archive_href = f'/download/{urlquote(time+"/"+"MVP_analysis.zip")}'
         except Exception:
             error = traceback.format_exc()
 
-            return no_update, no_update, [], no_update, False, error, True
+            return no_update, no_update, no_update, [], no_update, False, error, True
 
-        return 'Link to report', download_href, [], '', True, '', False
+        return 'Link to report', download_href, archive_href, [], '', True, '', False
 
 
 @app.callback([Output('upgrade-modal', 'is_open'),
