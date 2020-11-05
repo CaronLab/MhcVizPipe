@@ -17,6 +17,8 @@ from dominate.tags import *
 from dominate import document
 import PlotlyLogo.logo as pl
 from MhcVizPipe.defaults import ROOT_DIR
+import concurrent.futures
+
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
     if 'px' in width:
@@ -49,6 +51,7 @@ class mhc_report:
     def __init__(self,
                  analysis_results: MhcToolHelper,
                  mhc_class: str,
+                 cpus: int,
                  experiment_description: str = None,
                  submitter_name: str = None,
                  experimental_info=None
@@ -61,6 +64,7 @@ class mhc_report:
         self.preds = analysis_results.predictions.drop_duplicates()
         self.samples = list(self.preds['Sample'].unique())
         self.experimental_info = experimental_info
+        self.cpus = cpus
 
         peptide_numbers = {}
         for sample in self.samples:
@@ -484,7 +488,10 @@ class mhc_report:
         for sample in self.samples:
             motifs_row = div(className='row')
             cores = self.results.gibbs_files[sample]['unsupervised']['cores']
-            logos = [make_logo(x) for x in cores]
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
+                logos = list(executor.map(make_logo, cores))
+
             pep_groups = []
             for x in range(len(cores)):
                 pep_groups.append(cores[x].name.replace('gibbs.', '')[0])
