@@ -18,6 +18,7 @@ from dominate import document
 import PlotlyLogo.logo as pl
 from MhcVizPipe.defaults import ROOT_DIR
 import concurrent.futures
+from threading import Thread
 
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
@@ -485,12 +486,22 @@ class mhc_report:
                 pep = line[3]
                 gibbs_peps[sample][group].append(pep)
 
+        sample_logos = {}
+        # make logos asynchronously
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.cpus) as executor:
+            for sample in self.samples:
+                cores = self.results.gibbs_files[sample]['unsupervised']['cores']
+                if not isinstance(cores, list):
+                    cores = [cores]
+                sample_logos[sample] = [executor.submit(make_logo, core) for core in cores]
+        for sample in self.samples:
+            sample_logos[sample] = [x.result() for x in sample_logos[sample]]
+
         for sample in self.samples:
             motifs_row = div(className='row')
             cores = self.results.gibbs_files[sample]['unsupervised']['cores']
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=self.cpus) as executor:
-                logos = list(executor.map(make_logo, cores))
+            logos = sample_logos[sample]
 
             pep_groups = []
             for x in range(len(cores)):
@@ -555,6 +566,7 @@ class mhc_report:
         motifs = div(className=className)
         n_motifs = {}
         gibbs_peps = {}
+
         for sample in self.samples:
             for allele in self.alleles + ['unannotated']:
                 if self.results.gibbs_files[sample][allele] is not None:
@@ -569,16 +581,36 @@ class mhc_report:
                         pep = line[3]
                         gibbs_peps[f'{allele}_{sample}'][group].append(pep)
 
+        sample_logos = {}
+        # make logos asynchronously
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.cpus) as executor:
+            for sample in self.samples:
+                sample_logos[sample] = {}
+                for allele in self.alleles:
+                    if self.results.gibbs_files[sample][allele] is not None:
+                        cores = self.results.gibbs_files[sample][allele]['cores']
+                        if not isinstance(cores, list):
+                            cores = [cores]
+                        sample_logos[sample][allele] = [executor.submit(make_logo, core) for core in cores]
+                cores = self.results.gibbs_files[sample]['unannotated']['cores']
+                if not isinstance(cores, list):
+                    cores = [cores]
+                sample_logos[sample]['unannotated'] = [executor.submit(make_logo, core) for core in cores]
+
+        for sample in self.samples:
+            for allele in self.alleles + ['unannotated']:
+                if self.results.gibbs_files[sample][allele] is not None:
+                    sample_logos[sample][allele] = [x.result() for x in sample_logos[sample][allele]]
+
         for sample in self.samples:
             motifs_row = div(className='row')
             for allele in self.alleles:
                 if self.results.gibbs_files[sample][allele] is not None:
-                    logo = self.results.gibbs_files[sample][allele]['cores']
                     motifs_row.add(
                         div(
                             [
                                 b(f'{allele}'),
-                                wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
+                                wrap_plotly_fig(sample_logos[sample][allele][0][0], height="300px", width="100%"),
                                 p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"]["1"])}\n'),
                             ],
                             className='col',
@@ -613,12 +645,11 @@ class mhc_report:
                 for logo in logos:
                     pep_groups.append(logo.name.replace('gibbs.', '')[0])
                 for x in range(len(logos)):
-                    logo = logos[x]
                     motifs_row.add(
                         div(
                             [
                                 b(f'Non-binders group {pep_groups[x]}'),
-                                wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
+                                wrap_plotly_fig(sample_logos[sample]['unannotated'][x][0], height="300px", width="100%"),
                                 p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][pep_groups[x]])}\n'),
                             ],
                             className='col',
