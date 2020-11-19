@@ -3,9 +3,7 @@ from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
 from MhcVizPipe.ReportTemplates import report
 from MhcVizPipe.defaults import Parameters, ROOT_DIR
 from pathlib import Path
-from datetime import datetime
 from os import getcwd
-from shutil import copy
 
 """
 NOTE: This interface is out of date. It needs to be refactored before it will work.
@@ -21,7 +19,7 @@ parser.add_argument('-f', '--files', type=str, nargs='+', required=True,
 parser.add_argument('-d', '--delimiter', type=str, required=False, choices=['comma', 'tab'],
                     help='Delimiter if the file is delimited (e.g. for .csv use "comma").')
 parser.add_argument('-H', '--column_header', type=str, required=False, help='The name of the column containing the peptide '
-                                                                    'list, if it is a multi-column file.')
+                                                                            'list, if it is a multi-column file.')
 parser.add_argument('-a', '--alleles', type=str, required=True, nargs='+',
                     help='MHC alleles, spaces separated if more than one.')
 parser.add_argument('-c', '--mhc_class', type=str, choices=['I', 'II'], required=True, help='MHC class')
@@ -32,10 +30,15 @@ parser.add_argument('-n', '--name', type=str, required=False,
                     help='Submitter name (optional).')
 parser.add_argument('-p', '--publish_directory', type=str, required=False, default=getcwd(),
                     help='The directory where you want the report published. It should be an absolute path.')
-parser.add_argument('--f_out', type=str, required=False, default='report',
+parser.add_argument('--f_out', type=str, required=False, default='report.html',
                     help='The filename you want for the report. Defaults to "report".')
 parser.add_argument('-v', '--version', type=str, required=False, default='4.1', choices=['4.0', '4.1'],
                     help='Which version of NetMHCpan to use. For internal use during development.')
+parser.add_argument('-e', '--exp_info', type=str, required=False,
+                    help='Optional details to be added to the report (e.g. experimental conditions). Should be in '
+                         'this format (including quotes): "A: Z; B: Y; C: X;" etc... where ABC(etc.) are field names '
+                         '(e.g. cell line, # of cells, MS Instrument, etc) and ZYX(etc) are details describing the '
+                         'field (e.g. JY cell line, 10e6, Orbitrap Fusion, etc.).')
 
 if __name__ == '__main__':
     netmhcpan_alleles = []
@@ -91,25 +94,42 @@ if __name__ == '__main__':
                         sample_description=peptide_data[sample_name]['description'],
                         peptides=peptide_data[sample_name]['peptides'])
         )
-    time = str(datetime.now()).replace(' ', '_')
-    analysis_location = str(Path(TMP_DIR) / time)
+    #time = str(datetime.now()).replace(' ', '_')
+    analysis_location = args.publish_directory
+
+    if args.mhc_class == 'I':
+        min_length = 8
+        max_length = 12
+    else:
+        min_length = 9
+        max_length = 22
+
+    exp_info = args.exp_info.replace('; ', '\n').replace(';', '\n')
 
     cl_tools = MhcToolHelper(
         samples=samples,
         mhc_class=args.mhc_class,
         alleles=args.alleles,
         tmp_directory=analysis_location,
+        min_length=min_length,
+        max_length=max_length
     )
-    cl_tools.make_binding_predictions()
+    cl_tools.make_binding_prediction_jobs()
+    cl_tools.run_jubs()
+    cl_tools.aggregate_netmhcpan_results()
+    cl_tools.clear_jobs()
+
     cl_tools.make_cluster_with_gibbscluster_jobs()
     cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
-    analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name)
+    cl_tools.order_gibbs_runs()
+    cl_tools.run_jubs()
+    cl_tools.find_best_files()
+    analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name, exp_info)
     _ = analysis.make_report()
     report = Path(analysis_location) / 'report.html'
     if args.f_out.endswith('.html'):
         f_out = args.f_out
     else:
         f_out = args.f_out + '.html'
-    print(str(report))
-    print(str(Path(args.publish_directory) / args.f_out))
-    copy(str(report), str(Path(args.publish_directory) / args.f_out))
+    Path(report).rename(f_out)
+    print('Done!')
