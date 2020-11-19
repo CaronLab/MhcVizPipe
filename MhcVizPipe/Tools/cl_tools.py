@@ -71,9 +71,8 @@ class MhcToolHelper:
             columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder']
         )
         self.tmp_folder = Path(tmp_directory)
-        if self.tmp_folder.exists():
-            os.system(f'rm -R {str(self.tmp_folder)}')
-        self.tmp_folder.mkdir(parents=True)
+        if not self.tmp_folder.exists():
+            self.tmp_folder.mkdir(parents=True)
         self.predictions_made = False
         self.gibbs_directories = []
         self.supervised_gibbs_directories = {}
@@ -90,6 +89,8 @@ class MhcToolHelper:
                 for pep in sample.peptides:
                     f.write(pep + '\n')
 
+        if Path(self.tmp_folder / 'gibbs').exists() and Path(self.tmp_folder / 'gibbs').is_dir():
+            os.system(f'rm -R {Path(self.tmp_folder / "gibbs")}')
         Path(self.tmp_folder / 'gibbs').mkdir()
         for sample in self.samples:
             Path(self.tmp_folder / 'gibbs' / sample.sample_name).mkdir()
