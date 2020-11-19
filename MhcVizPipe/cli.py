@@ -44,6 +44,8 @@ if __name__ == '__main__':
     netmhcpan_alleles = []
     args = parser.parse_args()
     dir = getcwd()
+    if len(args.alleles) == 1:
+        args.alleles = args.alleles[0].split(' ')
     if args.mhc_class == 'I':
         if args.version == '4.1':
             with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
