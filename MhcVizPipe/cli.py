@@ -39,6 +39,7 @@ parser.add_argument('-e', '--exp_info', type=str, required=False,
                          'this format (including quotes): "A: Z; B: Y; C: X;" etc... where ABC(etc.) are field names '
                          '(e.g. cell line, # of cells, MS Instrument, etc) and ZYX(etc) are details describing the '
                          'field (e.g. JY cell line, 10e6, Orbitrap Fusion, etc.).')
+parser.add_argument('--max', type=int, required=False, help='Maximum peptide length to run through NetMHCpan.')
 
 if __name__ == '__main__':
     netmhcpan_alleles = []
@@ -101,9 +102,14 @@ if __name__ == '__main__':
 
     if args.mhc_class == 'I':
         min_length = 8
-        max_length = 12
     else:
         min_length = 9
+
+    if args.max:
+        max_length = args.max
+    elif args.mhc_class == 'I':
+        max_length = 12
+    else:
         max_length = 22
 
     exp_info = args.exp_info.replace('; ', '\n').replace(';', '\n')
