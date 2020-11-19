@@ -71,6 +71,8 @@ class MhcToolHelper:
             columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder']
         )
         self.tmp_folder = Path(tmp_directory)
+        if self.tmp_folder.exists():
+            os.system(f'rm -R {str(self.tmp_folder)}')
         self.tmp_folder.mkdir(parents=True)
         self.predictions_made = False
         self.gibbs_directories = []
