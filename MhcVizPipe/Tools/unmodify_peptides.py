@@ -8,7 +8,7 @@ def remove_modifications(peptide_list, verbose=False):
     if verbose:
         print('Removing peptide modifications')
     for pep in peptide_list:
-        pep = ''.join(re.findall('[a-zA-z]+', pep))
+        pep = ''.join(re.findall('[a-zA-Z]+', pep))
         unmodified_peps.append(pep)
     return unmodified_peps
 
