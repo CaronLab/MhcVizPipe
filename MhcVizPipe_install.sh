@@ -145,9 +145,9 @@ INSTALL_DIR="${INSTALL_DIR//\\//}"
 
 # set URLs for downloading the compiled Python distribution
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20200822-20200823/cpython-3.7.9-x86_64-unknown-linux-gnu-pgo-20200823T0036.tar.gz"
+  URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20201020/cpython-3.8.6-x86_64-unknown-linux-gnu-pgo-20201020T0627.tar.gz"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20200822-20200823/cpython-3.7.9-x86_64-apple-darwin-pgo-20200823T2228.tar.gz"
+  URL="https://github.com/kevinkovalchik/python-build-standalone/releases/download/20201020/cpython-3.8.6-x86_64-apple-darwin-pgo-20201020T0626.tar.gz"
 else
   echo "ERROR! MhcVizPipe is only compatible with Linux and Mac OS. Sorry!"
   exit 1
