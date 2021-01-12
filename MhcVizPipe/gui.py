@@ -25,6 +25,10 @@ from warnings import simplefilter, catch_warnings
 import traceback
 import zipfile
 from os import walk as os_walk
+from subprocess import Popen
+from defaults import TOOLS, EXECUTABLE
+from os import chdir
+import tarfile
 
 
 Parameters = Parameters()
@@ -1168,6 +1172,75 @@ def get_report(path):
     return flask.send_from_directory(Parameters.TMP_DIR, path)
 
 
+def download_data_file(tool: str):
+    if tool == 'netMHCIIpan':
+        url = 'http://www.cbs.dtu.dk/services/NetMHCIIpan/data.tar.gz'
+        dest = str(Path(TOOLS) / 'netMHCIIpan-4.0')
+    elif tool == 'netMHCpan4.1':
+        url = 'http://www.cbs.dtu.dk/services/NetMHCpan/data.tar.gz'
+        dest = str(Path(TOOLS) / 'netMHCpan-4.1')
+    elif tool == 'netMHCpan4.0' and platform_sys() == 'Linux':
+        url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Linux.tar.gz'
+        dest = str(Path(TOOLS) / 'netMHCpan-4.0')
+    elif tool == 'netMHCpan4.0' and platform_sys() == 'Darwin':
+        url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Darwin.tar.gz'
+        dest = str(Path(TOOLS) / 'netMHCpan-4.0')
+    else:
+        raise ValueError('tool must be one of [netMHCIIpan, netMHCpan4.1, netMHCpan4.0]')
+    chdir(dest)
+    print(f"\nDownloading data files for {tool}\n")
+    command = f'curl -L -k -o ./data.tar.gz {url}'.split()
+    download = Popen(command)
+    _ = download.communicate()
+    print('\nExtracting archive... ', end="", flush=True)
+    tar = tarfile.open('./data.tar.gz', 'r:gz')
+    tar.extractall()
+    tar.close()
+    print('done')
+
+
+def initialize():
+    """
+    Ensure everything will run.
+    :return:
+    """
+    print('\nInitializing')
+    # check for NetMHCpan, NetMHCIIpan and GibbsCluster
+    missing = []
+    for tool in ['netMHCIIpan-4.0', 'gibbscluster-2.0']:
+        if not (Path(TOOLS) / tool).is_dir():
+            missing.append(tool)
+    if not ((Path(TOOLS) / 'netMHCpan-4.0').is_dir() or (Path(TOOLS) / 'netMHCpan-4.1').is_dir()):
+        missing.append('netMHCpan(4.0 or 4.1)')
+    if missing:
+        print(f'ERROR: The following tools are required by MhcVizPipe and were not found: {", ".join(missing)}. '
+              f'Please download them from DTU Health Tech and extract them into the following directory: {Path(TOOLS)}')
+        input('\nPress enter to exit')
+        exit(0)
+
+    # check for data files in NetMHCpan and NetMHCIIpan
+    tools = []
+    if not (Path(TOOLS) / 'netMHCIIpan-4.0' / 'data').is_dir():
+        tools.append('netMHCIIpan')
+    if (Path(TOOLS) / 'netMHCpan-4.0').is_dir() and not (Path(TOOLS) / 'netMHCpan-4.0' / 'data').is_dir():
+        tools.append('netMHCpan4.0')
+    if (Path(TOOLS) / 'netMHCpan-4.1').is_dir() and not (Path(TOOLS) / 'netMHCpan-4.1' / 'data').is_dir():
+        tools.append('netMHCpan4.1')
+    for tool in tools:
+        download_data_file(tool)
+
+    # make sure nothing has quarantine attribute in Mac OS
+    if platform_sys() == 'Darwin':
+        Popen(f'xattr - dr com.apple.quarantine {TOOLS}'.split())
+        Popen(f'xattr - dr com.apple.quarantine {EXECUTABLE}'.split())
+
+    # make sure all the scripts are executable
+    Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split())
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split())
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan-4.0")}'.split())
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan-4.1")}'.split())
+
+
 if __name__ == '__main__':
     import platform
     windows = 'Microsoft' in platform.release()
@@ -1203,6 +1276,9 @@ if __name__ == '__main__':
 
     ========================================
     '''
+
+    if '--standalone' in argv:
+        initialize()
 
     if 'debug' in argv or '-debug' in argv or '--debug' in argv:
         print(debug_welcome)
