@@ -1229,16 +1229,16 @@ def initialize():
     for tool in tools:
         download_data_file(tool)
 
-    # make sure nothing has quarantine attribute in Mac OS
+    # make sure nothing we need has quarantine attribute in Mac OS
     if platform_sys() == 'Darwin':
-        Popen(f'xattr -dr com.apple.quarantine {TOOLS}'.split())
-        Popen(f'xattr -d com.apple.quarantine {EXECUTABLE}'.split())
+        Popen(f'xattr -dr com.apple.quarantine {TOOLS}'.split()).communicate()
+        Popen(f'xattr -dr com.apple.quarantine {str(Path(EXECUTABLE) / "..")}'.split()).communicate()
 
     # make sure all the scripts are executable
-    Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split())
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split())
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.0")}'.split())
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split())
+    Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split()).communicate()
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.0")}'.split()).communicate()
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split()).communicate()
 
 
 if __name__ == '__main__':
