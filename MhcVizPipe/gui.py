@@ -26,7 +26,7 @@ import traceback
 import zipfile
 from os import walk as os_walk
 from subprocess import Popen
-from defaults import TOOLS, EXECUTABLE
+from MhcVizPipe.defaults import TOOLS, EXECUTABLE
 from os import chdir
 import tarfile
 
