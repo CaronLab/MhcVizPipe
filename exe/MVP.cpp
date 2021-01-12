@@ -23,7 +23,7 @@ int main()
     // make command
     std::string cmd;
     if (BOOST_OS_MACOS){
-        cmd = "open -a Terminal " + dir + "/tools/MhcVizPipe";
+        cmd = dir + "/tools/MhcVizPipe";
     }
     else {
         if (BOOST_OS_LINUX){
