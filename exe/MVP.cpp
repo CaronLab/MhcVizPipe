@@ -23,24 +23,24 @@ int main()
     // make command
     std::string cmd;
     if (BOOST_OS_MACOS){
-        cmd = dir + "/tools/MhcVizPipe";
+        cmd = dir + "/tools/MhcVizPipe --standalone";
     }
     else {
         if (BOOST_OS_LINUX){
             if (file_exists("/bin/gnome-terminal")){
-                cmd = "gnome-terminal -- " + dir + "/tools/MhcVizPipe";
+                cmd = "gnome-terminal -- " + dir + "/tools/MhcVizPipe --standalone";
             }
             else if (file_exists("/bin/konsole/")){
-                cmd = "konsole -e " + dir + "/tools/MhcVizPipe";
+                cmd = "konsole -e " + dir + "/tools/MhcVizPipe --standalone";
             }
             else if (file_exists("/bin/terminator/")){
-                cmd = "terminator -e " + dir + "/tools/MhcVizPipe";
+                cmd = "terminator -e " + dir + "/tools/MhcVizPipe --standalone";
             }
             else if (file_exists("/bin/xterm/")){
-                cmd = "xterm -e " + dir + "/tools/MhcVizPipe";
+                cmd = "xterm -e " + dir + "/tools/MhcVizPipe --standalone";
             }
             else if (file_exists("/bin/aterm/")){
-                cmd = "aterm -e " + dir + "/tools/MhcVizPipe";
+                cmd = "aterm -e " + dir + "/tools/MhcVizPipe --standalone";
             }
             else{
                 printf("%s\n", "Sorry, your terminal emulator was not automatically detected. Please start MhcVizPipe from the terminal manually.");
