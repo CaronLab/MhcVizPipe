@@ -46,7 +46,7 @@ class Parameters():
     def GIBBSCLUSTER(self) -> str:
         self.config.read(config_file)
         if self.config['DIRECTORIES']['GibbsCluster path'].lower() == 'auto':
-            return str((Path(executable) / '../../tools/gibbscluster').resolve())
+            return str((Path(executable) / '../../../tools/gibbscluster').resolve())
         return self.config['DIRECTORIES']['GibbsCluster path']
     @property
     def HOSTNAME(self) -> str:
