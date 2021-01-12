@@ -1186,7 +1186,8 @@ if __name__ == '__main__':
     and the latest updates please visit our GitHub repository:
     https://github.com/kevinkovalchik/MhcVizPipe.
 
-    To shut down this instance of MhcVizPipe, use this keyboard shortcut in the terminal:
+    To shut down this instance of MhcVizPipe, close this window or
+    use the following keyboard shortcut in the terminal:
       ctrl+c
     
     ========================================
