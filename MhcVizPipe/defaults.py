@@ -28,9 +28,9 @@ class Parameters():
         self.config.read(config_file)
         if self.config['DIRECTORIES']['NetMHCpan path'].lower() == 'auto':
             if self.config['DIRECTORIES']['NetMHCpan version'] == '4.1':
-                return str((Path(executable) / '../../tools/netMHCpan4.1').resolve())
+                return str((Path(executable) / '../../../tools/netMHCpan4.1').resolve())
             else:
-                return str((Path(executable) / '../../tools/netMHCpan4.0').resolve())
+                return str((Path(executable) / '../../../tools/netMHCpan4.0').resolve())
         return self.config['DIRECTORIES']['NetMHCpan path']
     @property
     def NETMHCPAN_VERSION(self) -> str:
@@ -40,7 +40,7 @@ class Parameters():
     def NETMHCIIPAN(self) -> str:
         self.config.read(config_file)
         if self.config['DIRECTORIES']['NetMHCIIpan path'].lower() == 'auto':
-            return str((Path(executable) / '../../tools/netMHCIIpan').resolve())
+            return str((Path(executable) / '../../../tools/netMHCIIpan').resolve())
         return self.config['DIRECTORIES']['NetMHCIIpan path']
     @property
     def GIBBSCLUSTER(self) -> str:
