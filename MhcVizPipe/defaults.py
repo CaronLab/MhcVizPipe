@@ -1,10 +1,12 @@
 from configparser import ConfigParser
 import os
 from pathlib import Path
+from sys import executable
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 config_file = str(os.path.expanduser('~/.mhcvizpipe.config'))
 default_config_file = str(Path(ROOT_DIR)/'mhcvizpipe_defaults.config')
+EXECUTABLE = executable
 
 if not Path(config_file).exists():
     with open(default_config_file, 'r') as f:
@@ -24,6 +26,11 @@ class Parameters():
     @property
     def NETMHCPAN(self) -> str:
         self.config.read(config_file)
+        if self.config['DIRECTORIES']['NetMHCpan path'].lower() == 'auto':
+            if self.config['DIRECTORIES']['NetMHCpan version'] == '4.1':
+                return str((Path(executable) / '../../tools/netMHCpan4.1').resolve())
+            else:
+                return str((Path(executable) / '../../tools/netMHCpan4.0').resolve())
         return self.config['DIRECTORIES']['NetMHCpan path']
     @property
     def NETMHCPAN_VERSION(self) -> str:
@@ -32,10 +39,14 @@ class Parameters():
     @property
     def NETMHCIIPAN(self) -> str:
         self.config.read(config_file)
+        if self.config['DIRECTORIES']['NetMHCIIpan path'].lower() == 'auto':
+            return str((Path(executable) / '../../tools/netMHCIIpan').resolve())
         return self.config['DIRECTORIES']['NetMHCIIpan path']
     @property
     def GIBBSCLUSTER(self) -> str:
         self.config.read(config_file)
+        if self.config['DIRECTORIES']['GibbsCluster path'].lower() == 'auto':
+            return str((Path(executable) / '../../tools/gibbscluster').resolve())
         return self.config['DIRECTORIES']['GibbsCluster path']
     @property
     def HOSTNAME(self) -> str:
