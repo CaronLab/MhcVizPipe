@@ -1231,14 +1231,14 @@ def initialize():
 
     # make sure nothing has quarantine attribute in Mac OS
     if platform_sys() == 'Darwin':
-        Popen(f'xattr - dr com.apple.quarantine {TOOLS}'.split())
-        Popen(f'xattr - dr com.apple.quarantine {EXECUTABLE}'.split())
+        Popen(f'xattr -dr com.apple.quarantine {TOOLS}'.split())
+        Popen(f'xattr -d com.apple.quarantine {EXECUTABLE}'.split())
 
     # make sure all the scripts are executable
     Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split())
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split())
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan-4.0")}'.split())
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan-4.1")}'.split())
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.0")}'.split())
+    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split())
 
 
 if __name__ == '__main__':
