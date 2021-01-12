@@ -1214,7 +1214,10 @@ def initialize():
         missing.append('netMHCpan(4.0 or 4.1)')
     if missing:
         print(f'ERROR: The following tools are required by MhcVizPipe and were not found: {", ".join(missing)}. '
-              f'Please download them from DTU Health Tech and extract them into the following directory: {Path(TOOLS)}')
+              f'Please download them from DTU Health Tech (https://services.healthtech.dtu.dk/software.php) '
+              f'and extract them into the following directory: {Path(TOOLS)}\n'
+              f'Note that downloading the tools requires an academic email address. Non-academic users must '
+              f'contact health-software@dtu.dk to obtain the software.')
         input('\nPress enter to exit')
         exit(0)
 
