@@ -1,13 +1,17 @@
 from configparser import ConfigParser
 import os
 from pathlib import Path
-from sys import executable
+from sys import executable, argv
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-config_file = str(os.path.expanduser('~/.mhcvizpipe.config'))
 default_config_file = str(Path(ROOT_DIR)/'mhcvizpipe_defaults.config')
 EXECUTABLE = executable
 TOOLS = str((Path(executable) / '../../../tools').resolve())
+
+if '--standalone' in argv:
+    config_file = str(Path(TOOLS) / '../mhcvizpipe.config')
+else:
+    config_file = str(os.path.expanduser('~/.mhcvizpipe.config'))
 
 if not Path(config_file).exists():
     with open(default_config_file, 'r') as f:
