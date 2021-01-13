@@ -568,6 +568,11 @@ app.layout = html.Div(children=[
                             ),
                             dbc.Row(
                                 dbc.Col(
+                                    html.P(id='tmp-location')
+                                )
+                            ),
+                            dbc.Row(
+                                dbc.Col(
                                     html.P(
                                         [
                                             html.A(id='link-to-report',
@@ -593,6 +598,21 @@ app.layout = html.Div(children=[
                                             ' - Save all analysis results in a zip file. This includes NetMHCpan or '
                                             'NetMHCIIpan predictions, GibbsCluster results and the final HTML report. '
                                             'Note that GibbsCluster reports do not include Logos.'
+                                        ],
+                                        style={'margin-top': '1em', 'margin-left': '1em'}
+                                    )
+                                )
+                            ),
+                            dbc.Row(
+                                dbc.Col(
+                                    html.P(
+                                        [
+                                            html.A('Link to figures archive',
+                                                   id='link-to-figures',
+                                                   style={'color': 'blue', 'text-decoration': 'underline',
+                                                          'font-size': '12pt', 'font-weight': 'bold'}),
+                                            ' - Save all figures in a zip file. This includes PDF files of all '
+                                            'figures except the Upset Plot which is in SVG format.'
                                         ],
                                         style={'margin-top': '1em', 'margin-left': '1em'}
                                     )
@@ -966,7 +986,9 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
 
 @app.callback([Output('link-to-report', 'children'),
                Output('link-to-report', 'href'),
+               Output('link-to-figures', 'href'),
                Output('link-to-archive', 'href'),
+               Output('tmp-location', 'children'),
                Output('is-there-a-problem', 'children'),
                Output('loading', 'children'),
                Output('modal2', 'is_open'),
@@ -984,6 +1006,8 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
         return (no_update,
                 no_update,
                 no_update,
+                no_update,
+                no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
                            children='You need to load some data first.',
                            style={'width': '360px', 'margin-top': '2px'})],
@@ -993,6 +1017,8 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
         return (no_update,
                 no_update,
                 no_update,
+                no_update,
+                no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
                            children='Please select one or more alleles.',
                            style={'width': '360px', 'margin-top': '2px'})],
@@ -1000,6 +1026,8 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                 False, '', False)
     elif alleles and len(alleles) > 9:
         return (no_update,
+                no_update,
+                no_update,
                 no_update,
                 no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
@@ -1050,6 +1078,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
             analysis = report.mhc_report(cl_tools, mhc_class, description, submitter_name, exp_info)
             _ = analysis.make_report()
             download_href = f'/download/{urlquote(time+"/"+"report.html")}'
+            # put everything in an archive
             with zipfile.ZipFile(f'{analysis_location}/MVP_analysis.zip', 'w', zipfile.ZIP_STORED) as zipf:
                 netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.csv')]
                 for f in netmhcpan_files:
@@ -1060,12 +1089,22 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                         zipf.write(str(p), p.relative_to(analysis_location))
                 zipf.write(f'{analysis_location}/report.html', 'report.html')
             archive_href = f'/download/{urlquote(time+"/"+"MVP_analysis.zip")}'
+            # put figures in an archive
+            with zipfile.ZipFile(f'{analysis_location}/MVP_figures.zip', 'w', zipfile.ZIP_STORED) as zipf:
+                for root, dirs, files in os_walk(f'{analysis_location}/figures'):
+                    for file in files:
+                        p = Path(root, file)
+                        zipf.write(str(p), p.relative_to(analysis_location))
+            figures_href = f'/download/{urlquote(time+"/"+"MVP_figures.zip")}'
+
+            tmp_location = f"If you wish to access the files directly, the location for this analysis is: " \
+                           f"{analysis_location}."
         except Exception:
             error = traceback.format_exc()
 
-            return no_update, no_update, no_update, [], no_update, False, error, True
+            return no_update, no_update, no_update, no_update, no_update, [], no_update, False, error, True
 
-        return 'Link to report', download_href, archive_href, [], '', True, '', False
+        return 'Link to report', download_href, figures_href, archive_href, tmp_location, [], '', True, '', False
 
 
 @app.callback([Output('upgrade-modal', 'is_open'),
