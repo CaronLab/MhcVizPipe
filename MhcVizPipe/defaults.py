@@ -19,6 +19,7 @@ if not Path(config_file).exists():
     with open(str(config_file), 'w') as f:
         f.write(settings)
 
+
 class Parameters():
     def __init__(self):
         c = ConfigParser()
