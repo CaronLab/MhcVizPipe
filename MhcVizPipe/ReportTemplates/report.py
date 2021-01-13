@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcVizPipe.Tools.cl_tools import MhcToolHelper
 import plotly.graph_objects as go
 import numpy as np
 from MhcVizPipe.Tools import plotly_venn
 import base64
-import itertools
-import re
 import pandas as pd
 from upsetplot import UpSet, from_contents
 import matplotlib.pyplot as plt
@@ -29,13 +27,6 @@ def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
 
 def make_logo(cores_file: str):
     return pl.logo_from_alignment(cores_file, plot=False, return_fig=True)
-
-
-def ploty_fig_to_image(fig: go.Figure, width: int = 360, height: int = 360):
-    fig_data = fig.to_image(format='svg', width=width, height=height).decode()
-    return img(src=f'data:image/svg+xml;base64,{fig_data}',
-               className='img-fluid',
-               style=f'width: 100%; height: auto')
 
 
 def get_plotlyjs():
@@ -82,6 +73,9 @@ class mhc_report:
             counts_df = counts_df.pivot(index='Peptide', columns='Allele', values='Binder')
             pep_binding_dict[sample] = counts_df.copy(deep=True)
         self.pep_binding_dict = pep_binding_dict
+        self.fig_dir = self.results.tmp_folder / 'figures'
+        if not self.fig_dir.exists():
+            self.fig_dir.mkdir()
 
     def lab_logo(self):
         lab_logo = base64.b64encode(
@@ -235,10 +229,11 @@ class mhc_report:
             n_peps_fig.add_trace(go.Bar(x=binders, y=counts, name=sample))
         n_peps_fig.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                                  hovermode='x',
-                                 legend=dict(yanchor="top",
-                                             y=0.99,
+                                 legend=dict(orientation="h",
+                                             yanchor="bottom",
+                                             y=1.02,
                                              xanchor="right",
-                                             x=0.99,
+                                             x=1,
                                              bgcolor="rgba(255, 255, 255, 0.8)"),
                                  font_color='#212529'
                                  )
@@ -248,6 +243,7 @@ class mhc_report:
         n_peps_fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
         n_peps_fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
         n_peps_fig.update_xaxes(fixedrange=True)
+        n_peps_fig.write_image(str(self.fig_dir / 'binding_histogram.pdf'), engine="kaleido")
         card = div(div(b('Binding Affinities'), className='card-header'), className='card')
         card.add(div(raw(n_peps_fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
 
@@ -262,10 +258,11 @@ class mhc_report:
             len_dist.add_trace(go.Bar(name=sample.sample_name, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                                hovermode='x',
-                               legend=dict(yanchor="top",
-                                           y=0.99,
+                               legend=dict(orientation="h",
+                                           yanchor="bottom",
+                                           y=1.02,
                                            xanchor="right",
-                                           x=0.99,
+                                           x=1,
                                            bgcolor="rgba(255, 255, 255, 0.8)"),
                                font_color='#212529'
                                )
@@ -276,23 +273,24 @@ class mhc_report:
         len_dist.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
         len_dist.layout.xaxis.dtick = 1
         len_dist.update_xaxes(fixedrange=True)
+        len_dist.write_image(str(self.fig_dir / 'length_distribution.pdf'), engine="kaleido")
         card = div(p([b('Peptide Length Distribution '), '(maximum of 30 mers)'], className='card-header'),
                    className='card')
         card.add(div(raw(len_dist.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
         return div(card, className=className)
 
     def sample_heatmap(self, sample: str):
-        ymax = np.max([self.peptide_numbers[sample]['total'] for sample in self.samples])
+        #ymax = np.max([self.peptide_numbers[sample]['total'] for sample in self.samples])
         pivot = self.preds.loc[self.preds['Sample'] == sample, :].pivot(index='Peptide', columns='Allele',
                                                                         values='Rank').astype(float)
         if self.mhc_class == 'I':
             pivot[pivot > 2.5] = 2.5
             colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                          [2.2 / 2.5, 'rgba(99, 110, 250, 0)'], [1, 'rgba(99, 110, 250, 0)']]
+                          [2.2 / 2.5, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
         else:
             pivot[pivot > 12] = 12
             colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                          [10.6 / 12, 'rgba(99, 110, 250, 0)'], [1, 'rgba(99, 110, 250, 0)']]
+                          [10.6 / 12, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
         data = pivot.sort_values(list(pivot.columns), ascending=True)
 
         if self.mhc_class == 'I':
@@ -310,17 +308,20 @@ class mhc_report:
             z=data,
             x=list(pivot.columns),
             colorscale=colorscale,
-            colorbar=colorbar
+            colorbar=colorbar,
+            #xgap=1
         ))
         fig.update_layout(font_color='#212529'
                           )
         fig.layout.plot_bgcolor = '#e5ecf6'
         fig.layout.margin = dict(l=20, r=20, t=20, b=20)
-        fig.update_yaxes(range=[0, ymax],
-                         title_text='Number of peptides')
+        fig.update_yaxes(title_text='Number of peptides')
         fig.update_xaxes(title_text='Allele')
         fig.update_xaxes(fixedrange=True)
         fig.update_yaxes(fixedrange=True)
+        fig.update_xaxes(showgrid=False)
+        fig.update_yaxes(showgrid=False)
+        fig.write_image(str(self.fig_dir / f'{sample}_heatmap.pdf'), engine="kaleido")
 
         return fig
 
@@ -336,11 +337,11 @@ class mhc_report:
             if self.mhc_class == 'I':
                 pivot[pivot > 2.5] = 2.5
                 colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                              [2.2 / 2.5, 'rgba(99, 110, 250, 0)'], [1, 'rgba(99, 110, 250, 0)']]
+                              [2.2 / 2.5, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
             else:
                 pivot[pivot > 12] = 12
                 colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                              [10.6 / 12, 'rgba(99, 110, 250, 0)'], [1, 'rgba(99, 110, 250, 0)']]
+                              [10.6 / 12, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
             data = pivot.sort_values(list(pivot.columns), ascending=True)
 
             if self.mhc_class == 'I':
@@ -358,7 +359,8 @@ class mhc_report:
                 z=data,
                 x=list(pivot.columns),
                 colorscale=colorscale,
-                colorbar=colorbar
+                colorbar=colorbar,
+                #xgap=2
             ))
             fig.update_layout(font_color='#212529',
                               title={
@@ -375,6 +377,8 @@ class mhc_report:
             fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
             fig.update_xaxes(fixedrange=True)
             fig.update_yaxes(fixedrange=True)
+            fig.update_xaxes(showgrid=False)
+            fig.update_yaxes(showgrid=False)
 
             heatmaps.add(
                 div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='col-4',
@@ -451,7 +455,7 @@ class mhc_report:
                     pos = (pos[0], pos[1] + 0.1 * ylim)
                     c.set_position(pos)
             plt.draw()
-        upset_fig = f'{self.results.tmp_folder / "upsetplot.svg"}'
+        upset_fig = f'{self.fig_dir / "upsetplot.svg"}'
         plt.savefig(upset_fig, bbox_inches="tight")
         encoded_upset_fig = base64.b64encode(open(upset_fig, 'rb').read()).decode()
         card = div(className='card', style="height: 100%")
@@ -466,6 +470,8 @@ class mhc_report:
     def sequence_logos(self, className=None):
         motifs = div(className=className)
         gibbs_peps = {}
+        logo_dir = self.fig_dir / 'unsupervised_logos'
+        logo_dir.mkdir()
 
         # get the peptides in each group
         for sample in self.samples:
@@ -494,6 +500,7 @@ class mhc_report:
             logos_for_row = div(className="row")
             motifs_row.add(div(logos_for_row, className="col"))
             for i in range(len(logos)):
+                logos[i][0].write_image(str(logo_dir / f'{sample}_{i}.pdf'), engine="kaleido")
                 g_peps = set(gibbs_peps[sample][pep_groups[i]])
                 strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
                                                 len(g_peps)) for allele in self.alleles}
@@ -544,7 +551,8 @@ class mhc_report:
         return motifs
 
     def supervised_sequence_logos(self, className=None):
-
+        logo_dir = self.fig_dir / 'allele_specific_logos'
+        logo_dir.mkdir()
         motifs = div(className=className)
         n_motifs = {}
         gibbs_peps = {}
@@ -567,11 +575,13 @@ class mhc_report:
             for allele in self.alleles:
                 if self.results.gibbs_files[sample][allele] is not None:
                     logo = self.results.gibbs_files[sample][allele]['cores']
+                    logo_fig = make_logo(logo)[0]
+                    logo_fig.write_image(str(logo_dir / f'{sample}_{allele}.pdf'), engine="kaleido")
                     motifs_row.add(
                         div(
                             [
                                 b(f'{allele}'),
-                                wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
+                                wrap_plotly_fig(logo_fig, height="300px", width="100%"),
                                 p(f'Peptides: {len(gibbs_peps[f"{allele}_{sample}"]["1"])}\n'),
                             ],
                             className='col',
@@ -607,11 +617,13 @@ class mhc_report:
                     pep_groups.append(logo.name.replace('gibbs.', '')[0])
                 for x in range(len(logos)):
                     logo = logos[x]
+                    logo_fig = make_logo(logo)[0]
+                    logo_fig.write_image(str(logo_dir / f'{sample}_unannotated_{x}.pdf'), engine="kaleido")
                     motifs_row.add(
                         div(
                             [
                                 b(f'Non-binders group {pep_groups[x]}'),
-                                wrap_plotly_fig(make_logo(logo)[0], height="300px", width="100%"),
+                                wrap_plotly_fig(logo_fig, height="300px", width="100%"),
                                 p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][pep_groups[x]])}\n'),
                             ],
                             className='col',
@@ -719,6 +731,18 @@ class mhc_report:
                 with div(className='row'):
                     with div(className='col-12'):
                         h3('Binding Heatmaps')
+                        p(f'{pan} eluted ligand predictions made for all peptides between {self.results.min_length} & '
+                          f'{self.results.max_length} mers, inclusive.\n',
+                          style='white-space: pre')
+                        div([
+                            div(style='width: 18px; height: 18px; background-color: #ef553b; border-radius: 3px'),
+                            p('Predicted strong binders', style="margin-left: 5px; margin-right: 10px"),
+                            div(style='width: 18px; height: 18px; background-color: #636efa; border-radius: 3px'),
+                            p('Predicted weak binders', style="margin-left: 5px; margin-right: 10px"),
+                            div(style='width: 18px; height: 18px; background-color: #ffffff; border-color: #484848; '
+                                      'border-width: 1px; border-style: solid; border-radius: 3px'),
+                            p('Predicted non-binders', style="margin-left: 5px; margin-right: 10px")
+                        ], style="display: flex; pad: 5px"),
                 self.gen_heatmaps()
                 #with div(className='row'):
                 #    self.gen_heatmaps(className='col-12')
