@@ -1239,7 +1239,7 @@ def download_data_file(tool: str):
               f'After downloading the file, extract it into the following directory (this should create a folder '
               f'called "data" in the destination directory):\n\n'
               f'  {dest}')
-        return
+        exit(1)
     print('\nExtracting archive... ', end="", flush=True)
     try:
         with tarfile.open('./data.tar.gz', 'r:gz') as tar:
@@ -1253,7 +1253,7 @@ def download_data_file(tool: str):
               f'After downloading the file, extract it into the following directory (this should create a folder '
               f'called "data" in the destination directory):\n\n'
               f'  {dest}')
-        return
+        exit(1)
     print('done')
 
 
