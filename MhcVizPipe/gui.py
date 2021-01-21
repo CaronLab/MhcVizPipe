@@ -1271,11 +1271,6 @@ def initialize():
     for tool in tools:
         download_data_file(tool)
 
-    # make sure nothing we need has quarantine attribute in Mac OS
-    if platform_sys() == 'Darwin':
-        Popen(f'xattr -dr com.apple.quarantine {TOOLS}'.split()).communicate()
-        Popen(f'xattr -dr com.apple.quarantine {str((Path(EXECUTABLE) / "..").resolve())}'.split()).communicate()
-
     # make sure all the scripts are executable
     Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
