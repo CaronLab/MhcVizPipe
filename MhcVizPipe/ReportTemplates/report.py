@@ -286,11 +286,11 @@ class mhc_report:
         if self.mhc_class == 'I':
             pivot[pivot > 2.5] = 2.5
             colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                          [2.2 / 2.5, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
+                          [2.2 / 2.5, '#e5ecf6'], [1, '#e5ecf6']]
         else:
             pivot[pivot > 12] = 12
             colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                          [10.6 / 12, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
+                          [10.6 / 12, '#e5ecf6'], [1, '#e5ecf6']]
         data = pivot.sort_values(list(pivot.columns), ascending=True)
 
         if self.mhc_class == 'I':
@@ -313,9 +313,9 @@ class mhc_report:
         ))
         fig.update_layout(font_color='#212529'
                           )
-        fig.layout.plot_bgcolor = '#e5ecf6'
+        fig.layout.plot_bgcolor = '#ffffff'
         fig.layout.margin = dict(l=20, r=20, t=20, b=20)
-        fig.update_yaxes(title_text='Number of peptides')
+        fig.update_yaxes(title_text='Peptides')
         fig.update_xaxes(title_text='Allele')
         fig.update_xaxes(fixedrange=True)
         fig.update_yaxes(fixedrange=True)
@@ -327,6 +327,7 @@ class mhc_report:
 
     def gen_heatmaps(self, className=None):
         ymax = np.max([self.peptide_numbers[sample]['total'] for sample in self.samples])
+        ymax += 0.01 * ymax
         heatmaps = div(className=f'row', style='margin: 10px;'
                                                'border-color: #dee2e6;'
                                                'border-width: 1px;'
@@ -337,12 +338,13 @@ class mhc_report:
             if self.mhc_class == 'I':
                 pivot[pivot > 2.5] = 2.5
                 colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                              [2.2 / 2.5, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
+                              [2.2 / 2.5, '#e5ecf6'], [1, '#e5ecf6']]
             else:
                 pivot[pivot > 12] = 12
                 colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                              [10.6 / 12, 'rgba(99, 110, 250, 0.5)'], [1, 'rgba(255, 255, 255, 1)']]
+                              [10.6 / 12, '#e5ecf6'], [1, '#e5ecf6']]
             data = pivot.sort_values(list(pivot.columns), ascending=True)
+            n_peps = len(data)
 
             if self.mhc_class == 'I':
                 colorbar = dict(title='%Rank',
@@ -362,16 +364,24 @@ class mhc_report:
                 colorbar=colorbar,
                 #xgap=2
             ))
+            fig.add_shape(type='line',
+                          x0=0,
+                          y0=n_peps,
+                          x1=1,
+                          y1=n_peps,
+                          line=dict(color='black', width=2, dash='dash'),
+                          xref='paper',
+                          yref='y')
             fig.update_layout(font_color='#212529',
                               title={
                                   'text': sample,
                                   'x': 0.5,
                                   'xanchor': 'center'}
                               )
-            fig.layout.plot_bgcolor = '#e5ecf6'
+            fig.layout.plot_bgcolor = '#ffffff'
             fig.layout.margin = dict(l=0, r=0, t=40, b=0)
             fig.update_yaxes(range=[0, ymax],
-                             title_text='Number of peptides')
+                             title_text='Peptides')
             fig.update_xaxes(title_text='Allele')
             fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
             fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
@@ -538,10 +548,12 @@ class mhc_report:
                               f'font-size: 11pt'
                     ),
                 )
+            total_n_peptides = len(p_df)
+            n_outliers = self.results.gibbs_files[sample]['unsupervised']['n_outliers']
             motifs.add(
                 div(
                     [
-                        div(b(f'{sample}'),
+                        div(p([b(f'{sample}  '), f'(peptides used: {total_n_peptides}, outliers: {n_outliers})']),
                             className='card-header'),
                         div(motifs_row, className='card-body')
                     ],
@@ -554,7 +566,6 @@ class mhc_report:
         logo_dir = self.fig_dir / 'allele_specific_logos'
         logo_dir.mkdir()
         motifs = div(className=className)
-        n_motifs = {}
         gibbs_peps = {}
         for sample in self.samples:
             for allele in self.alleles + ['unannotated']:
@@ -739,9 +750,10 @@ class mhc_report:
                             p('Predicted strong binders', style="margin-left: 5px; margin-right: 10px"),
                             div(style='width: 18px; height: 18px; background-color: #636efa; border-radius: 3px'),
                             p('Predicted weak binders', style="margin-left: 5px; margin-right: 10px"),
-                            div(style='width: 18px; height: 18px; background-color: #ffffff; border-color: #484848; '
-                                      'border-width: 1px; border-style: solid; border-radius: 3px'),
-                            p('Predicted non-binders', style="margin-left: 5px; margin-right: 10px")
+                            div(style='width: 18px; height: 18px; background-color: #e5ecf6'),
+                            p('Predicted non-binders', style="margin-left: 5px; margin-right: 10px"),
+                            #div(hr(style="border-top: dashed 2px black"), style='width: 18px; height: 18px; diplay: flex; justify-content: center; align-items:center; text-align: center'),
+                            p([b('- -  ', style='white-space: pre'), '# of peptides in sample'], style="margin-left: 5px; margin-right: 10px")
                         ], style="display: flex; pad: 5px"),
                 self.gen_heatmaps()
                 #with div(className='row'):
