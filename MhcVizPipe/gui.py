@@ -1231,6 +1231,15 @@ def download_data_file(tool: str):
     command = f'curl -L -k -o ./data.tar.gz {url}'.split()
     download = Popen(command)
     _ = download.communicate()
+    if download.returncode != 0:
+        print(f'ERROR: Sorry! There was a problem downloading the data file for {tool}. This might be due to elevated '
+              f'security settings on your computer or network. Please download the data file for the tool using the '
+              f'following URL:\n\n'
+              f'  {url}\n\n'
+              f'After downloading the file, extract it into the following directory (this should create a folder '
+              f'called "data" in the destination directory):\n\n'
+              f'  {dest}')
+        return
     print('\nExtracting archive... ', end="", flush=True)
     tar = tarfile.open('./data.tar.gz', 'r:gz')
     tar.extractall()
