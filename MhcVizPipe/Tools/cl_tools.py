@@ -8,6 +8,7 @@ from MhcVizPipe.Tools.unmodify_peptides import remove_modifications
 from typing import List
 from multiprocessing import Pool
 from MhcVizPipe.Tools.jobs import Job, _run_multiple_processes
+import re
 
 
 class MhcPeptides:
@@ -228,6 +229,10 @@ class MhcToolHelper:
                                                                       list(Path(best_grouping_dir / 'cores').glob('*'))
                                                                       if 'of' in x.name]
                 self.gibbs_files[sample.sample_name][run]['pep_groups_file'] = best_grouping_dir/'res'/f'gibbs.{best_grouping}g.ds.out'
+                with open(best_grouping_dir/'res'/f'gibbs.{best_grouping}g.out', 'r') as f:
+                    contents = f.read()
+                    self.gibbs_files[sample.sample_name][run]['n_outliers'] = \
+                        re.findall('# Trash cluster: removed ([0-9]*) outliers', contents)[0]
         for sample in self.samples:
             for allele in self.alleles:
                 self.gibbs_files[sample.sample_name][allele] = {}
