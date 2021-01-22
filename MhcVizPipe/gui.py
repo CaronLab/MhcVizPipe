@@ -29,6 +29,7 @@ from subprocess import Popen
 from MhcVizPipe.defaults import TOOLS, EXECUTABLE
 from os import chdir
 import tarfile
+from MhcVizPipe import __version__
 
 
 Parameters = Parameters()
@@ -1302,7 +1303,7 @@ if __name__ == '__main__':
     windows = 'Microsoft' in platform.release()
     welcome = f'''
     ========================================
-    MhcVizPipe v0.4.12
+    MhcVizPipe v{__version__}
     
     Welcome to MhcVizPipe! To open the GUI, open the following link
     in your web browser: http://{'localhost' if windows else Parameters.HOSTNAME}:{Parameters.PORT}
