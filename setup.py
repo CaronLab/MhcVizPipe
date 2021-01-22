@@ -22,7 +22,8 @@ setup(
         'upsetplot',
         'seaborn',
         'plotly-logo',
-        'waitress'
+        'waitress',
+        'kaleido'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
