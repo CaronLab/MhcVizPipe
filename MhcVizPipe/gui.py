@@ -1341,11 +1341,21 @@ if __name__ == '__main__':
         print(debug_welcome)
         app.run_server(debug=True, port=8971, host=Parameters.HOSTNAME)
     else:
-        print(welcome)
-        with catch_warnings():
-            simplefilter('ignore')
-            serve(app.server,
-                  host=Parameters.HOSTNAME,
-                  port=int(Parameters.PORT),
-                  threads=6,
-                  _quiet=True)
+        try:
+            print(welcome)
+            with catch_warnings():
+                simplefilter('ignore')
+                serve(app.server,
+                      host=Parameters.HOSTNAME,
+                      port=int(Parameters.PORT),
+                      threads=6,
+                      _quiet=True)
+        except OSError as e:
+            if e.errno == 98:
+                print(f'ERROR: address {Parameters.HOSTNAME}:{Parameters.PORT} is already in use. This could be due to '
+                      f'an instance of MhcVizPipe already running. Please check for any open terminals running '
+                      f'MhcVizPipe. If nothing is found, try checking the System Monitor or Task Manager for MhcVizPipe '
+                      f'and end/kill it if you find it.')
+                exit(1)
+            else:
+                raise e
