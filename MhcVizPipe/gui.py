@@ -1190,16 +1190,10 @@ def check_if_version_is_uptodate(name: str) -> (bool, str, str):
     :param name:
     :return: (up-to-date: bool, current_version: str, latest_version: str)
     """
-    from subprocess import run
-    from sys import executable
-    latest_version = str(run([executable, '-m', 'pip', 'install', '{}==random'.format(name)], capture_output=True, text=True))
-    latest_version = latest_version[latest_version.find('(from versions:')+15:]
-    latest_version = latest_version[:latest_version.find(')')]
-    latest_version = latest_version.replace(' ','').split(',')[-1]
-
-    current_version = str(run([executable, '-m', 'pip', 'show', '{}'.format(name)], capture_output=True, text=True))
-    current_version = current_version[current_version.find('Version:')+8:]
-    current_version = current_version[:current_version.find('\\n')].replace(' ','')
+    from johnnydep.lib import JohnnyDist
+    mvp = JohnnyDist(name)
+    current_version = mvp.version_installed
+    latest_version = mvp.version_latest
 
     if latest_version == current_version:
         return True, current_version, latest_version

@@ -23,7 +23,8 @@ setup(
         'seaborn',
         'plotly-logo',
         'waitress',
-        'kaleido'
+        'kaleido',
+        'johnnydep'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
