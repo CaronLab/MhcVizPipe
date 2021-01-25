@@ -1076,7 +1076,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
             cl_tools.order_gibbs_runs()
             cl_tools.run_jubs()
             cl_tools.find_best_files()
-            analysis = report.mhc_report(cl_tools, mhc_class, description, submitter_name, exp_info)
+            analysis = report.mhc_report(cl_tools, mhc_class, Parameters.THREADS, description, submitter_name, exp_info)
             _ = analysis.make_report()
             download_href = f'/download/{urlquote(time+"/"+"report.html")}'
             # put everything in an archive
