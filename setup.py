@@ -24,7 +24,8 @@ setup(
         'plotly-logo',
         'waitress',
         'kaleido',
-        'johnnydep'
+        'johnnydep',
+        'structlog'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

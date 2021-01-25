@@ -10,3 +10,4 @@ waitress
 plotly-logo
 kaleido
 johnnydep
+structlog

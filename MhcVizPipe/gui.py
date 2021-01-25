@@ -29,6 +29,7 @@ from subprocess import Popen
 from MhcVizPipe.defaults import TOOLS, EXECUTABLE
 from os import chdir
 import tarfile
+import structlog
 from MhcVizPipe import __version__
 
 
@@ -1293,6 +1294,7 @@ def initialize():
 
 
 if __name__ == '__main__':
+    structlog.configure(logger_factory=structlog.stdlib.LoggerFactory())
     import platform
     windows = 'Microsoft' in platform.release()
     welcome = f'''
