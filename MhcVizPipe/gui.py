@@ -1289,6 +1289,7 @@ def initialize():
         download_data_file(tool)
 
     # make sure all the scripts are executable
+    Popen(f'chmod +x {str(Path(TOOLS) / ".." / "MhcVizPipe.sh")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.0")}'.split()).communicate()
