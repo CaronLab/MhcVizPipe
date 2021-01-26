@@ -1235,6 +1235,7 @@ def download_data_file(tool: str):
               f'After downloading the file, extract it into the following directory (this should create a folder '
               f'called "data" in the destination directory):\n\n'
               f'  {dest}')
+        input("\nPress enter to exit")
         exit(1)
     print('\nExtracting archive... ', end="", flush=True)
     try:
@@ -1249,6 +1250,7 @@ def download_data_file(tool: str):
               f'After downloading the file, extract it into the following directory (this should create a folder '
               f'called "data" in the destination directory):\n\n'
               f'  {dest}')
+        input("\nPress enter to exit")
         exit(1)
     print('done')
 
@@ -1352,6 +1354,7 @@ if __name__ == '__main__':
                       f'an instance of MhcVizPipe already running. Please check for any open terminals running '
                       f'MhcVizPipe. If nothing is found, try checking the System Monitor or Task Manager for MhcVizPipe '
                       f'and end/kill it if you find it.')
+                input("\nPress enter to exit")
                 exit(1)
             else:
                 raise e
