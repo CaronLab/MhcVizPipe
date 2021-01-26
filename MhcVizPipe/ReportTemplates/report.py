@@ -352,11 +352,11 @@ class mhc_report:
             if self.mhc_class == 'I':
                 pivot[pivot > 2.5] = 2.5
                 colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                              [2.2 / 2.5, '#e5ecf6'], [1, '#e5ecf6']]
+                              [2.2 / 2.5, '#fdffc2'], [1, '#fdffc2']]
             else:
                 pivot[pivot > 12] = 12
                 colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                              [10.6 / 12, '#e5ecf6'], [1, '#e5ecf6']]
+                              [10.6 / 12, '#fdffc2'], [1, '#fdffc2']]
             data = pivot.sort_values(list(pivot.columns), ascending=True)
             n_peps = len(data)
 
@@ -392,7 +392,6 @@ class mhc_report:
                                   'x': 0.5,
                                   'xanchor': 'center'}
                               )
-            fig.layout.plot_bgcolor = '#ffffff'
             fig.layout.margin = dict(l=0, r=0, t=40, b=0)
             fig.update_yaxes(range=[0, ymax],
                              title_text='Peptides')
@@ -795,7 +794,8 @@ class mhc_report:
                             p('Predicted strong binders', style="margin-left: 5px; margin-right: 10px"),
                             div(style='width: 18px; height: 18px; background-color: #636efa; border-radius: 3px'),
                             p('Predicted weak binders', style="margin-left: 5px; margin-right: 10px"),
-                            div(style='width: 18px; height: 18px; background-color: #e5ecf6'),
+                            div(style='width: 18px; height: 18px; background-color: #fdffc2; border-radius: 3px;'
+                                      'border-style: solid; border-color: #e5ecf6; border-width: 1px'),
                             p('Predicted non-binders', style="margin-left: 5px; margin-right: 10px"),
                             #div(hr(style="border-top: dashed 2px black"), style='width: 18px; height: 18px; diplay: flex; justify-content: center; align-items:center; text-align: center'),
                             p([b('- -  ', style='white-space: pre'), '# of peptides in sample'], style="margin-left: 5px; margin-right: 10px")
