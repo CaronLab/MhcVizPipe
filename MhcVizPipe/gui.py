@@ -1151,6 +1151,8 @@ def check_mvp_version_and_update(a, b, c):
         try:
             output = check_output([executable, '-m', 'pip', 'install', '--upgrade', 'MhcVizPipe'], stderr=STDOUT)
             uptodate, current, latest = check_if_version_is_uptodate('MhcVizPipe')
+            current = check_output([executable, '-c', 'from MhcVizPipe import __version__ as current_version; '
+                                                      'print(current_version)'], stderr=STDOUT).decode().strip()
             if current == latest:
                 header = 'Upgrade successful!'
                 body = ['MhcVizPipe is now up to date. You will need to restart the MhcVizPipe server to start using '
