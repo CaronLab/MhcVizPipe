@@ -2,6 +2,8 @@
     #include <gtk/gtk.h>
 #elif __has_include( <CoreFoundation/CoreFoundation.h> )
     #include <CoreFoundation/CoreFoundation.h>
+#else
+    #error "Compilation requires a linux system with libgtk-3-dev or a Mac using CoreFoundation."
 #endif
 #include "exe_dir.h"
 #include <sys/stat.h>
@@ -167,7 +169,7 @@ int main()
         "try running MhcVizPipe directly from the terminal using the following command:\n\n" +
         dir + "/MhcVizPipe.sh\n\n"+
         "If you do this but see a \"permission denied\" error when you run MhcVizPipe.sh try the following command to fix it before trying again:\n\n"+
-        "chmod +x " + dir + "/MhcVizPipe.sh\n\n";
+        "chmod +x " + dir + "/MhcVizPipe.sh\n\n" +
         "If there is no obvious solution from the error message, please contact the developers by email or at:\n\n\thttps://github.com/CaronLab/MhcVizPipe/issues";
         show_error((message).c_str(), "Error");
     }
