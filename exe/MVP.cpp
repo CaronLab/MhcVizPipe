@@ -11,7 +11,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 
 // test if a file exists
-inline bool file_exists (const std::string& name) {
+bool file_exists (const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
 }
@@ -129,32 +129,42 @@ int main()
     else {
         if (BOOST_OS_LINUX){
             // its linux, try to find a terminal emulator to use
-            if (file_exists("/bin/gnome-terminal") | file_exists("/usr/bin/gnome-terminal")){
+            if (file_exists("/bin/gnome-terminal") || file_exists("/usr/bin/gnome-terminal")){
                 cmd = "gnome-terminal -- " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
             }
-            else if (file_exists("/bin/konsole/") | file_exists("/usr/bin/konsole/")){
+            else if (file_exists("/bin/konsole") || file_exists("/usr/bin/konsole")){
                 cmd = "konsole -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
             }
-            else if (file_exists("/bin/terminator/") | file_exists("/usr/bin/terminator/")){
-                cmd = "terminator -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
+            else if (file_exists("/bin/x-terminal-emulator") || file_exists("/usr/bin/x-terminal-emulator")){
+                cmd = "x-terminal-emulator -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
             }
-            else if (file_exists("/bin/xterm/") | file_exists("/usr/bin/xterm/")){
+            else if (file_exists("/bin/mate-terminal") || file_exists("/usr/bin/mate-terminal")){
+                // mate-terminal requires us to enclose the command in quotes
+                cmd = "mate-terminal -e \"" + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone\"";
+            }
+            else if (file_exists("/bin/terminator") || file_exists("/usr/bin/terminator")){
+                // so does terminator
+                cmd = "terminator -e \"" + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone\"";
+            }
+            else if (file_exists("/bin/xterm") || file_exists("/usr/bin/xterm")){
                 cmd = "xterm -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
             }
-            else if (file_exists("/bin/aterm/") | file_exists("/usr/bin/aterm/")){
+            else if (file_exists("/bin/aterm") || file_exists("/usr/bin/aterm")){
                 cmd = "aterm -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
             }
-            else if (file_exists("/bin/tilda/") | file_exists("/usr/bin/tilda/")){
-                cmd = "tilda -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
+            else if (file_exists("/bin/tilda") || file_exists("/usr/bin/tilda")){
+                // tilda requires the quotes and uses -c instead of -e
+                cmd = "tilda -c \"" + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone\"";
             }
-            else if (file_exists("/bin/xfce4-terminal/") | file_exists("/usr/bin/xfce4-terminal/")){
-                cmd = "xfce4-terminal -e " + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone";
+            else if (file_exists("/bin/xfce4-terminal") || file_exists("/usr/bin/xfce4-terminal")){
+                // requires quotes
+                cmd = "xfce4-terminal -e \"" + dir + "/python/bin/python3 -m MhcVizPipe.gui --standalone\"";
             }
             else{
                 std::string message = std::string("") +
                     "Sorry, your terminal emulator was not automatically detected. Please start MhcVizPipe from the terminal manually using the provided " +
                     "shell script (MhcVizPipe.sh). If you need the full path to the script, here it is:\n\n" +
-                    dir + "/MhcVizPipe.shn\n\n" +
+                    dir + "/MhcVizPipe.sh\n\n" +
                     "If you type that into you terminal and hit enter, MhcVizPipe should hopefully start up. If you see a \"permission denied\" error try " +
                     "the following command to fix it before trying again:\n\n" +
                     "chmod +x " + dir + "/MhcVizPipe.sh";
