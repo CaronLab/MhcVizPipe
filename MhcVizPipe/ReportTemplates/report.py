@@ -613,16 +613,12 @@ class mhc_report:
         with concurrent.futures.ProcessPoolExecutor(max_workers=self.cpus) as executor:
             for sample in self.samples:
                 sample_logos[sample] = {}
-                for allele in self.alleles:
+                for allele in self.alleles + ['unannotated']:
                     if self.results.gibbs_files[sample][allele] is not None:
                         cores = self.results.gibbs_files[sample][allele]['cores']
                         if not isinstance(cores, list):
                             cores = [cores]
                         sample_logos[sample][allele] = [executor.submit(make_logo, core) for core in cores]
-                cores = self.results.gibbs_files[sample]['unannotated']['cores']
-                if not isinstance(cores, list):
-                    cores = [cores]
-                sample_logos[sample]['unannotated'] = [executor.submit(make_logo, core) for core in cores]
 
         for sample in self.samples:
             for allele in self.alleles + ['unannotated']:
