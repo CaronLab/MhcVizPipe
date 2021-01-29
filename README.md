@@ -37,6 +37,9 @@ will see performance increases on systems with higher numbers of CPUs.
 
 ## Installation and usage
 
+**_NOTE: the installation processes is being updated and the quick installation described below
+will possibly fail. The instructions will be updated soon._**
+
 Below you will find a brief overview of the installation steps and usage of the tool. For
 more details please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
 
