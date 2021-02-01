@@ -1,0 +1,41 @@
+This will guide you on how to install the standalone distribution of MhcVizPipe.
+
+You must first download NetMHCpan, NetMHCIIpan and GibbsCluster. If you have not yet downloaded
+these files, see the instructions here:
+https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software
+
+NOTE: You don't need to do a full installation of these tools for MhcVizPipe to work. However,
+it would be a good idea to install them at some point because MhcVizPipe does not show the full
+output of the tools, and you will want to run the tools yourself for experiments such as mining
+peptide lists for novel motifs. When you are ready, you can follow our installation instructions
+for the tools: https://github.com/CaronLab/MhcVizPipe/wiki/Installation-of-third-party-software.md
+
+
+--- Installation ---
+
+1. Download MhcVizPipe (https://github.com/CaronLab/MhcVizPipe/releases)
+   (choose the download which is appropriate for your operating system, i.e. either MacOS or Linux).
+
+2. Extract the archive to a location of your choosing. This should create a folder called `MhcVizpipe`
+
+3. Inside the `MhcVizPipe` folder, you should find a folder called `tools` in which there will be a few files.
+
+   i.  Into this `tools` folder extract the archives for NetMHCpan, NetMHCIIpan and GibbsCluster.
+
+   ii. There should now be three
+   additional folders: `gibbscluster-2.0`, `netMHCIIpan-4.0`, and `netMHCpan-4.0` or `netMHCpan-4.1`.
+
+4. Now try running MhcVizPipe by double-clicking the `MhcVizPipe` executable file in the `MhcVizPipe` folder.
+
+    i. A terminal window should appear and the executable will start to download some required data files for
+    NetMHCpan and NetMHCIIpan
+
+    ii. If there are any issues with the download, an error message will appear that will tell you
+    how to download the files yourself and where to put them.
+
+    iii. Once the downloads are complete, a welcome message should appear. You will find a URL link in the message. To
+       start the MhcVizPipe GUI, right-click the link or copy-paste it into your web browser.
+
+5. Now you should be seeing MhcVizPipe for the first time.
+    - If you want, you can bookmark the page that is running MVP. It will be the same address every
+    time you start the program unless you or someone else changes the server parameters in the settings.
