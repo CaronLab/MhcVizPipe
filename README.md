@@ -1,9 +1,14 @@
 # MhcVizPipe (MVP)
 A reporting pipeline for visualization of immunopeptidomics MS data.
 
+MhcVizPipe is intended for rapid assessment and comparison of general sample quality and composition across a single or multiple
+files. Example use cases of MhcVizPipe are assessment of QC samples or comparison of samples during method development.
+
 MhcVizPipe connects the bioinformatic tools NetMHCpan, NetMHCIIpan and GibbsCluster and generates organized
 and easy-to-understand reports in HTML format. The reports are fully portable and can be viewed on any computer
-with a modern web browser. Here are some of the features of MhcVizPipe:
+with a modern web browser.
+
+Here are some of the features of MhcVizPipe:
 
 ### Sample Overview
 ![](images/sample_overview.png)
@@ -25,6 +30,35 @@ The "Sequence Motifs" section highlights the GibbsCluster results, including mot
 all peptides ("Unsupervised GibbsCluster") and motifs generated for each allele-specific peptide list as identified by
 NetMHCpan or NetMHCIIpan ("Allele-specific GibbsCluster").
 
+## When to use MhcVizPipe
+
+MhcVizPipe is intended for situations where you want a quick and consolidated view of the general quality 
+and composition of one or more immunopeptidomics samples:
+- QC samples
+    - Compare numbers of binders, distribution of binders per allele and prominent binding motifs with 
+    previous QC sample to check consistency of data
+- Quality check of a batch of data returned from a core facility
+    - Rapidly check for overall sample quality
+    - Check for possible labeling issues (e.g. switch-ups of class I and class II)
+- Comparison of multiple samples in a method development experiment
+    - Compare general composition across multiple conditions
+
+## When not to use MhcVizPipe
+
+MhcVizPipe is not intended for situations where you want data mining of your sample or if the sample is 
+uncharacterized. For example:
+- Finding new motifs in data
+    - MhcVizPipe is designed to show you the most prominent motifs in your data, not find every single possible 
+      motif. If you are looking for something that might be hidden or requires manipulation of 
+      the data to find, you will need to do this analysis yourself.
+- Uncharacterized samples
+    - MhcVizPipe expects you to know your sample(s). E.g. you should know if it is class I or class II and what 
+    alleles are expressed.
+- As a replacement for a bioinformatician
+    - MhcVizPipe automates some routine and time-intensive tasks for you, but it does provide biological insight
+    beyond what you can see in the report! MhcVizPipe gives you a general characterization of the sample, not 
+    a deep biological interpretation.
+
 ## System requirements
 
 #### Operating system
@@ -36,9 +70,6 @@ There are no hard memory or CPU requirements for MhcVizPipe. However, because Mh
 will see performance increases on systems with higher numbers of CPUs.
 
 ## Installation and usage
-
-**_NOTE: the installation processes is being updated and the quick installation described below
-will possibly fail. The instructions will be updated soon._**
 
 Below you will find a brief overview of the installation steps and usage of the tool. For
 more details please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
