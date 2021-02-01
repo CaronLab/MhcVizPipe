@@ -4,7 +4,10 @@ from pathlib import Path
 from sys import executable, argv
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-default_config_file = str(Path(ROOT_DIR)/'mhcvizpipe_defaults.config')
+if '--standalone' in argv:
+    default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_standalone_defaults.config')
+else:
+    default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_defaults.config')
 EXECUTABLE = executable
 TOOLS = str((Path(executable) / '../../../tools').resolve())
 
