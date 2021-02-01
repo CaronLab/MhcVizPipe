@@ -5,4 +5,4 @@ The scripts provided by DTU Health Tech to run NetMHCpan-(4.0 & 4.1), NetMHCIIpa
 MhcVizPipe as simple (and sudo-free) as possible we translated these scripts into Bash scipts which should work on
 nearly any system. 
 
-These scripts are automatically downloaded by the MVP installer.
+These scripts are included as part of the standalone distribution.
