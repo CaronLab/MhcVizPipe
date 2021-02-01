@@ -71,7 +71,7 @@ int main()
     // check that it looks like we are in the correct directory
     if (! boost::algorithm::ends_with(dir, "MhcVizPipe")){
         std::string msg = std::string("") +
-            "It looks like the MhcVizPipe executable has been moved out of its installation directory or the "+
+            "ERROR: It looks like the MhcVizPipe executable has been moved out of its installation directory or the "+
             "installation directory has been renamed. The executable needs to remain inside the installation directory and the "+
             "installation directory must not be renamed (i.e. it should still be called MhcVizPipe).";
         show_error((msg).c_str(), "Error");
@@ -80,7 +80,7 @@ int main()
     // check that the tool directory is there
     if (! file_exists(dir + "/tools")){
         std::string msg = std::string("") +
-            "The \"tools\" folder is missing from the MhcVizPipe folder. If you have moved it, please move it back to "+
+            "ERROR: The \"tools\" folder is missing from the MhcVizPipe folder. If you have moved it, please move it back to "+
             "its original location. If it has been deleted or is missing, you will need to reinstall MhcVizPipe (or replace the tool " +
             "folder by extracting it from the MhcVizPipe download).";
         show_error((msg).c_str(), "Error");
@@ -89,16 +89,16 @@ int main()
     // check that the python directory is there
     if (! file_exists(dir + "/python")){
         std::string msg = std::string("") +
-            "The \"python\" folder is missing from the MhcVizPipe folder. If you have moved it, please move it back to "+
+            "ERROR: The \"python\" folder is missing from the MhcVizPipe folder. If you have moved it, please move it back to "+
             "its original location. If it has been deleted or is missing, you will need to reinstall MhcVizPipe (or replace the python "+
             "folder by extracting it from the MhcVizPipe download).";
         show_error((msg).c_str(), "Error");
         return 1;
     }
     // check that all the scripts are there
-    if (!file_exists(dir + "/tools/gibbscluster") |
-        !file_exists(dir + "/tools/netMHCIIpan") |
-        !file_exists(dir + "/tools/netMHCpan4.0") |
+    if (!file_exists(dir + "/tools/gibbscluster") ||
+        !file_exists(dir + "/tools/netMHCIIpan") ||
+        !file_exists(dir + "/tools/netMHCpan4.0") ||
         !file_exists(dir + "/tools/netMHCpan4.1") ){
         std::string msg = std::string("") +
             "One or more of the tool scripts are missing from the \"tools\" folder. It should have the following contents: "+
