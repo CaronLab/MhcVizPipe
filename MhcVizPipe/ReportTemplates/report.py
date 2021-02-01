@@ -5,8 +5,6 @@ import plotly.graph_objects as go
 import numpy as np
 from MhcVizPipe.Tools import plotly_venn
 import base64
-import itertools
-import re
 import pandas as pd
 from upsetplot import UpSet, from_contents
 import matplotlib.pyplot as plt
@@ -18,7 +16,6 @@ from dominate import document
 import PlotlyLogo.logo as pl
 from MhcVizPipe.defaults import ROOT_DIR
 import concurrent.futures
-from threading import Thread
 
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
