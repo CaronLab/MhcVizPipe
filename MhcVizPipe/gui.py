@@ -1230,8 +1230,8 @@ def download_data_file(tool: str):
     download = Popen(command)
     _ = download.communicate()
     if download.returncode != 0:
-        print(f'ERROR: Sorry! There was a problem downloading the data file for {tool}. This might be due to elevated '
-              f'security settings on your computer or network. Please download the data file for the tool using the '
+        print(f'\nERROR: Sorry! There was a problem downloading the data file for {tool}. Please try '
+              f'again. If the problem continues, you can manually download the data file for the tool using the '
               f'following URL:\n\n'
               f'  {url}\n\n'
               f'After downloading the file, extract it into the following directory (this should create a folder '
@@ -1243,9 +1243,8 @@ def download_data_file(tool: str):
     try:
         with tarfile.open('./data.tar.gz', 'r:gz') as tar:
             tar.extractall()
-
     except Exception:
-        print(f'ERROR: Sorry! There was a problem extracting the downloaded data file for {tool}. This might be due to '
+        print(f'\nERROR: Sorry! There was a problem extracting the downloaded data file for {tool}. This might be due to '
               f'a corrupted download. Please try restarting the program and if the problem persists download the data '
               f'file for {tool} using the following URL:\n\n'
               f'  {url}\n\n'
