@@ -63,7 +63,7 @@ class Parameters():
     def NETMHCIIPAN(self) -> str:
         self.config.read(config_file)
         if self.config['DIRECTORIES']['NetMHCIIpan path'].lower() == 'auto':
-            return str((Path(TOOLS) / 'tools/netMHCIIpan').resolve())
+            return str((Path(TOOLS) / 'netMHCIIpan').resolve())
         return self.config['DIRECTORIES']['NetMHCIIpan path']
     @property
     def GIBBSCLUSTER(self) -> str:
