@@ -76,7 +76,7 @@ more details please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki
 
 Note that MVP runs natively on Linux and Mac systems. If you have a Windows computer, you can follow
 [these instructions](https://github.com/CaronLab/MhcVizPipe/wiki/Windows-installation) to install it using the
-Windows Subsystem for Linux (IN PROGRESS).
+Windows Subsystem for Linux.
 
 #### Quick installation
 Below is a quick overview of the installation steps. For more details, [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
