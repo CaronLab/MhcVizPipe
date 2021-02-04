@@ -784,9 +784,9 @@ class mhc_report:
                           style='white-space: pre')
                         div([
                             div(style='width: 18px; height: 18px; background-color: #ef553b; border-radius: 3px'),
-                            p('Predicted strong binders', style="margin-left: 5px; margin-right: 10px"),
+                            p(f'Predicted strong binders (%rank <= {sb})', style="margin-left: 5px; margin-right: 10px"),
                             div(style='width: 18px; height: 18px; background-color: #636efa; border-radius: 3px'),
-                            p('Predicted weak binders', style="margin-left: 5px; margin-right: 10px"),
+                            p(f'Predicted weak binders ({sb} < %rank <= {wb})', style="margin-left: 5px; margin-right: 10px"),
                             div(style='width: 18px; height: 18px; background-color: #fdffc2; border-radius: 3px;'
                                       'border-style: solid; border-color: #e5ecf6; border-width: 1px'),
                             p('Predicted non-binders', style="margin-left: 5px; margin-right: 10px"),
