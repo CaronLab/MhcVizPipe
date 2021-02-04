@@ -18,7 +18,7 @@ export NMHOME
 # determine where to store temporary files (must be writable to all users)
 
 if [[ -z $TMPDIR ]]; then
-  TMPDIR="$NMHOME"/tmp
+  TMPDIR=/tmp
 	export TMPDIR
 fi
 
