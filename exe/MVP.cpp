@@ -116,6 +116,7 @@ int main()
             "chmod +x " + dir + "/tools/netMHCIIpan; " +
             "chmod +x " + dir + "/tools/netMHCpan4.0; " +
             "chmod +x " + dir + "/tools/netMHCpan4.1; " +
+            "chmod -R +x " + dir + "/python/bin; " +
             "chmod +x " + dir + "/MhcVizPipe.sh").c_str());
 
     if (BOOST_OS_MACOS){

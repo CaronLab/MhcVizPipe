@@ -35,11 +35,12 @@ fi
 
 
 
-# make sure MVP will be able to execute the tool scripts
+# make sure MVP will be able to execute the tool scripts and python
 chmod +x "$CDIR"/tools/gibbscluster
 chmod +x "$CDIR"/tools/netMHCIIpan
 chmod +x "$CDIR"/tools/netMHCpan4.0
 chmod +x "$CDIR"/tools/netMHCpan4.1
+chmod -R +x "$CDIR"/python/bin
 
 # if we're on a Mac, remove any quarantine attributes
 if [[ $OSTYPE == *darwin* ]]; then
