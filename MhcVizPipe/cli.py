@@ -40,6 +40,7 @@ parser.add_argument('-e', '--exp_info', type=str, required=False,
                          '(e.g. cell line, # of cells, MS Instrument, etc) and ZYX(etc) are details describing the '
                          'field (e.g. JY cell line, 10e6, Orbitrap Fusion, etc.).')
 parser.add_argument('--max', type=int, required=False, help='Maximum peptide length to run through NetMHCpan.')
+parser.add_argument('--standalone', action='store_true', help='Run MVP in "standalone" mode.')
 
 if __name__ == '__main__':
     netmhcpan_alleles = []
