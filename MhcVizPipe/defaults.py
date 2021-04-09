@@ -40,7 +40,7 @@ class Parameters():
                 return str((Path(TOOLS) / 'netMHCpan4.1').resolve())
             else:
                 return str((Path(TOOLS) / 'netMHCpan4.0').resolve())
-        return self.config['DIRECTORIES']['NetMHCpan path']
+        return str(Path(self.config['DIRECTORIES']['NetMHCpan path']).expanduser())
     @property
     def NETMHCPAN_VERSION(self) -> str:
         self.config.read(config_file)
@@ -64,13 +64,13 @@ class Parameters():
         self.config.read(config_file)
         if self.config['DIRECTORIES']['NetMHCIIpan path'].lower() == 'auto':
             return str((Path(TOOLS) / 'netMHCIIpan').resolve())
-        return self.config['DIRECTORIES']['NetMHCIIpan path']
+        return str(Path(self.config['DIRECTORIES']['NetMHCIIpan path']).expanduser())
     @property
     def GIBBSCLUSTER(self) -> str:
         self.config.read(config_file)
         if self.config['DIRECTORIES']['GibbsCluster path'].lower() == 'auto':
             return str((Path(TOOLS) / 'gibbscluster').resolve())
-        return self.config['DIRECTORIES']['GibbsCluster path']
+        return str(Path(self.config['DIRECTORIES']['GibbsCluster path']).expanduser())
     @property
     def HOSTNAME(self) -> str:
         self.config.read(config_file)
