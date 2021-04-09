@@ -102,22 +102,23 @@ class mhc_report:
         else:
             info = self.experimental_info
 
-        for i in info:
-            if ':' not in i:
-                continue
-            idx = i.index(':')
-            field = i[:idx + 1].strip()
-            desc = i[idx + 1:].strip()
-            if not desc:
-                continue
-            info_div.add(
-                p(
-                    [
-                        b(field + ' '),
-                        desc
-                    ]
+        if info:
+            for i in info:
+                if ':' not in i:
+                    continue
+                idx = i.index(':')
+                field = i[:idx + 1].strip()
+                desc = i[idx + 1:].strip()
+                if not desc:
+                    continue
+                info_div.add(
+                    p(
+                        [
+                            b(field + ' '),
+                            desc
+                        ]
+                    )
                 )
-            )
         return info_div
 
     def sample_overview_table(self, className=None):
