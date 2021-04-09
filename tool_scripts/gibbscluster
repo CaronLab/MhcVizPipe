@@ -12,7 +12,7 @@
 ###############################################################################
 
 # Set FULL PATH to the GibbsCluster 2.0 directory (mandatory)
-GIBBS=/home/labcaron/MhcVizPipe/tools/gibbscluster-2.0
+GIBBS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export GIBBS
 
 # set paths to Seq2Logo and/or R to generate graphics (optional)
