@@ -23,10 +23,10 @@ parser.add_argument('-H', '--column_header', type=str, required=False, help='The
 parser.add_argument('-a', '--alleles', type=str, required=True, nargs='+',
                     help='MHC alleles, spaces separated if more than one.')
 parser.add_argument('-c', '--mhc_class', type=str, choices=['I', 'II'], required=True, help='MHC class')
-parser.add_argument('-D', '--description', type=str, required=False,
+parser.add_argument('-D', '--description', type=str, default='',
                     help='An optional description of the experiment/analysis. Enclose it in quotes, e.g. "This is '
                          'a description of my analysis".')
-parser.add_argument('-n', '--name', type=str, required=False,
+parser.add_argument('-n', '--name', type=str, default='',
                     help='Submitter name (optional).')
 parser.add_argument('-p', '--publish_directory', type=str, required=False, default=getcwd(),
                     help='The directory where you want the report published. It should be an absolute path.')
@@ -34,7 +34,7 @@ parser.add_argument('--f_out', type=str, required=False, default='report.html',
                     help='The filename you want for the report. Defaults to "report".')
 parser.add_argument('-v', '--version', type=str, required=False, default='4.1', choices=['4.0', '4.1'],
                     help='Which version of NetMHCpan to use. For internal use during development.')
-parser.add_argument('-e', '--exp_info', type=str, required=False,
+parser.add_argument('-e', '--exp_info', type=str, default='',
                     help='Optional details to be added to the report (e.g. experimental conditions). Should be in '
                          'this format (including quotes): "A: Z; B: Y; C: X;" etc... where ABC(etc.) are field names '
                          '(e.g. cell line, # of cells, MS Instrument, etc) and ZYX(etc) are details describing the '
