@@ -23,7 +23,7 @@ if not Path(config_file).exists():
         f.write(settings)
 
 
-class Parameters():
+class Parameters:
     def __init__(self):
         c = ConfigParser()
         self.config = c
@@ -31,7 +31,7 @@ class Parameters():
     @property
     def TMP_DIR(self) -> str:
         self.config.read(config_file)
-        return self.config['DIRECTORIES']['temp directory']
+        return str(Path(self.config['DIRECTORIES']['temp directory']).expanduser())
     @property
     def NETMHCPAN(self) -> str:
         self.config.read(config_file)
