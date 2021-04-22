@@ -876,7 +876,7 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
 
     if sample_name:
         sample_name = sample_name.replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')\
-            .replace('[', '_').replace(']', '_')
+            .replace('[', '_').replace(']', '_').replace('/', '_')
 
     if triggered_by == 'upload-data':
         if len(filename) == 1:
