@@ -3,12 +3,27 @@ import argparse
 from pathlib import Path
 
 
+def remove_previous_and_next_aa(peptide: str):
+    """
+    If the peptide has previous and next amino acids (e.g. A.AKLNCNAA.K) they get removed (e.g. returns AKLNCNAA)
+    :param peptide: A string representing one peptide
+    :return:
+    """
+    if peptide[1] == '.':
+        peptide = peptide[2:]
+    if peptide[-2] == '.':
+        peptide = peptide[:-2]
+    return peptide
+
+
 def remove_modifications(peptide_list, verbose=False):
     unmodified_peps = []
     if verbose:
         print('Removing peptide modifications')
     for pep in peptide_list:
+        pep = remove_previous_and_next_aa(pep)
         pep = ''.join(re.findall('[a-zA-Z]+', pep))
+        pep = pep.upper()
         unmodified_peps.append(pep)
     return unmodified_peps
 
