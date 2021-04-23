@@ -69,7 +69,7 @@ using the Windows Subsystem.
 There are no hard memory or CPU requirements for MhcVizPipe. However, because MhcVizPipe utilizes multi-threading you
 will see performance increases on systems with higher numbers of CPUs.
 
-## Installation and usage
+## Installation
 
 Below you will find a brief overview of the installation steps and usage of the tool. For
 more details please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
@@ -78,21 +78,24 @@ Note that MVP runs natively on Linux and Mac systems. If you have a Windows comp
 [these instructions](https://github.com/CaronLab/MhcVizPipe/wiki/Windows-installation) to install it using the
 Windows Subsystem for Linux.
 
-#### Quick installation
-Below is a quick overview of the installation steps. For more details, [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
-1. Right-click and choose "save link as" to download 
-[this file](https://github.com/CaronLab/MhcVizPipe/raw/master/MhcVizPipe_install.sh) and place
-it in the same directory as the 
-[NetMHCpan, NetMHCIIpan and GibbsCluster downloads](https://github.com/CaronLab/MhcVizPipe/wiki/Downloading-third-party-software)
-(do not extract the downloads).
-2. Open a terminal and navigate to this directory
-    - Example: Invoke the following command (i.e. type it and hit enter): `cd \Users\isoiris\Downloads\MVP_Tools`,
-    where you would replace `\Users\isoiris\Downloads\MVP_Tools` with the path to the directory on your computer.
-3. Invoke this command (i.e. type it in and hit enter): `chmod +x ./MhcVizPipe_install.sh`
-4. Invoke this command: `./MhcVizPipe_install.sh`
-5. During installation, choose to add MhcVizPipe to you PATH
+There are two ways to install MhcVizPipe:
 
-#### Usage
+1. From the [releases section](https://github.com/CaronLab/MhcVizPipe/releases), download a standalone package 
+   which contains Python and all the required Python packages. The only thing 
+   you need to do is download GibbsCluster, NetMHCpan and NetMHCIIpan and extract them into a directory called 
+   "tools" 
+   inside the MhcVizPipe directory. This option is completely portable, e.g. you could move the program onto 
+   a USB stick and use it on any compatible system.
+   - Because of system dependencies of the standalone Python distribution we are using, we cannot guarantee 
+    the portable package will work on every computer. However, we have tested in Ubuntu 16.04-20.04, LinuxMint 18, 
+      several versions of Mac OSX and using the Windows Subsystem for Linux, and generally have had no problems. If 
+      you encounter problems, please try option 2 below.
+2. Install MhcVizPipe into an existing Python environment using `pip install MhcVizPipe` and configure 
+   the settings to point to existing installations of GibbsCluster, NetMHCpan and netMHCIIpan.
+   
+For complete instructions, [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
+
+## Usage
 From any terminal, enter the following command:
 ```
 MhcVizPipe
