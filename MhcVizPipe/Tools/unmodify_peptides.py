@@ -26,10 +26,13 @@ def clean_peptides(peptide_list, verbose=False):
         pep = remove_previous_and_next_aa(pep)
         pep = ''.join(re.findall('[a-zA-Z]+', pep))
         pep = pep.upper()
+        incompatible_aa = False
         for aa in pep:
             if aa not in common_aa:
-                continue
-        unmodified_peps.append(pep)
+                incompatible_aa = True
+                break
+        if not incompatible_aa:
+            unmodified_peps.append(pep)
     return unmodified_peps
 
 
