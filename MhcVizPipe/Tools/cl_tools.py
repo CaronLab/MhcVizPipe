@@ -4,7 +4,7 @@ import os
 from numpy import array_split
 import numpy as np
 from pathlib import Path
-from MhcVizPipe.Tools.unmodify_peptides import remove_modifications
+from MhcVizPipe.Tools.unmodify_peptides import clean_peptides
 from typing import List
 from multiprocessing import Pool
 from MhcVizPipe.Tools.jobs import Job, _run_multiple_processes
@@ -103,7 +103,7 @@ class MhcToolHelper:
     def make_binding_prediction_jobs(self):
         # split peptide list into chunks
         for sample in self.samples:
-            peptides = np.array(remove_modifications(sample.peptides))
+            peptides = np.array(clean_peptides(sample.peptides))
             lengths = np.vectorize(len)(peptides)
             peptides = peptides[(lengths >= self.min_length) & (lengths <= self.max_length)]
             np.random.shuffle(peptides)  # we need to shuffle them so we don't end up with files filled with peptide lengths that take a LONG time to compute (this actually is a very significant speed up)
@@ -137,7 +137,7 @@ class MhcToolHelper:
         os.chdir(self.tmp_folder)
         for sample in self.samples:
             fname = Path(self.tmp_folder, f'{sample.sample_name}_forgibbs.csv')
-            peps = np.array(remove_modifications(sample.peptides))
+            peps = np.array(clean_peptides(sample.peptides))
             lengths = np.vectorize(len)(peps)
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
             peps.tofile(str(fname), '\n', '%s')
