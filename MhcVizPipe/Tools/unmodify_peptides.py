@@ -3,6 +3,8 @@ import argparse
 from pathlib import Path
 
 
+common_aa = "ARNDCQEGHILKMFPSTWYV"
+
 def remove_previous_and_next_aa(peptide: str):
     """
     If the peptide has previous and next amino acids (e.g. A.AKLNCNAA.K) they get removed (e.g. returns AKLNCNAA)
@@ -16,7 +18,7 @@ def remove_previous_and_next_aa(peptide: str):
     return peptide
 
 
-def remove_modifications(peptide_list, verbose=False):
+def clean_peptides(peptide_list, verbose=False):
     unmodified_peps = []
     if verbose:
         print('Removing peptide modifications')
@@ -24,6 +26,9 @@ def remove_modifications(peptide_list, verbose=False):
         pep = remove_previous_and_next_aa(pep)
         pep = ''.join(re.findall('[a-zA-Z]+', pep))
         pep = pep.upper()
+        for aa in pep:
+            if aa not in common_aa:
+                continue
         unmodified_peps.append(pep)
     return unmodified_peps
 
@@ -66,7 +71,7 @@ if __name__ == '__main__':
                 p = p.split(args.d)[index]
             modified.append(p)
 
-        unmodified = remove_modifications(modified, verbose=True)
+        unmodified = clean_peptides(modified, verbose=True)
         print('Writing unmodified file to disk')
         for p in unmodified:
             f.write(p + '\n')
