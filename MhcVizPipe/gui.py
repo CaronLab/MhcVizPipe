@@ -30,6 +30,7 @@ from MhcVizPipe.defaults import TOOLS, EXECUTABLE
 from os import chdir
 import tarfile
 import structlog
+from MhcVizPipe.Tools import unmodify_peptides
 from MhcVizPipe import __version__
 
 
@@ -1046,6 +1047,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
         try:
             for sample_name in peptides.keys():
                 peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
+                peps = unmodify_peptides.clean_peptides(peps)
                 samples.append(
                     MhcPeptides(sample_name=sample_name,
                                 sample_description=peptides[sample_name]['description'],
