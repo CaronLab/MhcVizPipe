@@ -16,7 +16,7 @@ fi
 if [[ ! -e "$CDIR"/tools ]]; then
 	echo "ERROR: The \"tools\" folder is missing from the MhcVizPipe folder. If you have moved it, please move it back to \
 its original location. If it has been deleted or is missing, you will need to reinstall MhcVizPipe (or \
-replace the tool folder by extracting it from the MhcVizPipe download).";
+replace the tools folder by extracting it from the MhcVizPipe download).";
   read -rsp "Press any key to exit..." -n1 key;
   printf "\n";
 	exit 1
