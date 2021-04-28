@@ -12,7 +12,7 @@
 ###############################################################################
 
 # full path to the NetMHCIIpan 4.0 directory (mandatory)
-NMHOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+NMHOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"/netMHCIIpan-4.0
 export NMHOME
 
 # determine where to store temporary files (must be writable to all users)

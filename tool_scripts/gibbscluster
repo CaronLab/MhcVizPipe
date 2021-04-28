@@ -12,7 +12,7 @@
 ###############################################################################
 
 # Set FULL PATH to the GibbsCluster 2.0 directory (mandatory)
-GIBBS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+GIBBS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"/gibbscluster-2.0
 export GIBBS
 
 # set paths to Seq2Logo and/or R to generate graphics (optional)
