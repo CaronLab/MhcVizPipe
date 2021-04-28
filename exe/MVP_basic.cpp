@@ -97,8 +97,8 @@ int main()
     else if (! file_exists(dir + "/MhcVizPipe.sh")){
         std::string msg = std::string("") +
             "ERROR: The MhcVizPipe.sh file is missing from the MhcVizPipe folder. If you have moved it, please move it back to " +
-            "its original location. If it has been deleted or is missing, you will need to reinstall MhcVizPipe (or " +
-            "replace the MhcVizPipe.sh file by extracting it from the MhcVizPipe download).\nPress any key to exit...\n";
+            "its original location. If it has been deleted or is missing, you will need download it from " +
+            "https://github.com/CaronLab/MhcVizPipe/tree/master/exe and place it in the MhcVizPipe directory.\nPress any key to exit...\n";
         std::string call = "read -rsp $'" + msg + "' -n1 key";
         cmd = format_terminal_bash_call(term, call);
         system((cmd).c_str());
