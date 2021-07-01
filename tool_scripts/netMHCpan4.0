@@ -22,6 +22,10 @@ if [[ -z $TMPDIR ]]; then
 	export TMPDIR
 fi
 
+if [[ ! -e $TMPDIR ]]; then
+	mkdir $TMPDIR
+fi
+
 # determine platform (do not change this unless you don't have 'uname'!)
 UNIX=$(uname -s)
 export UNIX
