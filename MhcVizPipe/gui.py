@@ -873,11 +873,11 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
 
     if filename:
         filename = [str(f).replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')
-                        .replace('[', '_').replace(']', '_') for f in filename]
+                        .replace('[', '_').replace(']', '_').replace(':', '-') for f in filename]
 
     if sample_name:
         sample_name = sample_name.replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')\
-            .replace('[', '_').replace(']', '_').replace('/', '_')
+            .replace('[', '_').replace(']', '_').replace('/', '_').replace(':', '-')
 
     if triggered_by == 'upload-data':
         if len(filename) == 1:
@@ -1053,7 +1053,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                                 sample_description=peptides[sample_name]['description'],
                                 peptides=peps)
                 )
-            time = str(datetime.now()).replace(' ', '_')
+            time = str(datetime.now()).replace(' ', '_').replace(':', '-')
             analysis_location = str(Path(Parameters.TMP_DIR)/time)
             if mhc_class == 'I':
                 min_length = 8
