@@ -124,14 +124,14 @@ if __name__ == '__main__':
         max_length=max_length
     )
     cl_tools.make_binding_prediction_jobs()
-    cl_tools.run_jubs()
+    cl_tools.run_jobs()
     cl_tools.aggregate_netmhcpan_results()
     cl_tools.clear_jobs()
 
     cl_tools.make_cluster_with_gibbscluster_jobs()
     cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
     cl_tools.order_gibbs_runs()
-    cl_tools.run_jubs()
+    cl_tools.run_jobs()
     cl_tools.find_best_files()
     analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name, exp_info)
     _ = analysis.make_report()

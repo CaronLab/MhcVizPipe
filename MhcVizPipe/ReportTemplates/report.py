@@ -58,23 +58,24 @@ class mhc_report:
         self.mhc_class = mhc_class
         self.experiment_description = experiment_description
         self.submitter_name = submitter_name
-        self.alleles = analysis_results.alleles
-        self.preds = analysis_results.predictions.drop_duplicates()
+        self.sample_alleles = analysis_results.sample_alleles
+        self.preds = analysis_results.binding_predictions.drop_duplicates()
         self.samples = list(self.preds['Sample'].unique())
         self.experimental_info = experimental_info
         self.cpus = cpus
 
         peptide_numbers = {}
-        for sample in self.samples:
+        for sample in self.results.samples:
             peptide_numbers[sample] = {}
-            peptide_numbers[sample]['total'] = len(self.preds.loc[self.preds['Sample'] == sample, 'Peptide'].unique())
-            for allele in self.alleles:
+            peptide_numbers[sample]['original_total'] = len(set(self.results.original_peptides[sample]))
+            peptide_numbers[sample]['within_length'] = len(set(self.results.sample_peptides[sample]))
+            for allele in self.sample_alleles[sample]:
                 peptide_numbers[sample][allele] = {}
                 for strength in ['Strong', 'Weak', 'Non-binder']:
                     peptide_numbers[sample][allele][strength] = len(
                         self.preds.loc[(self.preds['Sample'] == sample) &
-                                  (self.preds['Allele'] == allele) &
-                                  (self.preds['Binder'] == strength), 'Peptide'].unique()
+                                       (self.preds['Allele'] == allele) &
+                                       (self.preds['Binder'] == strength), 'Peptide'].unique()
                     )
         self.peptide_numbers = peptide_numbers
 
@@ -141,16 +142,16 @@ class mhc_report:
         tablebody = tbody()
         for sample in self.results.samples:
             tablerow = tr()
-            tablerow.add(td(sample.sample_name, style='word-break: break-word', rowspan=3))
+            tablerow.add(td(sample, style='word-break: break-word', rowspan=3))
             tablerow.add(td('all lengths'))
-            all_peptides = len(set(sample.peptides))
+            all_peptides = self.peptide_numbers[sample]['original_total']
             tablerow.add(td(f'{all_peptides}'))
             tablerow.add(td('100'))
             tablebody.add(tablerow)
 
             tablerow = tr()
             tablerow.add(td(f'{self.results.min_length}-{self.results.max_length} mers'))
-            within_length = self.peptide_numbers[sample.sample_name]['total']
+            within_length = self.peptide_numbers[sample]['within_length']
             tablerow.add(td(f'{within_length}'))
             tablerow.add(td(f'{round(within_length/all_peptides * 100)}'))
             tablebody.add(tablerow)
@@ -174,9 +175,9 @@ class mhc_report:
             thead(
                 tr(
                     [
-                        th('Allele', style="padding: 5px"),
                         th('Sample', style="padding: 5px"),
                         th('Total peptides', style="padding: 5px"),
+                        th('Allele', style="padding: 5px"),
                         th('Strong binders', style="padding: 5px"),
                         th('Weak binders', style="padding: 5px"),
                         th('Non-binders', style="padding: 5px")
@@ -185,23 +186,24 @@ class mhc_report:
             )
         )
 
-        for allele in self.alleles:
+        for sample in self.samples:
             tablebody = tbody()
-            for sample in self.samples:
+            for allele in self.sample_alleles[sample]:
                 tablerow = tr()
-                if sample == self.samples[0]:
-                    tablerow.add(td(p(allele, style='writing-mode: vertical-rl;'
+                if allele == self.sample_alleles[sample][0]:
+                    tablerow.add(td(p(sample, style='writing-mode: vertical-rl;'
                                                     'font-weight: bold'),
-                                    rowspan=len(self.samples),
+                                    rowspan=len(self.sample_alleles[sample]),
                                     style="vertical-align : middle;text-align:center;"
                                     )
                                  )
-                tablerow.add(td(sample, style="word-break: break-word"))
-                tablerow.add(td(self.peptide_numbers[sample]['total']))
+                    tablerow.add(td(self.peptide_numbers[sample]['within_length'],
+                                    rowspan=len(self.sample_alleles[sample])))
+                tablerow.add(td(allele, style="word-break: break-word"))
                 tablerow.add(
                     [
                         td(f"{self.peptide_numbers[sample][allele][strength]} "
-                           f"({round(self.peptide_numbers[sample][allele][strength] * 100 / self.peptide_numbers[sample]['total'], 1)}%)")
+                           f"({round(self.peptide_numbers[sample][allele][strength] * 100 / self.peptide_numbers[sample]['within_length'], 1)}%)")
                         for strength in ['Strong', 'Weak', 'Non-binder']
                     ]
                 )
@@ -264,10 +266,10 @@ class mhc_report:
     def gen_length_histogram(self, className=None):
         len_dist = go.Figure()
         for sample in self.results.samples:
-            peps = list(set(sample.peptides))
+            peps = list(set(self.results.sample_peptides[sample]))
             peps = [pep for pep in peps if len(pep) <= 30]
             lengths, counts = np.unique(np.vectorize(len)(peps), return_counts=True)
-            len_dist.add_trace(go.Bar(name=sample.sample_name, x=lengths, y=counts))
+            len_dist.add_trace(go.Bar(name=sample, x=lengths, y=counts))
         len_dist.update_layout(margin=dict(l=20, r=20, t=20, b=20),
                                hovermode='x',
                                legend=dict(orientation="h",
@@ -297,12 +299,10 @@ class mhc_report:
                                                                         values='Rank').astype(float)
         if self.mhc_class == 'I':
             pivot[pivot > 2.5] = 2.5
-            colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                          [2.2 / 2.5, '#e5ecf6'], [1, '#e5ecf6']]
+            colorscale = [[0, '#ef553b'], [2.0 / 2.5, '#636efa'], [2.1 / 2.5, '#e5ecf6'], [1, '#e5ecf6']]
         else:
             pivot[pivot > 12] = 12
-            colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                          [10.6 / 12, '#e5ecf6'], [1, '#e5ecf6']]
+            colorscale = [[0, '#ef553b'], [10 / 12, '#636efa'], [10.5 / 12, '#e5ecf6'], [1, '#e5ecf6']]
         data = pivot.sort_values(list(pivot.columns), ascending=True)
 
         if self.mhc_class == 'I':
@@ -338,23 +338,21 @@ class mhc_report:
         return fig
 
     def gen_heatmaps(self, className=None):
-        ymax = np.max([self.peptide_numbers[sample]['total'] for sample in self.samples])
+        ymax = np.max([self.peptide_numbers[sample]['within_length'] for sample in self.results.samples])
         ymax += 0.01 * ymax
         heatmaps = div(className=f'row', style='margin: 10px;'
                                                'border-color: #dee2e6;'
                                                'border-width: 1px;'
                                                'border-style: solid')
-        for sample in self.samples:
+        for sample in self.results.samples:
             pivot = self.preds.loc[self.preds['Sample'] == sample, :].pivot(index='Peptide', columns='Allele',
                                                                   values='Rank').astype(float)
             if self.mhc_class == 'I':
                 pivot[pivot > 2.5] = 2.5
-                colorscale = [[0, '#ef553b'], [0.4 / 2.5, '#ef553b'], [0.7 / 2.5, '#636efa'], [1.9 / 2.5, '#636efa'],
-                              [2.2 / 2.5, '#fdffc2'], [1, '#fdffc2']]
+                colorscale = [[0, '#ef553b'], [2.0 / 2.5, '#636efa'], [2.1 / 2.5, '#fdffc2'], [1, '#fdffc2']]
             else:
                 pivot[pivot > 12] = 12
-                colorscale = [[0, '#ef553b'], [1.6 / 12, '#ef553b'], [2.4 / 12, '#636efa'], [9.8 / 12, '#636efa'],
-                              [10.6 / 12, '#fdffc2'], [1, '#fdffc2']]
+                colorscale = [[0, '#ef553b'], [10 / 12, '#636efa'], [10.5 / 12, '#fdffc2'], [1, '#fdffc2']]
             data = pivot.sort_values(list(pivot.columns), ascending=True)
             n_peps = len(data)
 
@@ -425,9 +423,8 @@ class mhc_report:
 
     def gen_upset_plot(self, className=None):
         # total_peps = len([pep for s in self.results.samples for pep in s.peptides])
-        total_peps = np.sum([len(s.peptides) for s in self.results.samples])
-        data = from_contents({s.sample_name: set(s.peptides)
-                              for s in self.results.samples})
+        total_peps = np.sum([len(self.results.sample_peptides[s]) for s in self.results.samples])
+        data = from_contents({s: set(self.results.sample_peptides[s]) for s in self.results.samples})
         for intersection in data.index.unique():
             if len(data.loc[intersection, :])/total_peps < 0.005:
                 data.drop(index=intersection, inplace=True)
@@ -495,8 +492,10 @@ class mhc_report:
         logo_dir.mkdir()
 
         # get the peptides in each group
-        for sample in self.samples:
+        for sample in self.results.samples:
             pep_groups_file = self.results.gibbs_files[sample]['unsupervised']['pep_groups_file']
+            if not Path(pep_groups_file).exists():
+                raise FileNotFoundError(f'The GibbsCluster output file {pep_groups_file} does not exist.')
             with open(pep_groups_file, 'r') as f:
                 pep_lines = f.readlines()[1:]
             n_motifs = self.results.gibbs_files[sample]['unsupervised']['n_groups']
@@ -506,20 +505,20 @@ class mhc_report:
                 line = [x for x in line.split(' ') if x != '']
                 group = str(int(line[1]) + 1)
                 pep = line[3]
-                gibbs_peps[sample][group].append(pep)
+                gibbs_peps[sample][group].append(pep)  # will contain the peptides belonging to each group
 
         sample_logos = {}
         # make logos asynchronously
         with concurrent.futures.ProcessPoolExecutor(max_workers=self.cpus) as executor:
-            for sample in self.samples:
+            for sample in self.results.samples:
                 cores = self.results.gibbs_files[sample]['unsupervised']['cores']
                 if not isinstance(cores, list):
                     cores = [cores]
                 sample_logos[sample] = [executor.submit(make_logo, core) for core in cores]
-        for sample in self.samples:
+        for sample in self.results.samples:
             sample_logos[sample] = [x.result() for x in sample_logos[sample]]
 
-        for sample in self.samples:
+        for sample in self.results.samples:
             motifs_row = div(className='row')
             cores = self.results.gibbs_files[sample]['unsupervised']['cores']
 
@@ -529,19 +528,15 @@ class mhc_report:
             for x in range(len(cores)):
                 pep_groups.append(cores[x].name.replace('gibbs.', '')[0])
             p_df: pd.DataFrame = self.pep_binding_dict[sample]
-            width = 160 + 50*len(self.alleles)
+            width = 160 + 50*len(self.sample_alleles[sample])
             motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), width=f'{width}px', height='360px'))
             logos_for_row = div(className="row")
             motifs_row.add(div(logos_for_row, className="col"))
             for i in range(len(logos)):
                 logos[i][0].write_image(str(logo_dir / f'{sample}_{i}.pdf'), engine="kaleido")
-                g_peps = set(gibbs_peps[sample][pep_groups[i]])
+                g_peps = set(gibbs_peps[sample][pep_groups[i]])  # the set of peptides found in the group
                 strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
-                                                len(g_peps)) for allele in self.alleles}
-                non_binding_peps = [set(p_df[(p_df[allele] == "Non-binder") | (p_df[allele] == "Weak")].index) for allele in self.alleles]
-                non_binding_set = non_binding_peps[0]
-                for x in non_binding_peps[1:]:
-                    non_binding_set = non_binding_set & x
+                                                len(g_peps)) for allele in self.sample_alleles[sample]}
                 top_binder = np.max(list(strong_binders.values()))
 
                 composition = []
@@ -577,7 +572,7 @@ class mhc_report:
             motifs.add(
                 div(
                     [
-                        div(p([b(f'{sample}  '), f'(peptides used: {total_n_peptides}, outliers: {n_outliers})']),
+                        div(p([b(f'{sample}  '), f'(peptides clustered: {total_n_peptides}, outliers: {n_outliers})']),
                             className='card-header'),
                         div(motifs_row, className='card-body')
                     ],
@@ -592,8 +587,8 @@ class mhc_report:
         motifs = div(className=className)
         gibbs_peps = {}
 
-        for sample in self.samples:
-            for allele in self.alleles + ['unannotated']:
+        for sample in self.results.samples:
+            for allele in self.sample_alleles[sample] + ['unannotated']:
                 if self.results.gibbs_files[sample][allele] is not None:
                     pep_groups_file = self.results.gibbs_files[sample][allele]['pep_groups_file']
                     with open(pep_groups_file, 'r') as f:
@@ -609,23 +604,23 @@ class mhc_report:
         sample_logos = {}
         # make logos asynchronously
         with concurrent.futures.ProcessPoolExecutor(max_workers=self.cpus) as executor:
-            for sample in self.samples:
+            for sample in self.results.samples:
                 sample_logos[sample] = {}
-                for allele in self.alleles + ['unannotated']:
+                for allele in self.sample_alleles[sample] + ['unannotated']:
                     if self.results.gibbs_files[sample][allele] is not None:
                         cores = self.results.gibbs_files[sample][allele]['cores']
                         if not isinstance(cores, list):
                             cores = [cores]
                         sample_logos[sample][allele] = [executor.submit(make_logo, core) for core in cores]
 
-        for sample in self.samples:
-            for allele in self.alleles + ['unannotated']:
+        for sample in self.results.samples:
+            for allele in self.sample_alleles[sample] + ['unannotated']:
                 if self.results.gibbs_files[sample][allele] is not None:
                     sample_logos[sample][allele] = [x.result() for x in sample_logos[sample][allele]]
 
-        for sample in self.samples:
+        for sample in self.results.samples:
             motifs_row = div(className='row')
-            for allele in self.alleles:
+            for allele in self.sample_alleles[sample]:
                 if self.results.gibbs_files[sample][allele] is not None:
                     sample_logos[sample][allele][0][0].write_image(str(logo_dir / f'{sample}_{allele}.pdf'), engine="kaleido")
                     motifs_row.add(
@@ -737,15 +732,15 @@ class mhc_report:
                         with div(style='display: flex'):
                             b('Description of experiment:', style='margin-right: 5px; white-space: nowrap')
                             p(self.experiment_description if self.experiment_description else 'None provided')
-                        p([b('Alleles: '), ', '.join(self.results.alleles)])
 
                         b('Samples:')
                         div(
                             [
                                 p('\n'.join(
                                     [
-                                        f'\t{name}: {description}' if description else f'\t{name}'
-                                        for name, description in self.results.descriptions.items()
+                                        f'\t{s["sample-name"]}: {s["sample-description"]}\n'
+                                        f'\t\tAlleles: {s["sample-alleles"]}'
+                                        for s in self.results.sample_info
                                     ]
                                 ), style="white-space: pre"
                                 )
@@ -771,7 +766,8 @@ class mhc_report:
                 wb = '2.0' if self.mhc_class == 'I' else '10.0'
                 p(f'{pan} eluted ligand predictions made for all peptides between {self.results.min_length} & '
                   f'{self.results.max_length} mers, inclusive.\n'
-                  f'Percent rank cutoffs for strong and weak binders: {sb} and {wb}.',
+                  f'\u2022Percent rank cutoffs for strong and weak binders: {sb} and {wb}.\n'
+                  f'\u2022Percentages are calculated across rows (i.e. percentage of total peptides for a respective sample).',
                   style='white-space: pre')
                 with div(className='row'):
                     self.gen_peptide_tables(className='col-6')
@@ -781,7 +777,8 @@ class mhc_report:
                     with div(className='col-12'):
                         h3('Binding Heatmaps')
                         p(f'{pan} eluted ligand predictions made for all peptides between {self.results.min_length} & '
-                          f'{self.results.max_length} mers, inclusive.\n',
+                          f'{self.results.max_length} mers, inclusive.\n'
+                          f'Approximate color legend (detailed mapping shown next to heatmaps):',
                           style='white-space: pre')
                         div([
                             div(style='width: 18px; height: 18px; background-color: #ef553b; border-radius: 3px'),
@@ -793,7 +790,7 @@ class mhc_report:
                             p('Predicted non-binders', style="margin-left: 5px; margin-right: 10px"),
                             #div(hr(style="border-top: dashed 2px black"), style='width: 18px; height: 18px; diplay: flex; justify-content: center; align-items:center; text-align: center'),
                             p([b('- -  ', style='white-space: pre'), '# of peptides in sample'], style="margin-left: 5px; margin-right: 10px")
-                        ], style="display: flex; pad: 5px"),
+                        ], style="display: flex; pad: 5px; margin-left: 20px"),
                 self.gen_heatmaps()
                 #with div(className='row'):
                 #    self.gen_heatmaps(className='col-12')
@@ -803,7 +800,7 @@ class mhc_report:
                         h3('Sequence Motifs')
                         p(f'Clustering performed with all peptides between {self.results.min_length} & '
                           f'{self.results.max_length} mers, inclusive.')
-                        p('Percentages represent the percentage of peptides in a given group predicted to strongly '
+                        p('\u2022Percentages represent the percentage of peptides in a given group predicted to strongly '
                           'bind the indicated allele.')
                         div([
                             div(style='width: 18px; height: 18px; background-color: #21d426; border-radius: 3px'),

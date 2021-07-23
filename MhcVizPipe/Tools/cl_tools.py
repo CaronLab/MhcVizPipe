@@ -8,7 +8,9 @@ from MhcVizPipe.Tools.unmodify_peptides import clean_peptides
 from typing import List
 from multiprocessing import Pool
 from MhcVizPipe.Tools.jobs import Job, _run_multiple_processes
+from MhcVizPipe.Tools.netmhcpan_helper import NetMHCpanHelper
 import re
+import shutil
 
 
 class MhcPeptides:
@@ -20,26 +22,13 @@ class MhcPeptides:
         self.sample_description = sample_description
         self.peptides = peptides
 
-class MhcToolHelper:
-    """
-    example usage:
-    cl_tools.make_binding_prediction_jobs()
-    cl_tools.run_jubs()
-    cl_tools.aggregate_netmhcpan_results()
-    cl_tools.clear_jobs()
 
-    cl_tools.cluster_with_gibbscluster()
-    cl_tools.cluster_with_gibbscluster_by_allele()
-    cl_tools.order_gibbs_runs()
-    cl_tools.run_jubs()
-    cl_tools.find_gibbs_files()
-    cl_tools.find_gibbs_grouping()
-    """
+class MhcToolHelper:
     def __init__(self,
+                 sample_info_datatable: List[dict],
+                 sample_peptides: dict,
                  tmp_directory: str,
-                 samples: List[MhcPeptides],
                  mhc_class: str = 'I',
-                 alleles: List[str] = ('HLA-A03:02', 'HLA-A02:02'),
                  min_length: int = 8,
                  max_length: int = 12):
 
@@ -47,34 +36,31 @@ class MhcToolHelper:
             raise ValueError('Class I peptides must be 8 mers and longer for NetMHCpan')
         if mhc_class == 'II' and min_length < 9:
             raise ValueError('Class II peptides must be 8 mers and longer for NetMHCIIpan')
+        self.mhc_class = mhc_class
+        self.min_length = min_length
+        self.max_length = max_length
+
+        self.sample_info = sample_info_datatable
+        #self.sample_info_datatable = pd.DataFrame(data=self.sample_info,
+        #                                          columns=['sample-name', 'sample-description', 'sample-alleles'])
+        self.original_peptides = sample_peptides
+        self.sample_peptides = {}
+        for sample, peptides in sample_peptides.items():
+            self.sample_peptides[sample] = [p for p in peptides if min_length <= len(p) <= max_length]
+        self.samples = list(sample_peptides.keys())
+        self.sample_alleles = {}
 
         from MhcVizPipe.defaults import Parameters
         self.Parameters = Parameters()
         self.GIBBSCLUSTER = self.Parameters.GIBBSCLUSTER
         self.NETMHCPAN = self.Parameters.NETMHCPAN
         self.NETMHCIIPAN = self.Parameters.NETMHCIIPAN
-        self.NETMHCPAN_VERSION = self.Parameters.NETMHCPAN_VERSION
 
-        if isinstance(alleles, str):
-            if ',' in alleles:
-                alleles = alleles.split(',')
-            elif ' ' in alleles:
-                alleles = alleles.split(' ')
-            else:
-                alleles = [alleles]
-        self.samples: List[MhcPeptides] = samples
-        self.descriptions = {sample.sample_name: sample.sample_description for sample in samples}
-        self.alleles = alleles
-        self.mhc_class = mhc_class
-        self.min_length = min_length
-        self.max_length = max_length
-        self.predictions = pd.DataFrame(
-            columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder']
-        )
         self.tmp_folder = Path(tmp_directory)
         if not self.tmp_folder.exists():
             self.tmp_folder.mkdir(parents=True)
         self.predictions_made = False
+        self.binding_predictions: pd.DataFrame = pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'])
         self.gibbs_directories = []
         self.supervised_gibbs_directories = {}
         self.gibbs_cluster_lengths = {}
@@ -85,63 +71,89 @@ class MhcToolHelper:
             self.n_threads = os.cpu_count()
         self.jobs = []
 
-        for sample in self.samples:
-            with open(str(self.tmp_folder / f'{sample.sample_name}.peptides'), 'w') as f:
-                for pep in sample.peptides:
-                    f.write(pep + '\n')
-
+        # make directories to store the GibbsCluster analyses
         if Path(self.tmp_folder / 'gibbs').exists() and Path(self.tmp_folder / 'gibbs').is_dir():
-            os.system(f'rm -R {Path(self.tmp_folder / "gibbs")}')
+            # this shouldn't exist because a new tmp_folder is made each time. But possibly it could occur durring
+            # debugging, so if found remove it to avoid having multiple GibbsCluster analyses in any folders.
+            shutil.rmtree(f'{Path(self.tmp_folder / "gibbs")}')
         Path(self.tmp_folder / 'gibbs').mkdir()
-        for sample in self.samples:
-            Path(self.tmp_folder / 'gibbs' / sample.sample_name).mkdir()
-            Path(self.tmp_folder / 'gibbs' / sample.sample_name / 'unsupervised').mkdir()
-            Path(self.tmp_folder / 'gibbs' / sample.sample_name / 'unannotated').mkdir()
-            for allele in self.alleles:
-                Path(self.tmp_folder / 'gibbs' / sample.sample_name / allele).mkdir()
+        for sample in self.sample_info:
+            sample_name = sample['sample-name']
+            alleles = [x.strip() for x in sample['sample-alleles'].split(',')]
+            self.sample_alleles[sample_name] = alleles
+            Path(self.tmp_folder / 'gibbs' / sample_name).mkdir()
+            Path(self.tmp_folder / 'gibbs' / sample_name / 'unsupervised').mkdir()
+            Path(self.tmp_folder / 'gibbs' / sample_name / 'unannotated').mkdir()
+            for allele in alleles:
+                Path(self.tmp_folder / 'gibbs' / sample_name / allele).mkdir()
 
-    def make_binding_prediction_jobs(self):
-        # split peptide list into chunks
-        for sample in self.samples:
-            peptides = np.array(clean_peptides(sample.peptides))
-            lengths = np.vectorize(len)(peptides)
-            peptides = peptides[(lengths >= self.min_length) & (lengths <= self.max_length)]
-            np.random.shuffle(peptides)  # we need to shuffle them so we don't end up with files filled with peptide lengths that take a LONG time to compute (this actually is a very significant speed up)
+    def make_binding_predictions(self):
+        """
+        Run NetMHCpan or NetMHCIIpan to make binding predictions for all samples. Peptide lists are grouped by allele
+        rather than sample to reduce processing time when peptides exist in multiple samples.
+        :return:
+        """
+        # get the list of unique alleles
+        alleles = []
+        for sample in self.sample_info:
+            alleles += [x.strip() for x in sample['sample-alleles'].split(',')]
+        alleles = set(alleles)
 
-            if len(peptides) > 100:
-                chunks = array_split(peptides, self.n_threads)
-            else:
-                chunks = [peptides]
-            job_number = 1
-            results = []
+        # get sets of peptides per allele
+        allele_peptides = {}
+        for allele in alleles:
+            allele_peps = []
+            for sample in self.sample_info:
+                if allele in sample['sample-alleles']:
+                    allele_peps += self.sample_peptides[sample['sample-name']]
+            allele_peptides[allele] = list(set(allele_peps))
 
-            for chunk in chunks:
-                if len(chunk) < 1:
+        # run the prediction tool
+        all_predictions = {}
+        for allele, peptides in allele_peptides.items():
+            netmhcpan = NetMHCpanHelper(peptides=peptides,
+                                        alleles=[allele],
+                                        mhc_class=self.mhc_class,
+                                        n_threads=self.Parameters.THREADS,
+                                        tmp_dir=str(self.tmp_folder),
+                                        netmhcpan=self.NETMHCPAN,
+                                        netmhc2pan=self.NETMHCIIPAN,
+                                        min_length=self.min_length,
+                                        max_length=self.max_length)
+
+            predictions = netmhcpan.predict_dict()
+            all_predictions[allele] = {pep: {} for pep in peptides}
+            for pep in peptides:
+                all_predictions[allele][pep] = predictions[pep][allele]
+
+        # add all predictions to the self.binding_predictions DataTable
+        for sample in self.sample_info:
+            rows = []
+            for allele, peptides in allele_peptides.items():
+                if allele not in sample['sample-alleles']:
                     continue
-                fname = Path(self.tmp_folder, f'{sample.sample_name}_{job_number}.csv')
-                # save the new peptide list, this will be given to netMHCpan
-                chunk.tofile(str(fname), '\n', '%s')
-                # run netMHCpan
-                if self.mhc_class == 'I':
-                    command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)}'.split(' ')
-                else:
-                    command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)}'.split(' ')
-                job = Job(command=command,
-                          working_directory=self.tmp_folder,
-                          id=f'netmhc_{job_number}',
-                          sample=sample.sample_name)
-                self.jobs.append(job)
-                job_number += 1
+                for pep in peptides:
+                    if pep not in self.sample_peptides[sample['sample-name']]:
+                        continue
+                    rows.append([sample['sample-name'],
+                                 pep,
+                                 allele,
+                                 all_predictions[allele][pep]['EL_Rank'],
+                                 all_predictions[allele][pep]['Binder']])
+            self.binding_predictions = self.binding_predictions.append(
+                pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
+                ignore_index=True
+            )
 
     def make_cluster_with_gibbscluster_jobs(self):
         os.chdir(self.tmp_folder)
         for sample in self.samples:
-            fname = Path(self.tmp_folder, f'{sample.sample_name}_forgibbs.csv')
-            peps = np.array(clean_peptides(sample.peptides))
+            fname = Path(self.tmp_folder, f'{sample}_forgibbs.csv')
+            peps = np.array(clean_peptides(self.sample_peptides[sample]))
             lengths = np.vectorize(len)(peps)
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
             peps.tofile(str(fname), '\n', '%s')
-            n_groups = len(self.alleles)
+            n_groups = len(self.sample_alleles[sample])
             n_groups = n_groups if n_groups >= 5 else 5
             for groups in range(1, n_groups+1):
                 if self.mhc_class == 'I':
@@ -152,30 +164,31 @@ class MhcToolHelper:
                               f'-g {groups} -k 1 -T -j 2 -G'.split(' ')
 
                 job = Job(command=command,
-                          working_directory=self.tmp_folder/'gibbs'/sample.sample_name/'unsupervised',
+                          working_directory=self.tmp_folder/'gibbs'/sample/'unsupervised',
                           id=f'gibbscluster_{groups}groups')
                 self.jobs.append(job)
 
     def make_cluster_with_gibbscluster_by_allele_jobs(self):
         os.chdir(self.tmp_folder)
         for sample in self.samples:
-            self.supervised_gibbs_directories[sample.sample_name] = {}
-            sample_peps = self.predictions.loc[self.predictions['Sample'] == sample.sample_name, :]
+            alleles = self.sample_alleles[sample]
+            self.supervised_gibbs_directories[sample] = {}
+            sample_peps = self.binding_predictions.loc[self.binding_predictions['Sample'] == sample, :]
             allele_peps = {}
-            for allele in self.alleles:
+            for allele in alleles:
                 allele_peps[allele] = set(list(sample_peps.loc[(sample_peps['Allele'] == allele) &
                                                                ((sample_peps['Binder'] == 'Strong') |
                                                                 (sample_peps['Binder'] == 'Weak')), 'Peptide'].unique()))
 
             allele_peps['unannotated'] = set(list(sample_peps['Peptide']))
-            for allele in self.alleles:
+            for allele in alleles:
                 allele_peps['unannotated'] = allele_peps['unannotated'] - allele_peps[allele]
 
             for allele, peps in allele_peps.items():
-                fname = Path(self.tmp_folder, f"{allele}_{sample.sample_name}_forgibbs.csv")
+                fname = Path(self.tmp_folder, f"{allele}_{sample}_forgibbs.csv")
                 peps = np.array(list(allele_peps[allele]))
                 if len(peps) < 20:
-                    self.not_enough_peptides.append(f'{allele}_{sample.sample_name}')
+                    self.not_enough_peptides.append(f'{allele}_{sample}')
                 else:
                     lengths = np.vectorize(len)(peps)
                     peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
@@ -195,15 +208,15 @@ class MhcToolHelper:
                                       f'-g {g} -k 1 -T -j 2 -G'.split(' ')
 
                         job = Job(command=command,
-                                  working_directory=self.tmp_folder/'gibbs'/sample.sample_name/allele,
+                                  working_directory=self.tmp_folder/'gibbs'/sample/allele,
                                   id=f'gibbscluster_{g}groups')
                         self.jobs.append(job)
 
     def find_best_files(self):
         for sample in self.samples:
-            self.gibbs_files[sample.sample_name] = {}
+            self.gibbs_files[sample] = {}
             for run in ['unannotated', 'unsupervised']:
-                sample_dirs = list(Path(self.tmp_folder/'gibbs'/sample.sample_name/run).glob('*'))
+                sample_dirs = list(Path(self.tmp_folder/'gibbs'/sample/run).glob('*'))
                 high_score = 0
                 best_grouping = ''
                 best_n_motifs = 0
@@ -219,92 +232,40 @@ class MhcToolHelper:
                         high_score = score
                         best_n_motifs = n_motifs
                 if best_grouping == '':
-                    self.gibbs_files[sample.sample_name][run] = None
+                    self.gibbs_files[sample][run] = None
                     continue
-                self.gibbs_files[sample.sample_name][run] = {}
-                self.gibbs_files[sample.sample_name][run]['n_groups'] = best_grouping
-                self.gibbs_files[sample.sample_name][run]['directory'] = best_grouping_dir
-                self.gibbs_files[sample.sample_name][run]['n_motifs'] = best_n_motifs
-                self.gibbs_files[sample.sample_name][run]['cores'] = [x for x in
+                self.gibbs_files[sample][run] = {}
+                self.gibbs_files[sample][run]['n_groups'] = best_grouping
+                self.gibbs_files[sample][run]['directory'] = best_grouping_dir
+                self.gibbs_files[sample][run]['n_motifs'] = best_n_motifs
+                self.gibbs_files[sample][run]['cores'] = [x for x in
                                                                       list(Path(best_grouping_dir / 'cores').glob('*'))
                                                                       if 'of' in x.name]
-                self.gibbs_files[sample.sample_name][run]['pep_groups_file'] = best_grouping_dir/'res'/f'gibbs.{best_grouping}g.ds.out'
+                self.gibbs_files[sample][run]['pep_groups_file'] = best_grouping_dir/'res'/f'gibbs.{best_grouping}g.ds.out'
                 with open(best_grouping_dir/'res'/f'gibbs.{best_grouping}g.out', 'r') as f:
                     contents = f.read()
-                    self.gibbs_files[sample.sample_name][run]['n_outliers'] = \
+                    self.gibbs_files[sample][run]['n_outliers'] = \
                         re.findall('# Trash cluster: removed ([0-9]*) outliers', contents)[0]
         for sample in self.samples:
-            for allele in self.alleles:
-                self.gibbs_files[sample.sample_name][allele] = {}
-                ls = list(Path(self.tmp_folder/'gibbs'/sample.sample_name/allele).glob('*'))
+            for allele in self.sample_alleles[sample]:
+                self.gibbs_files[sample][allele] = {}
+                ls = list(Path(self.tmp_folder/'gibbs'/sample/allele).glob('*'))
                 if len(ls) == 0:
-                    self.gibbs_files[sample.sample_name][allele] = None
+                    self.gibbs_files[sample][allele] = None
                     continue
-                self.gibbs_files[sample.sample_name][allele]['n_groups'] = '1'
-                self.gibbs_files[sample.sample_name][allele]['directory'] = list(Path(self.tmp_folder/'gibbs'/sample.sample_name/allele).glob('*'))[0]
-                self.gibbs_files[sample.sample_name][allele]['n_motifs'] = 1
-                self.gibbs_files[sample.sample_name][allele]['cores'] = \
-                    self.gibbs_files[sample.sample_name][allele]['directory'] / 'cores' / 'gibbs.1of1.core'
-                self.gibbs_files[sample.sample_name][allele]['pep_groups_file'] = \
-                    self.gibbs_files[sample.sample_name][allele]['directory'] / 'res' / f'gibbs.1g.ds.out'
+                self.gibbs_files[sample][allele]['n_groups'] = '1'
+                self.gibbs_files[sample][allele]['directory'] = list(Path(self.tmp_folder/'gibbs'/sample/allele).glob('*'))[0]
+                self.gibbs_files[sample][allele]['n_motifs'] = 1
+                self.gibbs_files[sample][allele]['cores'] = \
+                    self.gibbs_files[sample][allele]['directory'] / 'cores' / 'gibbs.1of1.core'
+                self.gibbs_files[sample][allele]['pep_groups_file'] = \
+                    self.gibbs_files[sample][allele]['directory'] / 'res' / f'gibbs.1g.ds.out'
 
     def order_gibbs_runs(self):
         self.jobs.sort(key=lambda x: x.id, reverse=True)
 
-    def run_jubs(self):
+    def run_jobs(self):
         self.jobs = _run_multiple_processes(self.jobs, n_processes=int(self.Parameters.THREADS))
 
     def clear_jobs(self):
         self.jobs = []
-
-    def aggregate_netmhcpan_results(self):
-        for job in self.jobs:
-            if 'netmhc' in job.id:
-                self.parse_netmhc_output(job.stdout.decode(), sample=job.sample)
-
-        for sample in list(self.predictions['Sample'].unique()):
-            p = self.predictions.loc[self.predictions['Sample'] == sample, :]
-            p.to_csv(str(Path(self.tmp_folder)/f'{sample}_netMHC'
-                                               f'{"II" if self.mhc_class == "II" else ""}'
-                                               f'pan_predictions.csv'))
-
-    def parse_netmhc_output(self, stdout: str, sample: str):
-        rows = []
-        lines = stdout.split('\n')
-        if self.mhc_class == 'I':  # works for 4.0 and 4.1, will need to keep an eye on future releases
-            allele_idx = 1
-            peptide_idx = 2
-            rank_idx = 12
-        else:  # works for NetMHCIIpan4.0
-            allele_idx = 1
-            peptide_idx = 2
-            rank_idx = 8
-        for line in lines:
-            line = line.strip()
-            line = line.split()
-            if not line or line[0] == '#' or not line[0].isnumeric():
-                continue
-            allele = line[allele_idx].replace('*', '')
-            peptide = line[peptide_idx]
-            rank = line[rank_idx]
-            if self.mhc_class == 'I':
-                if float(rank) <= 0.5:
-                    binder = 'Strong'
-                elif float(rank) <= 2.0:
-                    binder = 'Weak'
-                else:
-                    binder = 'Non-binder'
-            else:
-                if float(rank) <= 2:
-                    binder = 'Strong'
-                elif float(rank) <= 10:
-                    binder = 'Weak'
-                else:
-                    binder = 'Non-binder'
-            rows.append((sample, peptide, allele, rank, binder))
-        self.predictions = self.predictions.append(
-            pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
-            ignore_index=True
-        )
-        if len(rows) == 0:
-            print(stdout)

@@ -1,4 +1,4 @@
-dash>=1.12.0
+dash>=1.21
 plotly
 dash-bootstrap-components
 pandas
@@ -11,3 +11,4 @@ plotly-logo
 kaleido
 johnnydep
 structlog
+mhcnames

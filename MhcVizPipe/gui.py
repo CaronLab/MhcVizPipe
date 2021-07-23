@@ -32,6 +32,7 @@ import tarfile
 import structlog
 from MhcVizPipe.Tools import unmodify_peptides
 from MhcVizPipe import __version__
+import dash_table
 
 
 Parameters = Parameters()
@@ -123,114 +124,6 @@ app.layout = html.Div(children=[
 
     dbc.Modal(
         [
-            dbc.ModalHeader('First-time setup'),
-            dbc.ModalBody(
-                [
-                    html.P('Welcome to MhcVizPipe! It looks like this might be the first time you have '
-                           'run the program. If you do not already have existing installations of GibbsCluster and '
-                           'NetMHCpan or NetMHCIIpan on your system, please use this utility to help you '
-                           'install them and get everything set up. You can access this utility again at any '
-                           'time by clicking the "First-Time Setup" button in the upper-right corner of the GUI.'),
-                    html.P('If you have not yet done so, you need to download GibbsCluster and NetMHCpan and/or '
-                                    'NetMHCIIpan. Downloading the tools requires an academic email address.'),
-                    html.H6('Downloading Tools'),
-                    html.Ul(
-                        [
-                            html.Li('On the download pages linked below, you will have the option for different '
-                                    'versions and for "Linux" or "Darwin". Choose the version indicated below. '
-                                    'If your OS is any Linux distribution (e.g. Ubuntu, Linux Mint, Fedora, '
-                                    'Cent OS, etc.) choose "Linux". If you have a Mac, choose "Darwin".'),
-                            html.Li('Note that you will have to agree to the EULA prior to downloading.')
-                        ]
-                    ),
-                    html.P('The programs can be downloaded by following the "Downloads" tabs on the following pages:'),
-                    html.Div(
-                        [
-                            html.P(['GibbsCluster2.0: ',
-                                    html.A('https://services.healthtech.dtu.dk/service.php?GibbsCluster-2.0',
-                                           href='https://services.healthtech.dtu.dk/service.php?GibbsCluster-2.0',
-                                           target='_blank',
-                                           style={'color': 'blue'})]),
-                            html.P(['NetMHCpan (choose version 4.0a or 4.1b): ',
-                                    html.A('https://services.healthtech.dtu.dk/service.php?NetMHCpan-4.1',
-                                           href='https://services.healthtech.dtu.dk/service.php?NetMHCpan-4.1',
-                                           target='_blank',
-                                           style={'color': 'blue'})]),
-                            html.P(['NetMHCIIpan4.0: ',
-                                    html.A('https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-4.0',
-                                           href='https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-4.0',
-                                           target='_blank',
-                                           style={'color': 'blue'})])
-                        ],
-                        style={'margin-left': '20px'}
-                    ),
-                    html.P('Only choose one of NetMHCpan4.0 and NetMHCpan4.1. MhcVizPipe is compatible with both, '
-                           'but only one can be connected to the pipeline at a time.'),
-                    html.H6('Installing'),
-                    html.Ol(
-                        [
-                            html.Li(['Once you have downloaded everything, make a new folder somewhere (anywhere, '
-                                     'it doesn\'t matter where) and place the downloaded files in it to keep track '
-                                     'of them. ', html.B('Do not decompress/unzip them or rename them!')]),
-                            html.Li('Click the "Select Files" button and select ALL of the downloaded files '
-                                    'in the folder.'),
-                            html.Li('Click the "Install" button.')
-                        ]
-                    ),
-                    html.P('During the installation, the compressed archive files you downloaded will be extracted '
-                           'into a new folder in you "Home" directory called "mhcvizpipe_tools". Each tool will be '
-                           'appropriately configured to run in its new location and any required additional files '
-                           'will be automatically downloaded. Finially, the MhcVizPipe settings will be updated to '
-                           'use the newly installed tools. This might all take a few minutes depending on the '
-                           'speed of your internet connection.'),
-                    html.Div(dcc.Upload(
-                        dbc.Button('Select Files',
-                                   style={'width': '50%', 'font-size': '12pt'},
-                                   id='choose-tool-files-btn'),
-                        style={'text-align': 'center'},
-                        id='choose-tool-files',
-                        multiple=True)
-                    ),
-                    html.Div(
-                        [
-                            html.B('Loaded files:'),
-                            html.Div(id='loaded-tool-files')
-                        ],
-                        id='loaded-tool-div',
-                        hidden=True
-                    ),
-                    html.Div(id='setup-status', style={'margin-top': '5px'}),
-                    html.Div(dbc.Button('Install',
-                                        id='install-tools',
-                                        style={'width': '50%', 'font-size': '12pt'},
-                                        disabled=True),
-                             style={'text-align': 'center', 'margin-top': '5px'}),
-                    dbc.Button('Cancel', id='setup-cancel', style={'font-size': '10pt'}),
-                    dcc.Loading(html.P('', id='installing-stuff', hidden=True), type='circle', fullscreen=True)
-                ]
-            )
-        ],
-        id='setup-modal',
-        is_open=False,
-        centered=True,
-        backdrop='static',
-        style={'max-width': '800px'}
-    ),
-
-    dbc.Modal(
-        [
-            dbc.ModalHeader('Setup successful!'),
-            dbc.ModalBody(
-                'Click anywhere outside this box to continue.'
-            )
-        ],
-        id='setup-successful',
-        is_open=False,
-        centered=True
-    ),
-
-    dbc.Modal(
-        [
             dbc.ModalHeader('Settings'),
             dbc.ModalBody(
                 [
@@ -260,12 +153,13 @@ app.layout = html.Div(children=[
 
     dbc.Row([
         dbc.Col([
-            html.P('To load data, use the light blue area below or copy-and-paste into the following text box:'),
+            html.P('To load data, use the light blue area below or copy-and-paste into the text box below '
+                   '(you may load any number of samples):'),
             dcc.Upload(
                 id='upload-data',
                 children=[
                     'Drag and drop one or more files in this area, or ',
-                    html.A('Click to Select File(s)', style={'color': 'blue', 'text-decoration': 'underline'}),
+                    html.Button('Click to Select File(s)', style={'color': 'black'}),
                     ' (.txt, .csv, .tsv)'
                 ],
                 style={
@@ -340,15 +234,46 @@ app.layout = html.Div(children=[
             html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
 
             html.Div(
+                dash_table.DataTable(
+                    id='sample-data-table',
+                    columns=[
+                        {'name': 'Sample name',
+                         'id': 'sample-name',
+                         'deletable': False,
+                         'renamable': False,
+                         'editable': False
+                         },
+                        {'name': 'Description (optional)',
+                         'id': 'sample-description',
+                         'deletable': False,
+                         'renamable': False
+                         },
+                        {'name': 'Alleles (required)',
+                         'id': 'sample-alleles',
+                         'deletable': False,
+                         'renamable': False
+                         }
+                    ],
+                    data=[],
+                    editable=True,
+                    row_deletable=True,
+                    style_data={
+                            'whiteSpace': 'normal',
+                            'height': 'auto',
+                        },
+                ),
+                style={'padding-left': '1em', 'font-size': '9pt'}
+            ),
+
+            html.Div(
                 id='loaded-data',
                 children=[],
-                style={'margin-left': '2em'}
+                style={'margin': '2em'}
             ),
         ], width=12)
     ]),
 
     html.Hr(),
-
 
     dbc.Modal(
         children=[
@@ -362,8 +287,8 @@ app.layout = html.Div(children=[
                                    'in the pipeline.'),
                             html.P(['MhcVizPipe is developed and maintained by the laboratory of Dr. Etienne Caron. '
                                     'For general inquiries and information please visit ',
-                                    html.A('https://github.com/caronlab/MhcVizPipe/wiki',
-                                           href='https://github.com/caronlab/MhcVizPipe/wiki',
+                                    html.A('https://github.com/CaronLab/MhcVizPipe/wiki',
+                                           href='https://github.com/CaronLab/MhcVizPipe/wiki',
                                            target='_blank',
                                            style=dict(color='blue')),
                                     ' or contact Etienne (caronchusj@gmail.com) or Kevin (kkovalchik.chusj@gmail.com). '
@@ -378,7 +303,7 @@ app.layout = html.Div(children=[
                             html.Div([
                                 html.P([html.P('1. ', style={'white-space': 'pre'}),
                                         'Load data by pasting a peptide list into the peptide list section, using '
-                                       'the "drag and drop" area, or clicking "Select a File".'],
+                                       'the blue "drag and drop" area, or clicking "SELECT FILE(S)" button.'],
                                        style={'display': 'flex'}),
                                 html.P([html.B('    Note: ', style={'white-space': 'pre'}),
                                         'You may load more than one file at a time. If you do so the sample names '
@@ -398,22 +323,26 @@ app.layout = html.Div(children=[
                                         'Add more samples as needed.'
                                         ], style={'display': 'flex'}),
                                 html.P([html.P('5. ', style={'white-space': 'pre'}),
-                                        'Using the drop-down "MHC class" menu, select the class of peptides you '
-                                        'are analyzing (i.e. class I or class II).'
+                                        'Add alleles for each sample. Multiple alleles must be separated by a comma. '
+                                        'Example: HLA-A0201, HLA-B0702. You can copy and paste parts of or entire '
+                                        'cells in the table. NetMHCpan and NetMHCIIpan require specific formatting '
+                                        'of alleles, so to make sure you have it correct you can use the "Allele '
+                                        'Search" box to search the recognized alleles.'
                                         ], style={'display': 'flex'}),
                                 html.P([html.P('6. ', style={'white-space': 'pre'}),
-                                        'Add alleles using the "Alleles" search box. Start typing an allele name '
-                                        'and available options will appear. Note that the format you enter must match '
-                                        'the available list, so pay attention to how the allele names are formatted. '
-                                        'You may add any number of alleles.'
+                                        'Using the drop-down "MHC class" menu, select the class of peptides you '
+                                        'are analyzing (i.e. class I or class II). All samples must be the same class.'
                                         ], style={'display': 'flex'}),
                                 html.P([html.P('7. ', style={'white-space': 'pre'}),
                                         html.P(['Optionally, use the text boxes above the ', html.B('"GO!" '),
                                                 ' button to enter a general description of the experiment and your '
-                                                'name (if needed for your own bookkeeping).']),
+                                                'name (if needed for your own bookkeeping). In the "Experimental '
+                                                'Information" box you can fill in any details you like, or add '
+                                                'you own fields (just follow the same colon-separated format, i.e. '
+                                                'name: value)']),
                                         ], style={'display': 'flex'}),
                                 html.P([html.P('8. ', style={'white-space': 'pre'}),
-                                        html.P(['Click the ', html.B('"GO!" '), 'button to start your analysis! '
+                                        html.P(['Click the ', html.B('"GO!" '), 'button to start your analysis. '
                                                                                 'You will see a loading screen '
                                                                                 'while things are running, followed '
                                                                                 'by a pop-up window with a link '
@@ -424,11 +353,18 @@ app.layout = html.Div(children=[
                             html.Div([
                                 'If you use MhcVizPipe, please cite the following publication:',
                                 html.P('Paper info to go here', style={'font-size': '11pt', 'margin-left': '20px'}),
-                                'MhcVizPipe makes use of the following tools: NetMHCpan4.0, NetMHCIIpan4.0 and'
+                                'MhcVizPipe makes use of the following tools: NetMHCpan4.1, NetMHCIIpan4.0 and'
                                 ' GibbsCluster2.0.',
-                                html.P('NetMHCpan citation', style={'font-size': '11pt', 'margin-left': '20px'}),
-                                html.P('NetMHCIIpan citation', style={'font-size': '11pt', 'margin-left': '20px'}),
-                                html.P('GibbsCluster citation', style={'font-size': '11pt', 'margin-left': '20px'}),
+                                html.P('Reynisson, B., Alvarez, B., Paul, S., Peters, B., & Nielsen, M. '
+                                       '(2020). NetMHCpan-4.1 and NetMHCIIpan-4.0: improved predictions of MHC antigen '
+                                       'presentation by concurrent motif deconvolution and integration of MS MHC '
+                                       'eluted ligand data. Nucleic acids research, 48(W1), W449–W454. '
+                                       'https://doi.org/10.1093/nar/gkaa379',
+                                       style={'font-size': '9pt', 'margin-left': '20px'}),
+                                html.P('Andreatta, M., Alvarez, B., & Nielsen, M. (2017). GibbsCluster: '
+                                       'unsupervised clustering and alignment of peptide sequences. Nucleic acids '
+                                       'research, 45(W1), W458–W463. https://doi.org/10.1093/nar/gkx248',
+                                       style={'font-size': '9pt', 'margin-left': '20px'}),
                             ], style={'margin-left': '20px'}),
                             html.Button(
                                 id='close-info-modal',
@@ -482,7 +418,7 @@ app.layout = html.Div(children=[
                 style={'width': '100%', 'margin-left': '5px'}
             ),
 
-            html.P('Alleles (type to search, can select multiple):',
+            html.P('Allele search (not required, use to check recognized formats):',
                    style={'font-weight': 'bold', 'margin-top': '10px'}),
 
             dcc.Dropdown(
@@ -660,100 +596,7 @@ app.layout = html.Div(children=[
         fullscreen=True, style={'z-index': '999999'}
     )
 
-], style={'padding': '20px', 'max-width': '800px'}, id='main-contents')
-
-
-@app.callback([Output('setup-modal', 'is_open'),
-               Output('loaded-tool-div', 'hidden'),
-               Output('loaded-tool-files', 'children'),
-               Output('setup-status', 'children'),
-               Output('install-tools', 'disabled'),
-               Output('setup-successful', 'is_open'),
-               Output('installing-stuff', 'children')],
-              [Input('initial-setup', 'n_clicks'),
-               Input('choose-tool-files', 'contents'),
-               Input('install-tools', 'n_clicks'),
-               Input('setup-cancel', 'n_clicks')],
-              [State('choose-tool-files', 'filename')])
-def setup_tools(initial_setup_nclicks,
-                files_contents,
-                install_nclicks,
-                setup_cancel_nclicks,
-                files_filename):
-    ctx = dash.callback_context
-    triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
-    if triggered_by == 'initial-setup':
-        return True, True, [], [], True, False, no_update
-    elif triggered_by == 'choose-tool-files':
-        loaded = {}
-        for file in files_filename:
-            if platform_sys() == 'Linux' and 'Darwin' in file:
-                return True, True, [], dbc.Alert(f'WARNING: Your operating system is Linux but you have downloaded '
-                                                 f'a Mac OS tool: {file}. Please ensure all files match your '
-                                                 f'operating system.',
-                                                 className='blink_me',
-                                                 color='danger'), True, False, no_update
-            elif platform_sys() == 'Darwin' and 'Linux' in file:
-                return True, True, [], dbc.Alert(f'WARNING: Your operating system is Mac OS but you have downloaded '
-                                                 f'a Linux tool: {file}. Please ensure all files match your '
-                                                 f'operating system.',
-                                                 className='blink_me',
-                                                 color='danger'), True, False, no_update
-        for file in files_filename:
-            if not (file.endswith('.tar.gz') or file.endswith('.tar')):
-                return True, True, [], dbc.Alert(f'WARNING: Unrecognized filetype {"".join(Path(file).suffixes)} for '
-                                                 f'file: {file}. Please make sure you have not decompressed the '
-                                                 f'downloaded archives or selected an incorrect file by mistake.',
-                                                 className='blink_me',
-                                                 color='danger'), True, False, no_update
-            elif 'netmhcpan-4.0' in file.lower():
-                loaded['NetMHCpan4.0'] = file
-            elif 'netmhcpan-4.1' in file.lower():
-                loaded['NetMHCpan4.1'] = file
-            elif 'netmhciipan-4.0' in file.lower():
-                loaded['NetMHCIIpan4.0'] = file
-            elif 'gibbscluster-2.0' in file.lower():
-                loaded['GibbsCluster2.0'] = file
-            else:
-                return True, True, [], dbc.Alert(f'WARNING: Unrecognized file: {file}. Please make sure all the files '
-                                                 f'you have selected are from the above list.',
-                                                 className='blink_me',
-                                                 color='danger'), True, False, no_update
-        loaded_files = html.Div(
-            [
-                html.P(f'{tool}: {filename}') for tool, filename in loaded.items()
-            ],
-            style={'margin-left': '20px'}
-        )
-
-        if 'NetMHCpan4.0' in list(loaded.keys()) and 'NetMHCpan4.1' in list(loaded.keys()):
-            return True, False, loaded_files, dbc.Alert(
-                f'WARNING: You have selected both NetMHCpan version 4.0 and 4.1. These are both compatible with MVP, but '
-                f'only one can be connected with the pipeline at a time. Please select just one of them.',
-                className='blink_me',
-                color='danger'), True, False, no_update
-
-        if 'GibbsCluster2.0' not in list(loaded.keys()) or 'NetMHCIIpan4.0' not in list(loaded.keys()) or \
-            ('NetMHCpan4.0' not in list(loaded.keys()) and
-             'NetMHCpan4.1' not in list(loaded.keys())):
-            return True, False, loaded_files, dbc.Alert(f'WARNING: Please select all necessary files for installation. '
-                                                        f'You need GibbsCluster, NetMHCpan and NetMHCIIpan.',
-                                                        className='blink_me',
-                                                        color='danger'), True, False, no_update
-        else:
-            return True, False, loaded_files, dbc.Alert(f'All files recognized! Click "Install" to continue. Note that '
-                                                        f'this might take a while depending on the speed of '
-                                                        f'your internet connection.',
-                                                        className='blink_me'), False, False, no_update
-    elif triggered_by == 'install-tools':
-        files = list(zip(files_filename, files_contents))
-        run_all(files)
-        return False, False, [], [], False, True, 'done!'
-    elif triggered_by == 'setup-cancel':
-        return False, False, [], [], False, False, no_update
-    else:
-        raise PreventUpdate
+], style={'padding': '20px', 'max-width': '1200px'}, id='main-contents')
 
 @app.callback([Output('settings-modal', 'is_open'),
                Output('settings-area', 'value'),
@@ -828,6 +671,7 @@ def change_mhc_class_alleles(mhc_class):
     else:
         raise PreventUpdate
 
+
 @app.callback([Output('resources', 'is_open')],
               [Input('open-info-modal', 'n_clicks'),
                Input('close-info-modal', 'n_clicks')])
@@ -843,6 +687,13 @@ def open_close_info_modal(open_modal, close_modal):
         raise PreventUpdate
 
 
+def sanitize_sample_name(sample_name: str):
+    for bad_character in [' ', ':', '/', '\\', '$', '@', '*', '(', ')', '{', '}', '[', ']']:
+        sample_name = sample_name.replace(bad_character, '_')
+    sample_name = sample_name.replace('&', 'AND')
+    return sample_name
+
+
 @app.callback([Output('peptide-list-area', 'value'),
                Output('modal', 'is_open'),
                Output('column-header-choices', 'options'),
@@ -850,8 +701,8 @@ def open_close_info_modal(open_modal, close_modal):
                Output('peptides', 'data'),
                Output('sample-name', 'value'),
                Output('sample-description', 'value'),
-               Output('loaded-data', 'children'),
-               Output('info-needed', 'children')
+               Output('info-needed', 'children'),
+               Output('sample-data-table', 'data')
                ],
               [Input('upload-data', 'contents'),
                Input('done-selecting-column', 'n_clicks'),
@@ -862,22 +713,20 @@ def open_close_info_modal(open_modal, close_modal):
                State('sample-name', 'value'),
                State('sample-description', 'value'),
                State('peptide-list-area', 'value'),
-               State('loaded-data', 'children'),
-               State('peptides', 'data')
+               State('peptides', 'data'),
+               State('sample-data-table', 'data')
                ])
 def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_clicks, filename, selected_column, sample_name,
-                       sample_description, peptide_list_state, loaded_data, peptide_data):
+                       sample_description, peptide_list_state, peptide_data, data_table):
 
     ctx = dash.callback_context
-    triggered_by = button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if filename:
-        filename = [str(f).replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')
-                        .replace('[', '_').replace(']', '_') for f in filename]
+        filename = [sanitize_sample_name(f) for f in filename]
 
     if sample_name:
-        sample_name = sample_name.replace('(', '_').replace(')', '_').replace('{', '_').replace('}', '_')\
-            .replace('[', '_').replace(']', '_').replace('/', '_')
+        sample_name = sanitize_sample_name(sample_name)
 
     if triggered_by == 'upload-data':
         if len(filename) == 1:
@@ -888,15 +737,15 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
             lines = io.StringIO(decoded.decode('utf-8')).readlines()
             try:
                 if ',' in lines[0]:
-                    return ''.join(lines), True, [{'label': x, 'value': x} for x in lines[0].split(',')], f'File: {filename}', peptide_data, filename, sample_description, loaded_data, []
+                    return ''.join(lines), True, [{'label': x, 'value': x} for x in lines[0].split(',')], f'File: {filename}', peptide_data, filename, sample_description, [], no_update
                 elif '\t' in lines[0]:
-                    return ''.join(lines), True, [{'label': x, 'value': x} for x in lines[0].split('\t')], f'File: {filename}', peptide_data, filename, sample_description, loaded_data, []
+                    return ''.join(lines), True, [{'label': x, 'value': x} for x in lines[0].split('\t')], f'File: {filename}', peptide_data, filename, sample_description, [], no_update
                 else:
-                    return ''.join(lines).replace('"', ''), False, [], f'File: {filename}', peptide_data, filename, sample_description, loaded_data, []
+                    return ''.join(lines).replace('"', ''), False, [], f'File: {filename}', peptide_data, filename, sample_description, [], no_update
             except Exception as e:
-                return peptide_list_state, False, [], f'File: {filename}', peptide_data, filename, sample_description, loaded_data, \
+                return peptide_list_state, False, [], f'File: {filename}', peptide_data, filename, sample_description, \
                        [dbc.Alert(f'There was an error processing this file: {e}', id=str(uniform(0, 1)),
-                                  className='blink_me', color='danger', style={'width': '720px'})]
+                                  className='blink_me', color='danger', style={'width': '720px'})], no_update
         else:
             first_content_type, content_string = contents[0].split(',')
             first_decoded = base64.b64decode(content_string)
@@ -904,10 +753,10 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
 
             if ',' in first_lines[0]:
                 return '', True, [{'label': x, 'value': x} for x in first_lines[0].split(
-                    ',')], f'Files: {", ".join(filename)}', peptide_data, '', '', loaded_data, []
+                    ',')], f'Files: {", ".join(filename)}', peptide_data, '', '', [], no_update
             elif '\t' in first_lines[0]:
                 return '', True, [{'label': x, 'value': x} for x in first_lines[0].split(
-                    '\t')], f'Files: {", ".join(filename)}', peptide_data, '', '', loaded_data, []
+                    '\t')], f'Files: {", ".join(filename)}', peptide_data, '', '', [], no_update
             else:
                 for file, content in zip(filename, contents):
                     content_type, content_string = content.split(',')
@@ -915,8 +764,14 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
                     lines = io.StringIO(decoded.decode('utf-8')).readlines()
                     peps = [x.replace('"', '').strip() for x in lines]
                     peptide_data[file] = {'description': file, 'peptides': peps}
-                    loaded_data += [html.P(f'{file}', style={'margin': '2px'})]
-                return '', False, [], '', peptide_data, '', '', loaded_data, []
+                    data_table.append(
+                        {
+                            'sample-name': file,
+                            'sample-description': '',
+                            'sample-alleles': ''
+                        }
+                    )
+                return '', False, [], '', peptide_data, '', '', [], data_table
 
     elif triggered_by == 'done-selecting-column':
         if len(filename) == 1:
@@ -931,7 +786,7 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
                 sep = '\t'
             i = headers.index(selected_column)
             peps = [line.split(sep)[i].strip().replace('"', '').upper() for line in lines[1:] if len(line) > 0]
-            return '\n'.join(peps), False, [], f'File: {filename}', peptide_data, sample_name, sample_description, loaded_data, []
+            return '\n'.join(peps), False, [], f'File: {filename}', peptide_data, sample_name, sample_description, [], no_update
         else:
             if not selected_column:
                 raise PreventUpdate
@@ -950,38 +805,46 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
                 total_n = len(peps)
                 peps = list(set(peps))
                 peptide_data[file] = {'description': file, 'peptides': peps, 'total_peps': total_n}
-                loaded_data += [html.P(f'{file}', style={'margin': '2px'})]
-            return '', False, [], '', peptide_data, '', '', loaded_data, []
+                data_table.append(
+                    {
+                        'sample-name': file,
+                        'sample-description': '',
+                        'sample-alleles': ''
+                    }
+                )
+            return '', False, [], '', peptide_data, '', '', [], data_table
 
     elif triggered_by == 'cancel-selecting-column':
-        return '', False, [], '', no_update, '', '', no_update, []
+        return '', False, [], '', no_update, '', '', [], no_update
 
     elif triggered_by == 'add-peptides':
         if peptide_list_state in ['', None]:
-            return peptide_list_state, False, [], f'File: {filename}', peptide_data, sample_name, sample_description, loaded_data, \
+            return peptide_list_state, False, [], f'File: {filename}', peptide_data, sample_name, sample_description, \
                    [dbc.Alert('You haven\'t entered any peptides.', id=str(uniform(0, 1)),
-                              className='blink_me', color='danger', style={'width': '360px'})]
+                              className='blink_me', color='danger', style={'width': '360px'})], no_update
         if sample_name in ['', None]:
             # the sample name or description has not been filled out, so we put up a reminder. The random ID is to force
             # it to blink each time.
-            return peptide_list_state, False, [], f'File: {filename}', peptide_data, sample_name, sample_description, loaded_data,\
+            return peptide_list_state, False, [], f'File: {filename}', peptide_data, sample_name, sample_description,\
                    [dbc.Alert('Please enter a sample name.', id=str(uniform(0, 1)),
-                              className='blink_me', color='danger', style={'width': '360px'})]
-        if sample_name in list(peptide_data.keys()):
-            # the sample name or description has not been filled out, so we put up a reminder. The random ID is to force
-            # it to blink each time.
-            return peptide_list_state, False, [], f'File: {filename}', peptide_data, sample_name, sample_description, loaded_data,\
-                   [dbc.Alert('You cannot enter replicate sample names.', id=str(uniform(0, 1)),
-                              className='blink_me', color='danger', style={'width': '360px'})]
+                              className='blink_me', color='danger', style={'width': '360px'})], no_update
+        if sample_name in [x['sample-name'] for x in data_table]:
+            # sample names must be unique
+            return peptide_list_state, False, [], f'File: {filename}', peptide_data, sample_name, sample_description,\
+                   [dbc.Alert('Duplicate sample names are not allowed. Change the sample name.', id=str(uniform(0, 1)),
+                              className='blink_me', color='danger', style={'width': '360px'})], no_update
         peps = [x.strip() for x in peptide_list_state.split('\n')]
         total_n = len(peps)
         peps = list(set(peps))
         peptide_data[sample_name] = {'description': sample_description, 'peptides': peps, 'total_peps': total_n}
-        if sample_description != '':
-            loaded_data += [html.P(f'{sample_name}: {sample_description}', style={'margin': '2px'})]
-        else:
-            loaded_data += [html.P(f'{sample_name}', style={'margin': '2px'})]
-        return '', False, [], '', peptide_data, '', '', loaded_data, []
+        data_table.append(
+            {
+                'sample-name': sample_name,
+                'sample-description': sample_description,
+                'sample-alleles': ''
+            }
+        )
+        return '', False, [], '', peptide_data, '', '', [], data_table
 
     else:
         raise PreventUpdate
@@ -1002,10 +865,10 @@ def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_cl
                State('submitter-name', 'value'),
                State('analysis-description', 'value'),
                State('mhc-class', 'value'),
-               State('mhc-alleles', 'value'),
-               State('experimental-info', 'value')])
-def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, alleles, exp_info):
-    if (peptides in [None, {}]) and (n_clicks is not None):
+               State('experimental-info', 'value'),
+               State('sample-data-table', 'data')])
+def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp_info, sample_info_datatable):
+    if (len(sample_info_datatable) == 0) and (n_clicks is not None):
         return (no_update,
                 no_update,
                 no_update,
@@ -1016,99 +879,134 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                            style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
                 False, '', False)
-    elif (alleles in [None, [], ['']]) and (n_clicks is not None):
+    alleles = []
+    for sample in sample_info_datatable:
+        # get the list of unique alleles
+        sample_alleles = [x.strip() for x in sample['sample-alleles'].split(',') if x.strip() not in ['', None]]
+        # check length of allele lists
+        if len(sample_alleles) == 0:
+            return (no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                    [dbc.Alert(id=str(uniform(0, 1)), color='danger',
+                               children="Don't forget to enter alleles for all samples in the sample table.",
+                               style={'width': '360px', 'margin-top': '2px'})],
+                    no_update,
+                    False, '', False)
+        if len(sample_alleles) > 6:
+            return (no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                    [dbc.Alert(id=str(uniform(0, 1)), color='danger',
+                               children="The maximum number of alleles per sample is 6.",
+                               style={'width': '360px', 'margin-top': '2px'})],
+                    no_update,
+                    False, '', False)
+        alleles += sample_alleles
+    # check for unrecognized alleles
+    unrecognized_alleles = []
+    for allele in set(alleles):
+        if mhc_class == 'I':
+            if allele not in [x['value'] for x in class_i_alleles]:
+                unrecognized_alleles.append(allele)
+        else:
+            if allele not in [x['value'] for x in class_ii_alleles]:
+                unrecognized_alleles.append(allele)
+    if len(unrecognized_alleles) > 0:
         return (no_update,
                 no_update,
                 no_update,
                 no_update,
                 no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
-                           children='Please select one or more alleles.',
+                           children=f"The following alleles are not recognized by "
+                                    f"NetMHC{mhc_class if mhc_class == 'II' else ''}pan: "
+                                    f"{unrecognized_alleles} Please check for the "
+                                    f"the allele in the \"available alleles\" dropdown menu above.",
                            style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
                 False, '', False)
-    elif alleles and len(alleles) > 9:
+    if n_clicks is None:
+        raise PreventUpdate
+
+    # when samples are removed from the datatable they don't get removed from the data storage element, so we
+    # need to make sure we only use the samples present in the table
+    samples_to_use = [x['sample-name'] for x in sample_info_datatable]
+    sample_peptides = {} # this will be filled in below
+    # check that there are no duplicate filenames
+    if len(samples_to_use) != len(set(samples_to_use)):
         return (no_update,
                 no_update,
                 no_update,
                 no_update,
                 no_update,
                 [dbc.Alert(id=str(uniform(0, 1)), color='danger',
-                           children='Sorry, you cannot analyze more than 9 alleles at a time. '
-                                    'Please remove some from the list.',
+                           children="All sample names must be unique.",
                            style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
                 False, '', False)
-    else:
-        if n_clicks is None:
-            raise PreventUpdate
+    try:
+        if mhc_class == 'I':
+            min_length = 8
+            max_length = 12
+        else:
+            min_length = 9
+            max_length = 22
+        for sample_name in samples_to_use:
+            peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
+            peps = unmodify_peptides.clean_peptides(peps)
+            sample_peptides[sample_name] = peps
+        time = str(datetime.now()).replace(' ', '_')
+        analysis_location = str(Path(Parameters.TMP_DIR)/time)
 
-        samples = []
-        try:
-            for sample_name in peptides.keys():
-                peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
-                peps = unmodify_peptides.clean_peptides(peps)
-                samples.append(
-                    MhcPeptides(sample_name=sample_name,
-                                sample_description=peptides[sample_name]['description'],
-                                peptides=peps)
-                )
-            time = str(datetime.now()).replace(' ', '_')
-            analysis_location = str(Path(Parameters.TMP_DIR)/time)
-            if mhc_class == 'I':
-                min_length = 8
-                max_length = 12
-            else:
-                min_length = 9
-                max_length = 22
-            cl_tools = MhcToolHelper(
-                samples=samples,
-                mhc_class=mhc_class,
-                alleles=alleles,
-                tmp_directory=analysis_location,
-                min_length=min_length,
-                max_length=max_length
-            )
-            cl_tools.make_binding_prediction_jobs()
-            cl_tools.run_jubs()
-            cl_tools.aggregate_netmhcpan_results()
-            cl_tools.clear_jobs()
+        cl_tools = MhcToolHelper(
+            sample_info_datatable=sample_info_datatable,
+            mhc_class=mhc_class,
+            sample_peptides=sample_peptides,
+            tmp_directory=analysis_location,
+            min_length=min_length,
+            max_length=max_length
+        )
+        cl_tools.make_binding_predictions()
+        cl_tools.make_cluster_with_gibbscluster_jobs()
+        cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
+        cl_tools.order_gibbs_runs()
+        cl_tools.run_jobs()
+        cl_tools.find_best_files()
+        analysis = report.mhc_report(cl_tools, mhc_class, Parameters.THREADS, description, submitter_name, exp_info)
+        _ = analysis.make_report()
+        download_href = f'/download/{urlquote(time+"/"+"report.html")}'
+        # put everything in an archive
+        with zipfile.ZipFile(f'{analysis_location}/MVP_analysis.zip', 'w', zipfile.ZIP_STORED) as zipf:
+            netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.csv')]
+            for f in netmhcpan_files:
+                zipf.write(f, arcname=Path(f).name)
+            for root, dirs, files in os_walk(f'{analysis_location}/gibbs'):
+                for file in files:
+                    p = Path(root, file)
+                    zipf.write(str(p), p.relative_to(analysis_location))
+            zipf.write(f'{analysis_location}/report.html', 'report.html')
+        archive_href = f'/download/{urlquote(time+"/"+"MVP_analysis.zip")}'
+        # put figures in an archive
+        with zipfile.ZipFile(f'{analysis_location}/MVP_figures.zip', 'w', zipfile.ZIP_STORED) as zipf:
+            for root, dirs, files in os_walk(f'{analysis_location}/figures'):
+                for file in files:
+                    p = Path(root, file)
+                    zipf.write(str(p), p.relative_to(analysis_location))
+        figures_href = f'/download/{urlquote(time+"/"+"MVP_figures.zip")}'
 
-            cl_tools.make_cluster_with_gibbscluster_jobs()
-            cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
-            cl_tools.order_gibbs_runs()
-            cl_tools.run_jubs()
-            cl_tools.find_best_files()
-            analysis = report.mhc_report(cl_tools, mhc_class, Parameters.THREADS, description, submitter_name, exp_info)
-            _ = analysis.make_report()
-            download_href = f'/download/{urlquote(time+"/"+"report.html")}'
-            # put everything in an archive
-            with zipfile.ZipFile(f'{analysis_location}/MVP_analysis.zip', 'w', zipfile.ZIP_STORED) as zipf:
-                netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.csv')]
-                for f in netmhcpan_files:
-                    zipf.write(f, arcname=Path(f).name)
-                for root, dirs, files in os_walk(f'{analysis_location}/gibbs'):
-                    for file in files:
-                        p = Path(root, file)
-                        zipf.write(str(p), p.relative_to(analysis_location))
-                zipf.write(f'{analysis_location}/report.html', 'report.html')
-            archive_href = f'/download/{urlquote(time+"/"+"MVP_analysis.zip")}'
-            # put figures in an archive
-            with zipfile.ZipFile(f'{analysis_location}/MVP_figures.zip', 'w', zipfile.ZIP_STORED) as zipf:
-                for root, dirs, files in os_walk(f'{analysis_location}/figures'):
-                    for file in files:
-                        p = Path(root, file)
-                        zipf.write(str(p), p.relative_to(analysis_location))
-            figures_href = f'/download/{urlquote(time+"/"+"MVP_figures.zip")}'
+        tmp_location = f"If you wish to access the files directly, the location for this analysis is: " \
+                       f"{analysis_location}."
+    except Exception:
+        error = traceback.format_exc()
 
-            tmp_location = f"If you wish to access the files directly, the location for this analysis is: " \
-                           f"{analysis_location}."
-        except Exception:
-            error = traceback.format_exc()
+        return no_update, no_update, no_update, no_update, no_update, [], no_update, False, error, True
 
-            return no_update, no_update, no_update, no_update, no_update, [], no_update, False, error, True
-
-        return 'Link to report', download_href, figures_href, archive_href, tmp_location, [], '', True, '', False
+    return 'Link to report', download_href, figures_href, archive_href, tmp_location, [], '', True, '', False
 
 
 @app.callback([Output('upgrade-modal', 'is_open'),
@@ -1120,6 +1018,9 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, all
                Input('upgrade-yes', 'n_clicks'),
                Input('upgrade-no', 'n_clicks')])
 def check_mvp_version_and_update(a, b, c):
+    """
+    Checks if the installed version of MVP is up-to-date. If not, prompts the user to install the newest version.
+    """
     ctx = dash.callback_context
     triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
 
@@ -1191,8 +1092,8 @@ def check_mvp_version_and_update(a, b, c):
 
 def check_if_version_is_uptodate(name: str) -> (bool, str, str):
     """
-    Checks if a package is up-to-date
-    :param name:
+    Checks if a package is up-to-date.
+    :param name: The name of the package.
     :return: (up-to-date: bool, current_version: str, latest_version: str)
     """
     from johnnydep.lib import JohnnyDist
@@ -1208,10 +1109,21 @@ def check_if_version_is_uptodate(name: str) -> (bool, str, str):
 
 @app.server.route("/download/<path:path>")
 def get_report(path):
+    """
+    Downloads the MVP report.
+    :param path:
+    :return:
+    """
     return flask.send_from_directory(Parameters.TMP_DIR, path)
 
 
-def download_data_file(tool: str):
+def download_data_file(tool: str) -> None:
+    """
+    Download the required data files for the DTU Health Tech tools. They are automatically placed in the appropriate
+    tool folder and extracted.
+    :param tool: The respective tool. Must be one of {netMHCIIpan, netMHCpan4.1, netMHCpan4.0}
+    :return: None
+    """
     if tool == 'netMHCIIpan':
         url = 'http://www.cbs.dtu.dk/services/NetMHCIIpan/data.tar.gz'
         dest = str(Path(TOOLS) / 'netMHCIIpan-4.0')
@@ -1225,7 +1137,7 @@ def download_data_file(tool: str):
         url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Darwin.tar.gz'
         dest = str(Path(TOOLS) / 'netMHCpan-4.0')
     else:
-        raise ValueError('tool must be one of [netMHCIIpan, netMHCpan4.1, netMHCpan4.0]')
+        raise ValueError('tool must be one of {netMHCIIpan, netMHCpan4.1, netMHCpan4.0}')
     chdir(dest)
     print(f"\nDownloading data files for {tool}\n")
     command = f'curl -L -k -o ./data.tar.gz {url}'.split()
@@ -1258,10 +1170,11 @@ def download_data_file(tool: str):
     print('done')
 
 
-def initialize():
+def initialize() -> None:
     """
-    Ensure everything will run.
-    :return:
+    Ensure everything will (hopefully) run. Checks if the DTU Health Tech tools are present, checks if they have
+    the rquired data files, makes sure the script files for the tools are executable on the system.
+    :return: None
     """
     print('\nInitializing')
     # check for NetMHCpan, NetMHCIIpan and GibbsCluster
@@ -1331,7 +1244,7 @@ if __name__ == '__main__':
     You are running MhcVizPipe in debugging mode. This uses the
     development server shipped with Flask.
     
-    The GUI is running here: http://{Parameters.HOSTNAME}:8971
+    The GUI is running here: http://{'localhost' if windows else Parameters.HOSTNAME}:8971
 
     ========================================
     '''
