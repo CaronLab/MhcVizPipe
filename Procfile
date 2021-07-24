@@ -1,1 +1,1 @@
-web: waitress-serve app: gui
+web: waitress-serve gui:server
