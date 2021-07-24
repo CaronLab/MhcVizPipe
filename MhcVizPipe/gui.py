@@ -598,6 +598,7 @@ app.layout = html.Div(children=[
 
 ], style={'padding': '20px', 'max-width': '1200px'}, id='main-contents')
 
+
 @app.callback([Output('settings-modal', 'is_open'),
                Output('settings-area', 'value'),
                Output('settings-problem', 'children'),
@@ -716,8 +717,8 @@ def sanitize_sample_name(sample_name: str):
                State('peptides', 'data'),
                State('sample-data-table', 'data')
                ])
-def parse_peptide_file(contents, select_n_clicks, cancel_n_clicks, add_peps_n_clicks, filename, selected_column, sample_name,
-                       sample_description, peptide_list_state, peptide_data, data_table):
+def add_peptides(contents, select_n_clicks, cancel_n_clicks, add_peps_n_clicks, filename, selected_column, sample_name,
+                 sample_description, peptide_list_state, peptide_data, data_table):
 
     ctx = dash.callback_context
     triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
