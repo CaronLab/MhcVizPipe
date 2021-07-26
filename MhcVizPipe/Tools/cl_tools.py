@@ -13,16 +13,6 @@ import re
 import shutil
 
 
-class MhcPeptides:
-    def __init__(self,
-                 sample_name: str,
-                 sample_description: str,
-                 peptides: List[str]):
-        self.sample_name = sample_name.replace(' ', '_')
-        self.sample_description = sample_description
-        self.peptides = peptides
-
-
 class MhcToolHelper:
     def __init__(self,
                  sample_info_datatable: List[dict],

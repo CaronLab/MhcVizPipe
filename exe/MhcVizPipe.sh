@@ -31,9 +31,9 @@ folder by extracting it from the MhcVizPipe download).";
 	exit 1
 fi
 
-if [[ ! (-e "$CDIR"/tools/gibbscluster && -e "$CDIR"/tools/netMHCIIpan && -e "$CDIR"/tools/netMHCpan4.0 && -e "$CDIR"/tools/netMHCpan4.1) ]]; then
-	echo "One or more of the tool scripts are missing from the \"tools\" folder. It should have the following scipt files: \
-netMHCpan4.0, netMHCpan4.1, netMHCIIpan, and gibbscluster. Please replace these files either by downloading them from \
+if [[ ! (-e "$CDIR"/tools/gibbscluster && -e "$CDIR"/tools/netMHCIIpan && -e "$CDIR"/tools/netMHCpan4.1) ]]; then
+	echo "One or more of the tool scripts are missing from the \"tools\" folder. It should have the following script files: \
+netMHCpan4.1, netMHCIIpan, and gibbscluster. Please replace these files either by downloading them from \
 https://github.com/CaronLab/MhcVizPipe/tree/master/tool_scripts or extracting them from your original MhcVizPipe download \
 (if you still have it).";
   read -rsp "Press any key to exit..." -n1 key;
@@ -46,7 +46,6 @@ fi
 # make sure MVP will be able to execute the tool scripts and python
 chmod +x "$CDIR"/tools/gibbscluster
 chmod +x "$CDIR"/tools/netMHCIIpan
-chmod +x "$CDIR"/tools/netMHCpan4.0
 chmod +x "$CDIR"/tools/netMHCpan4.1
 chmod -R +x "$CDIR"/python/bin
 

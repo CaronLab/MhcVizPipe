@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcVizPipe.Tools.cl_tools import MhcToolHelper
 import plotly.graph_objects as go
 import numpy as np
 from MhcVizPipe.Tools import plotly_venn

@@ -37,30 +37,9 @@ class Parameters:
     def NETMHCPAN(self) -> str:
         self.config.read(config_file)
         if self.config['DIRECTORIES']['NetMHCpan path'].lower() == 'auto':
-            if self.config['DIRECTORIES']['NetMHCpan version'] == '4.1':
-                return str((Path(TOOLS) / 'netMHCpan4.1').resolve())
-            else:
-                return str((Path(TOOLS) / 'netMHCpan4.0').resolve())
-        return str(Path(self.config['DIRECTORIES']['NetMHCpan path']).expanduser())
-
-    @property
-    def NETMHCPAN_VERSION(self) -> str:
-        self.config.read(config_file)
-        if '--standalone' in argv:
-            tools = [x.name for x in Path(TOOLS).glob('*') if x.is_dir()]
-            if 'netMHCpan-4.0' in tools and 'netMHCpan-4.1' in tools:
-                pass
-            elif 'netMHCpan-4.0' in tools and self.config['DIRECTORIES']['NetMHCpan version'] == '4.1':
-                self.config.set('DIRECTORIES', 'NetMHCpan version', '4.0')
-                with open(config_file, 'w+') as config:
-                    self.config.write(config)
-            elif 'netMHCpan-4.1' in tools and self.config['DIRECTORIES']['NetMHCpan version'] == '4.0':
-                self.config.set('DIRECTORIES', 'NetMHCpan version', '4.1')
-                with open(config_file, 'w+') as config:
-                    self.config.write(config)
-            else:
-                pass
-        return self.config['DIRECTORIES']['NetMHCpan version']
+            return str((Path(TOOLS) / 'netMHCpan4.1').resolve())
+        else:
+            return str(Path(self.config['DIRECTORIES']['NetMHCpan path']).expanduser())
 
     @property
     def NETMHCIIPAN(self) -> str:

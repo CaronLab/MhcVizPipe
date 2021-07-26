@@ -12,21 +12,19 @@ from random import uniform
 from datetime import datetime
 from pathlib import Path
 from MhcVizPipe.ReportTemplates import report
-from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from MhcVizPipe.Tools.cl_tools import MhcToolHelper
 import flask
 from sys import argv
 from urllib.parse import quote as urlquote
 from MhcVizPipe.defaults import ROOT_DIR, default_config_file, config_file
 from MhcVizPipe.defaults import Parameters
-from platform import system as platform_sys
-from MhcVizPipe.Tools.install_tools import run_all
 from waitress import serve
 from warnings import simplefilter, catch_warnings
 import traceback
 import zipfile
 from os import walk as os_walk
 from subprocess import Popen
-from MhcVizPipe.defaults import TOOLS, EXECUTABLE
+from MhcVizPipe.defaults import TOOLS
 from os import chdir
 import tarfile
 import structlog
@@ -48,11 +46,7 @@ app = dash.Dash(__name__, external_scripts=["https://ajax.googleapis.com/ajax/li
 app.title = "MhcVizPipe"
 
 class_i_alleles = []
-if Parameters.NETMHCPAN_VERSION == '4.0':
-    allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')
-else:
-    allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')
-with open(allele_file) as f:
+with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
     for allele in f.readlines():
         allele = allele.strip()
         class_i_alleles.append({'label': allele, 'value': allele})
@@ -657,15 +651,7 @@ def update_settings(defaults, done, cancel, open_settings, settings, mhc_class):
               [Input('mhc-class', 'value')])
 def change_mhc_class_alleles(mhc_class):
     if mhc_class == 'I':
-        class_i_alleles = []
-        if Parameters.NETMHCPAN_VERSION == '4.0':
-            allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')
-        else:
-            allele_file = Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')
-        with open(allele_file) as f:
-            for allele in f.readlines():
-                allele = allele.strip()
-                class_i_alleles.append({'label': allele, 'value': allele})
+        class_i_alleles.append({'label': allele, 'value': allele})
         return [class_i_alleles, []]
     elif mhc_class == 'II':
         return [class_ii_alleles, []]
@@ -1122,7 +1108,7 @@ def download_data_file(tool: str) -> None:
     """
     Download the required data files for the DTU Health Tech tools. They are automatically placed in the appropriate
     tool folder and extracted.
-    :param tool: The respective tool. Must be one of {netMHCIIpan, netMHCpan4.1, netMHCpan4.0}
+    :param tool: The respective tool. Must be one of {netMHCIIpan, netMHCpan4.1}
     :return: None
     """
     if tool == 'netMHCIIpan':
@@ -1131,14 +1117,8 @@ def download_data_file(tool: str) -> None:
     elif tool == 'netMHCpan4.1':
         url = 'http://www.cbs.dtu.dk/services/NetMHCpan/data.tar.gz'
         dest = str(Path(TOOLS) / 'netMHCpan-4.1')
-    elif tool == 'netMHCpan4.0' and platform_sys() == 'Linux':
-        url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Linux.tar.gz'
-        dest = str(Path(TOOLS) / 'netMHCpan-4.0')
-    elif tool == 'netMHCpan4.0' and platform_sys() == 'Darwin':
-        url = 'http://www.cbs.dtu.dk/services/NetMHCpan-4.0/data.Darwin.tar.gz'
-        dest = str(Path(TOOLS) / 'netMHCpan-4.0')
     else:
-        raise ValueError('tool must be one of {netMHCIIpan, netMHCpan4.1, netMHCpan4.0}')
+        raise ValueError('tool must be one of {netMHCIIpan, netMHCpan4.1}')
     chdir(dest)
     print(f"\nDownloading data files for {tool}\n")
     command = f'curl -L -k -o ./data.tar.gz {url}'.split()
@@ -1180,11 +1160,9 @@ def initialize() -> None:
     print('\nInitializing')
     # check for NetMHCpan, NetMHCIIpan and GibbsCluster
     missing = []
-    for tool in ['netMHCIIpan-4.0', 'gibbscluster-2.0']:
+    for tool in ['netMHCIIpan-4.0', 'gibbscluster-2.0', 'netMHCpan-4.1']:
         if not (Path(TOOLS) / tool).is_dir():
             missing.append(tool)
-    if not ((Path(TOOLS) / 'netMHCpan-4.0').is_dir() or (Path(TOOLS) / 'netMHCpan-4.1').is_dir()):
-        missing.append('netMHCpan(4.0 or 4.1)')
     if missing:
         print(f'\nERROR: The following tools are required by MhcVizPipe and were not found: {", ".join(missing)}. '
               f'Please download them from DTU Health Tech (https://services.healthtech.dtu.dk/software.php) '
@@ -1198,8 +1176,6 @@ def initialize() -> None:
     tools = []
     if not (Path(TOOLS) / 'netMHCIIpan-4.0' / 'data').is_dir():
         tools.append('netMHCIIpan')
-    if (Path(TOOLS) / 'netMHCpan-4.0').is_dir() and not (Path(TOOLS) / 'netMHCpan-4.0' / 'data').is_dir():
-        tools.append('netMHCpan4.0')
     if (Path(TOOLS) / 'netMHCpan-4.1').is_dir() and not (Path(TOOLS) / 'netMHCpan-4.1' / 'data').is_dir():
         tools.append('netMHCpan4.1')
     for tool in tools:
@@ -1209,7 +1185,6 @@ def initialize() -> None:
     Popen(f'chmod +x {str(Path(TOOLS) / ".." / "MhcVizPipe.sh")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.0")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split()).communicate()
 
 

@@ -49,16 +49,10 @@ if __name__ == '__main__':
     if len(args.alleles) == 1:
         args.alleles = args.alleles[0].split(' ')
     if args.mhc_class == 'I':
-        if args.version == '4.1':
-            with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
-                for allele in f.readlines():
-                    allele = allele.strip()
-                    netmhcpan_alleles.append(allele)
-        else:
-            with open(Path(ROOT_DIR, 'assets', 'class_I_alleles_4.0.txt')) as f:
-                for allele in f.readlines():
-                    allele = allele.strip()
-                    netmhcpan_alleles.append(allele)
+        with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
+            for allele in f.readlines():
+                allele = allele.strip()
+                netmhcpan_alleles.append(allele)
     else:
         with open(Path(ROOT_DIR, 'assets', 'class_II_alleles.txt')) as f:
             for allele in f.readlines():
