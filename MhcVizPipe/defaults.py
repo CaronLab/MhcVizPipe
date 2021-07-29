@@ -66,9 +66,19 @@ class Parameters:
         return self.config['SERVER']['PORT']
 
     @property
-    def TIMEOUT(self) -> str:
+    def LENGTH_CUTOFF(self) -> float:
         self.config.read(config_file)
-        return self.config['SERVER']['TIMEOUT']
+        return float(self.config['ANALYSIS']['length_cutoff'])
+
+    @property
+    def LF_CUTOFF(self) -> float:
+        self.config.read(config_file)
+        return float(self.config['ANALYSIS']['length_score_cutoff'])
+
+    @property
+    def BF_CUTOFF(self) -> float:
+        self.config.read(config_file)
+        return float(self.config['ANALYSIS']['binding_score_cutoff'])
 
     @property
     def HOBOHM(self) -> str:
