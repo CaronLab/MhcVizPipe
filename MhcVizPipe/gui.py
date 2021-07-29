@@ -36,8 +36,7 @@ import dash_table
 Parameters = Parameters()
 
 external_stylesheets = [dbc.themes.BOOTSTRAP,
-                        #'https://codepen.io/chriddyp/pen/bWLwgP.css',
-                        f'{ROOT_DIR}/assets/blinker.css']
+                        str(Path(ROOT_DIR) / 'assets' / 'gui_styles.css')]
 
 server = flask.Flask(__name__)
 
