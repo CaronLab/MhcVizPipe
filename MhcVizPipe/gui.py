@@ -264,12 +264,13 @@ app.layout = html.Div(children=[
                         ], width=8),
                     dbc.Col(
                         [
-                            html.P('Allele search (click arrow to add to a selected cell):',
+                            html.P('Allele search (click arrow to add to selected cells):',
                                    style={'font-weight': 'bold', 'margin-top': '4rem'}),
                             html.Div(
                                 [
                                     html.A('\u27AF',
-                                           id='add-alleles', style={'height': '1px', 'font-size': '24pt', 'transform': 'scaleX(-1)'}),
+                                           id='add-alleles', style={'height': '1px', 'font-size': '24pt',
+                                                                    'transform': 'scaleX(-1) translate(0, -4px)'}),
                                     dcc.Dropdown(
                                         id='mhc-alleles',
                                         options=class_i_alleles,
