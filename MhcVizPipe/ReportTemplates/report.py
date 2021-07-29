@@ -122,6 +122,63 @@ class mhc_report:
                 )
         return info_div
 
+    def quick_quality_table(self, className=None):
+        t = table(className=f'table table-hover table-bordered',
+                  style="text-align: center",
+                  id='quality-table')
+        t.add(
+            thead(
+                tr(
+                    [
+                        th('Sample', style="padding: 5px"),
+                        th('Average length', style="padding: 5px"),
+                        th('LF Score', style="padding: 5px"),
+                        th('BF Score', style="padding: 5px"),
+                        th(f'Total peptides', style="padding: 5px"),
+                    ]
+                )
+            )
+        )
+        tablebody = tbody()
+        for sample in self.results.samples:
+            all_peps = list(set(self.results.original_peptides[sample]))  # all peptides
+            n_all_peps = len(all_peps)  # number of peptides in original list
+            lengths = np.vectorize(len)(all_peps)  # lengths of those peptides
+            mean_length = round(np.mean(lengths), 2)  # mean length of all peptides
+            n_with_acceptable_length = np.sum((lengths >= self.results.min_length) & (lengths <= self.results.max_length))
+
+            # get counts of binders and non-binders
+            def get_highest_binding(predictions):
+                if 'Strong' in predictions.values:
+                    return 'Strong'
+                elif 'Weak' in predictions.values:
+                    return 'Weak'
+                else:
+                    return 'Non-binding'
+            counts_df = self.preds.loc[self.preds['Sample'] == sample, :]
+            counts_df = counts_df.pivot(index='Peptide', columns='Allele', values='Binder')
+            bindings = counts_df.apply(get_highest_binding, axis=1).values
+            binders, counts = np.unique(bindings, return_counts=True)
+            binder_counts = {binder: count for binder, count in zip(list(binders), (list(counts)))}
+            n_binders = n_with_acceptable_length - binder_counts['Non-binding']
+            fl_score = round(n_with_acceptable_length/n_all_peps, 2)
+            bl_score = round(n_binders/n_with_acceptable_length, 2)
+
+            warning = 'background-color: #ffd9d6'
+
+            tablerow = tr()
+            tablerow.add(td(sample, style='word-break: break-word'))
+            tablerow.add(td(mean_length, style=warning if mean_length >= 10 else ''))
+            tablerow.add(td(f'{fl_score}',
+                            style=warning if fl_score < 0.75 else ''))
+            tablerow.add(td(f'{bl_score}',
+                            style=warning if bl_score < 0.5 else ''))
+            tablerow.add(td(n_all_peps, style=warning if mean_length >= 10 else ''))
+            tablebody.add(tablerow)
+
+        t.add(tablebody)
+        return div(t, className=f'table-responsive {className}' if className else 'table-responsive')
+
     def sample_overview_table(self, className=None):
 
         t = table(className=f'table table-hover table-bordered',
@@ -266,7 +323,7 @@ class mhc_report:
     def gen_length_histogram(self, className=None):
         len_dist = go.Figure()
         for sample in self.results.samples:
-            peps = list(set(self.results.sample_peptides[sample]))
+            peps = list(set(self.results.original_peptides[sample]))
             peps = [pep for pep in peps if len(pep) <= 30]
             lengths, counts = np.unique(np.vectorize(len)(peps), return_counts=True)
             len_dist.add_trace(go.Bar(name=sample, x=lengths, y=counts))
@@ -747,6 +804,17 @@ class mhc_report:
                             ]
                         )
                     self.exp_info(className='col-6')
+                hr()
+                h3("Quick Overview")
+                p(f"LF Score: Length Fraction - "
+                  f"fraction of all peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
+                  f"BF Score: Binding Fraction - fraction of all peptides between {self.results.min_length} and "
+                  f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
+                  f"Total peptides: total number of unique peptide sequences (no length restrictions).\n"
+                  'Cells are flagged red if average length is >= 10, LF Score <= 0.75 or BF Score <= 0.5.'
+                  , style="white-space: pre")
+                with div(className='row'):
+                    self.quick_quality_table(className='col-12')
                 hr()
                 h3("Sample Overview")
                 with div(className='row', style='flex-direction: row-reverse'):
