@@ -16,6 +16,7 @@ from dominate import document
 import PlotlyLogo.logo as pl
 from MhcVizPipe.defaults import ROOT_DIR
 import concurrent.futures
+from MhcVizPipe.defaults import Parameters
 
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
@@ -63,6 +64,7 @@ class mhc_report:
         self.samples = list(self.preds['Sample'].unique())
         self.experimental_info = experimental_info
         self.cpus = cpus
+        self.parameters = Parameters()
 
         peptide_numbers = {}
         for sample in self.results.samples:
@@ -123,6 +125,9 @@ class mhc_report:
         return info_div
 
     def quick_quality_table(self, className=None):
+        len_cutoff = self.parameters.LENGTH_CUTOFF
+        lf_cutoff = self.parameters.LF_CUTOFF
+        bf_cutoff = self.parameters.BF_CUTOFF
         t = table(className=f'table table-hover table-bordered',
                   style="text-align: center",
                   id='quality-table')
@@ -161,19 +166,19 @@ class mhc_report:
             binders, counts = np.unique(bindings, return_counts=True)
             binder_counts = {binder: count for binder, count in zip(list(binders), (list(counts)))}
             n_binders = n_with_acceptable_length - binder_counts['Non-binding']
-            fl_score = round(n_with_acceptable_length/n_all_peps, 2)
-            bl_score = round(n_binders/n_with_acceptable_length, 2)
+            lf_score = round(n_with_acceptable_length / n_all_peps, 2)
+            bf_score = round(n_binders/n_with_acceptable_length, 2)
 
             warning = 'background-color: #ffd9d6'
 
             tablerow = tr()
             tablerow.add(td(sample, style='word-break: break-word'))
-            tablerow.add(td(mean_length, style=warning if mean_length >= 10 else ''))
-            tablerow.add(td(f'{fl_score}',
-                            style=warning if fl_score < 0.75 else ''))
-            tablerow.add(td(f'{bl_score}',
-                            style=warning if bl_score < 0.5 else ''))
-            tablerow.add(td(n_all_peps, style=warning if mean_length >= 10 else ''))
+            tablerow.add(td(mean_length, style=warning if mean_length >= len_cutoff else ''))
+            tablerow.add(td(f'{lf_score}',
+                            style=warning if lf_score < lf_cutoff else ''))
+            tablerow.add(td(f'{bf_score}',
+                            style=warning if bf_score < bf_cutoff else ''))
+            tablerow.add(td(n_all_peps))
             tablebody.add(tablerow)
 
         t.add(tablebody)
@@ -806,12 +811,13 @@ class mhc_report:
                     self.exp_info(className='col-6')
                 hr()
                 h3("Quick Overview")
-                p(f"LF Score: Length Fraction - "
+                p(f"\u2022LF Score: Length Fraction - "
                   f"fraction of all peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
-                  f"BF Score: Binding Fraction - fraction of all peptides between {self.results.min_length} and "
+                  f"\u2022BF Score: Binding Fraction - fraction of all peptides between {self.results.min_length} and "
                   f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
-                  f"Total peptides: total number of unique peptide sequences (no length restrictions).\n"
-                  'Cells are flagged red if average length is >= 10, LF Score <= 0.75 or BF Score <= 0.5.'
+                  f"\u2022Total peptides: total number of unique peptide sequences (no length restrictions).\n"
+                  '\u2022Cells are flagged red if average length is >= 10, LF Score <= 0.75 or BF Score <= 0.5 '
+                  '(can be changed in the MhcVizPipe settings).'
                   , style="white-space: pre")
                 with div(className='row'):
                     self.quick_quality_table(className='col-12')
