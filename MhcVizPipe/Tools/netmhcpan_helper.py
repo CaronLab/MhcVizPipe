@@ -8,21 +8,11 @@ from datetime import datetime
 import subprocess
 from multiprocessing import Pool
 from uuid import uuid4
-from mhcnames import normalize_allele_name, compact_allele_name
 import pandas as pd
 import tempfile
 
 common_aa = "ARNDCQEGHILKMFPSTWYV"
 TMP_DIR = str(Path(tempfile.gettempdir(), 'pynetmhcpan').expanduser())
-
-
-def format_class_II_allele(allele: str):
-    allele = normalize_allele_name(allele)
-    if allele.startswith('HLA-DRA1*01:01'):
-        allele = allele.split('-')[-1].replace(':', '').replace('*', '_')
-    else:
-        allele = allele.replace(':', '').replace('*', '')
-    return allele
 
 
 def chunk_list(it, size):
@@ -272,7 +262,7 @@ class NetMHCpanHelper:
             line = line.split()
             if not line or line[0] == '#' or not line[0].isnumeric():
                 continue
-            allele = line[allele_idx].replace('*', '').replace(':', '')
+            allele = line[allele_idx].replace('*', '')
             peptide = line[peptide_idx]
             el_rank = float(line[el_rank_idx])
             el_score = float(line[el_score_idx])
