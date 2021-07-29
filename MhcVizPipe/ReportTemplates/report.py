@@ -816,7 +816,8 @@ class mhc_report:
                   f"\u2022BF Score: fraction of peptides between {self.results.min_length} and "
                   f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
                   f"\u2022Total peptides: total number of unique peptide sequences (no length restrictions).\n"
-                  '\u2022Cells are flagged red if average length is >= 10, LF Score <= 0.75 or BF Score <= 0.5 '
+                  f'\u2022Cells are flagged red if average length is >= {self.parameters.LENGTH_CUTOFF}, '
+                  f'LF Score <= {self.parameters.LF_CUTOFF} or BF Score <= {self.parameters.BF_CUTOFF} '
                   '(can be changed in the MhcVizPipe settings).'
                   , style="white-space: pre")
                 with div(className='row'):
