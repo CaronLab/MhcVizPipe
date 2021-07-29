@@ -224,39 +224,66 @@ app.layout = html.Div(children=[
                     style={'margin-top': '10px', 'width': '50%', 'font-size': '14pt'})
             ], style={'text-align': 'center'}),
 
-            html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
-
-            html.Div(
-                dash_table.DataTable(
-                    id='sample-data-table',
-                    columns=[
-                        {'name': 'Sample name',
-                         'id': 'sample-name',
-                         'deletable': False,
-                         'renamable': False,
-                         'editable': False
-                         },
-                        {'name': 'Description (optional)',
-                         'id': 'sample-description',
-                         'deletable': False,
-                         'renamable': False
-                         },
-                        {'name': 'Alleles (required)',
-                         'id': 'sample-alleles',
-                         'deletable': False,
-                         'renamable': False
-                         }
-                    ],
-                    data=[],
-                    editable=True,
-                    row_deletable=True,
-                    style_data={
-                            'whiteSpace': 'normal',
-                            'height': 'auto',
-                        },
-                ),
-                style={'padding-left': '1em', 'font-size': '9pt'}
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.P('Loaded data:', style={'font-weight': 'bold', 'margin-top': '10px'}),
+                            html.Div(
+                                dash_table.DataTable(
+                                    id='sample-data-table',
+                                    columns=[
+                                        {'name': 'Sample name',
+                                         'id': 'sample-name',
+                                         'deletable': False,
+                                         'renamable': False,
+                                         'editable': False
+                                         },
+                                        {'name': 'Description (optional)',
+                                         'id': 'sample-description',
+                                         'deletable': False,
+                                         'renamable': False
+                                         },
+                                        {'name': 'Alleles (required)',
+                                         'id': 'sample-alleles',
+                                         'deletable': False,
+                                         'renamable': False
+                                         }
+                                    ],
+                                    data=[],
+                                    editable=True,
+                                    row_deletable=True,
+                                    style_data={
+                                            'whiteSpace': 'normal',
+                                            'height': 'auto',
+                                        },
+                                ),
+                                style={'padding-left': '1em', 'font-size': '9pt'}
+                            ),
+                        ], width=8),
+                    dbc.Col(
+                        [
+                            html.P('Allele search (click arrow to add to a selected cell):',
+                                   style={'font-weight': 'bold', 'margin-top': '4rem'}),
+                            html.Div(
+                                [
+                                    html.A(html.P('\u21E6', style={'font-size': '24pt', 'width': '25%'}),
+                                           id='add-alleles'),
+                                    dcc.Dropdown(
+                                        id='mhc-alleles',
+                                        options=class_i_alleles,
+                                        multi=True,
+                                        style={'width': '100%', 'margin-left': '5px'}
+                                    )
+                                ],
+                                style={'display': 'flex'}
+                            )
+                        ],
+                        width=4
+                    )
+                ]
             ),
+
 
             html.Div(
                 id='loaded-data',
@@ -411,15 +438,7 @@ app.layout = html.Div(children=[
                 style={'width': '100%', 'margin-left': '5px'}
             ),
 
-            html.P('Allele search (not required, use to check recognized formats):',
-                   style={'font-weight': 'bold', 'margin-top': '10px'}),
 
-            dcc.Dropdown(
-                id='mhc-alleles',
-                options=class_i_alleles,
-                multi=True,
-                style={'width': '100%', 'margin-left': '5px'}
-            ),
 
             html.P('General information:', style={'font-weight': 'bold', 'margin-top': '10px'}),
 
@@ -650,7 +669,6 @@ def update_settings(defaults, done, cancel, open_settings, settings, mhc_class):
               [Input('mhc-class', 'value')])
 def change_mhc_class_alleles(mhc_class):
     if mhc_class == 'I':
-        class_i_alleles.append({'label': allele, 'value': allele})
         return [class_i_alleles, []]
     elif mhc_class == 'II':
         return [class_ii_alleles, []]
@@ -692,6 +710,7 @@ def sanitize_sample_name(sample_name: str):
                ],
               [Input('upload-data', 'contents'),
                Input('done-selecting-column', 'n_clicks'),
+               Input('add-alleles', 'n_clicks'),
                Input('cancel-selecting-column', 'n_clicks'),
                Input('add-peptides', 'n_clicks')],
               [State('upload-data', 'filename'),
@@ -700,10 +719,13 @@ def sanitize_sample_name(sample_name: str):
                State('sample-description', 'value'),
                State('peptide-list-area', 'value'),
                State('peptides', 'data'),
+               State('mhc-alleles', 'value'),
+               State('sample-data-table', 'selected_cells'),
                State('sample-data-table', 'data')
                ])
-def add_peptides(contents, select_n_clicks, cancel_n_clicks, add_peps_n_clicks, filename, selected_column, sample_name,
-                 sample_description, peptide_list_state, peptide_data, data_table):
+def add_peptides_or_alleles(contents, select_n_clicks, add_alleles_n_clicks, cancel_n_clicks, add_peps_n_clicks,
+                            filename, selected_column, sample_name, sample_description, peptide_list_state,
+                            peptide_data, alleles, selected_cells, data_table):
 
     ctx = dash.callback_context
     triggered_by = ctx.triggered[0]['prop_id'].split('.')[0]
@@ -831,6 +853,23 @@ def add_peptides(contents, select_n_clicks, cancel_n_clicks, add_peps_n_clicks, 
             }
         )
         return '', False, [], '', peptide_data, '', '', [], data_table
+
+    elif triggered_by == 'add-alleles':
+        if selected_cells in [None, []] or alleles in [None, []]:
+            raise PreventUpdate
+
+        for active_cell in selected_cells:
+            row = active_cell['row']
+            column_id = active_cell['column_id']
+            if column_id != 'sample-alleles':
+                raise PreventUpdate
+            if data_table[row][column_id] is None:
+                data_table[row][column_id] = ''
+            current_alleles = [x.strip() for x in data_table[row][column_id].replace(',', ' ').split()]
+            current_alleles += [x for x in alleles if x not in current_alleles]
+            new_alleles = ', '.join(current_alleles)
+            data_table[row][column_id] = new_alleles
+        return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, data_table
 
     else:
         raise PreventUpdate
