@@ -219,7 +219,8 @@ app.layout = html.Div(children=[
             html.Div(children=[
                 html.Button(
                     id='add-peptides',
-                    children='Load Data',
+                    children=[html.P([html.P('\u2937', style={'transform': 'translate(0, -10px)', 'font-size': '24pt'}), html.P('Load Data'),
+                              html.P('\u2935', style={'font-size': '24pt'})], style={'display': 'inline-flex'})],
                     className='btn btn-secondary',
                     style={'margin-top': '10px', 'width': '50%', 'font-size': '14pt'})
             ], style={'text-align': 'center'}),
@@ -267,8 +268,8 @@ app.layout = html.Div(children=[
                                    style={'font-weight': 'bold', 'margin-top': '4rem'}),
                             html.Div(
                                 [
-                                    html.A(html.P('\u21E6', style={'font-size': '24pt', 'width': '25%'}),
-                                           id='add-alleles'),
+                                    html.A('\u27AF',
+                                           id='add-alleles', style={'height': '1px', 'font-size': '24pt', 'transform': 'scaleX(-1)'}),
                                     dcc.Dropdown(
                                         id='mhc-alleles',
                                         options=class_i_alleles,
@@ -489,7 +490,7 @@ app.layout = html.Div(children=[
         html.Button(id='run-analysis',
                     children='Go!',
                     className='btn btn-secondary',
-                    style={'margin-top': '10px', 'width': '50%', 'font-size': '14pt'}),
+                    style={'margin-top': '10px', 'width': '50%', 'font-size': '18pt'}),
         style={'text-align': 'center'}
     ),
 
