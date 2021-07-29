@@ -80,7 +80,7 @@ class mhc_report:
         self.peptide_numbers = peptide_numbers
 
         pep_binding_dict = {}
-        for sample in self.samples:
+        for sample in self.results.samples:
             counts_df = self.preds.loc[self.preds['Sample'] == sample, :]
             counts_df = counts_df.pivot(index='Peptide', columns='Allele', values='Binder')
             pep_binding_dict[sample] = counts_df.copy(deep=True)
@@ -243,7 +243,7 @@ class mhc_report:
             )
         )
 
-        for sample in self.samples:
+        for sample in self.results.samples:
             tablebody = tbody()
             for allele in self.sample_alleles[sample]:
                 tablerow = tr()
@@ -288,7 +288,7 @@ class mhc_report:
                 return 'Non-binding'
 
         n_peps_fig = go.Figure()
-        for sample in self.samples:
+        for sample in self.results.samples:
             counts_df = self.preds.loc[self.preds['Sample'] == sample, :]
             counts_df = counts_df.pivot(index='Peptide', columns='Allele', values='Binder')
             bindings = counts_df.apply(get_highest_binding, axis=1).values
