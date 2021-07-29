@@ -811,9 +811,9 @@ class mhc_report:
                     self.exp_info(className='col-6')
                 hr()
                 h3("Quick Overview")
-                p(f"\u2022LF Score: Length Fraction - "
-                  f"fraction of all peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
-                  f"\u2022BF Score: Binding Fraction - fraction of all peptides between {self.results.min_length} and "
+                p(f"\u2022LF Score: "
+                  f"fraction of peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
+                  f"\u2022BF Score: fraction of peptides between {self.results.min_length} and "
                   f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
                   f"\u2022Total peptides: total number of unique peptide sequences (no length restrictions).\n"
                   '\u2022Cells are flagged red if average length is >= 10, LF Score <= 0.75 or BF Score <= 0.5 '
