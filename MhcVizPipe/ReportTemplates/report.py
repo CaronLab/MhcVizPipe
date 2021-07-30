@@ -169,7 +169,7 @@ class mhc_report:
             lf_score = round(n_with_acceptable_length / n_all_peps, 2)
             bf_score = round(n_binders/n_with_acceptable_length, 2)
 
-            warning = 'background-color: #ffd9d6'
+            warning = 'background-color: #ff5c4f'
 
             tablerow = tr()
             tablerow.add(td(sample, style='word-break: break-word'))
@@ -361,10 +361,10 @@ class mhc_report:
                                                                         values='Rank').astype(float)
         if self.mhc_class == 'I':
             pivot[pivot > 2.5] = 2.5
-            colorscale = [[0, '#ef553b'], [2.0 / 2.5, '#636efa'], [2.1 / 2.5, '#e5ecf6'], [1, '#e5ecf6']]
+            colorscale = [[0, '#ef553b'], [2.0 / 2.5, '#636efa'], [2.1 / 2.5, '#fdffc2'], [1, '#fdffc2']]
         else:
             pivot[pivot > 12] = 12
-            colorscale = [[0, '#ef553b'], [10 / 12, '#636efa'], [10.5 / 12, '#e5ecf6'], [1, '#e5ecf6']]
+            colorscale = [[0, '#ef553b'], [10 / 12, '#636efa'], [10.5 / 12, '#fdffc2'], [1, '#fdffc2']]
         data = pivot.sort_values(list(pivot.columns), ascending=True)
 
         if self.mhc_class == 'I':
