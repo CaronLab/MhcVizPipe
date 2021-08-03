@@ -126,8 +126,8 @@ class mhc_report:
 
     def quick_quality_table(self, className=None):
         len_cutoff = self.parameters.LENGTH_CUTOFF
-        lf_cutoff = self.parameters.LF_CUTOFF
-        bf_cutoff = self.parameters.BF_CUTOFF
+        lf_cutoff = 0  # self.parameters.LF_CUTOFF Set these to 0 for now. I'll leave the code inplace in case we wish to revisit the cutoffs
+        bf_cutoff = 0  # self.parameters.BF_CUTOFF
         t = table(className=f'table table-hover table-bordered',
                   style="text-align: center",
                   id='quality-table')
@@ -136,10 +136,10 @@ class mhc_report:
                 tr(
                     [
                         th('Sample', style="padding: 5px"),
-                        th('Average length', style="padding: 5px"),
+                        th(f'Total peptides', style="padding: 5px"),
+                        th(f'Peptides between {self.results.min_length}-{self.results.max_length} mers', style="padding: 5px"),
                         th('LF Score', style="padding: 5px"),
                         th('BF Score', style="padding: 5px"),
-                        th(f'Total peptides', style="padding: 5px"),
                     ]
                 )
             )
@@ -173,56 +173,12 @@ class mhc_report:
 
             tablerow = tr()
             tablerow.add(td(sample, style='word-break: break-word'))
-            tablerow.add(td(mean_length, style=warning if mean_length >= len_cutoff else ''))
+            tablerow.add(td(n_all_peps))
+            tablerow.add(td(n_with_acceptable_length))
             tablerow.add(td(f'{lf_score}',
                             style=warning if lf_score < lf_cutoff else ''))
             tablerow.add(td(f'{bf_score}',
                             style=warning if bf_score < bf_cutoff else ''))
-            tablerow.add(td(n_all_peps))
-            tablebody.add(tablerow)
-
-        t.add(tablebody)
-        return div(t, className=f'table-responsive {className}' if className else 'table-responsive')
-
-    def sample_overview_table(self, className=None):
-
-        t = table(className=f'table table-hover table-bordered',
-                  style="text-align: center",
-                  id='peptidetable')
-        t.add(
-            thead(
-                tr(
-                    [
-                        th('Sample', style="padding: 5px"),
-                        th('Peptide length', style="padding: 5px"),
-                        th('Total peptides', style="padding: 5px"),
-                        th('%', style="padding: 5px")
-                    ]
-                )
-            )
-        )
-        tablebody = tbody()
-        for sample in self.results.samples:
-            tablerow = tr()
-            tablerow.add(td(sample, style='word-break: break-word', rowspan=3))
-            tablerow.add(td('all lengths'))
-            all_peptides = self.peptide_numbers[sample]['original_total']
-            tablerow.add(td(f'{all_peptides}'))
-            tablerow.add(td('100'))
-            tablebody.add(tablerow)
-
-            tablerow = tr()
-            tablerow.add(td(f'{self.results.min_length}-{self.results.max_length} mers'))
-            within_length = self.peptide_numbers[sample]['within_length']
-            tablerow.add(td(f'{within_length}'))
-            tablerow.add(td(f'{round(within_length/all_peptides * 100)}'))
-            tablebody.add(tablerow)
-
-            tablerow = tr()
-            tablerow.add(td('other'))
-            other_lengths = all_peptides - within_length
-            tablerow.add(td(f'{other_lengths}'))
-            tablerow.add(td(f'{round(other_lengths / all_peptides * 100)}'))
             tablebody.add(tablerow)
 
         t.add(tablebody)
@@ -810,30 +766,25 @@ class mhc_report:
                         )
                     self.exp_info(className='col-6')
                 hr()
-                h3("Quick Overview")
+                h3("Sample Overview")
                 p(f"\u2022LF Score: "
                   f"fraction of peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
                   f"\u2022BF Score: fraction of peptides between {self.results.min_length} and "
                   f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
-                  f"\u2022Total peptides: total number of unique peptide sequences (no length restrictions).\n"
-                  f'\u2022Cells are flagged red if average length is >= {self.parameters.LENGTH_CUTOFF}, '
-                  f'LF Score <= {self.parameters.LF_CUTOFF} or BF Score <= {self.parameters.BF_CUTOFF} '
-                  '(can be changed in the MhcVizPipe settings).'
+                  #f'\u2022Cells are flagged red if average length is >= {self.parameters.LENGTH_CUTOFF}, '
+                  #f'LF Score <= {self.parameters.LF_CUTOFF} or BF Score <= {self.parameters.BF_CUTOFF} '
+                  #'(can be changed in the MhcVizPipe settings).'
+                  # commented out the above because we are unsure about having the cutoffs
                   , style="white-space: pre")
                 with div(className='row'):
                     self.quick_quality_table(className='col-12')
-                hr()
-                h3("Sample Overview")
                 with div(className='row', style='flex-direction: row-reverse'):
                     if len(self.samples) > 1:
                         up = self.gen_upset_plot()
                         up['style'] = "margin-right: 15px; margin-left: 15px; margin-bottom: 15px"
                         self.gen_length_histogram(className='col')
-                        #hr(style="height: 0px")
-                        self.sample_overview_table(className='col-12')
                     else:
-                        self.gen_length_histogram(className='col-6')
-                        self.sample_overview_table(className='col-6')
+                        self.gen_length_histogram(className='col-12')
                 hr()
                 h3("Annotation Results")
                 pan = 'NetMHCpan' if self.mhc_class == 'I' else 'NetMHCIIpan'
