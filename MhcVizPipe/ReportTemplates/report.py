@@ -149,7 +149,7 @@ class mhc_report:
             all_peps = list(set(self.results.original_peptides[sample]))  # all peptides
             n_all_peps = len(all_peps)  # number of peptides in original list
             lengths = np.vectorize(len)(all_peps)  # lengths of those peptides
-            mean_length = round(np.mean(lengths), 2)  # mean length of all peptides
+            mean_length = round(np.mean(lengths), 2)  # mean length of all peptides, not using for now
             n_with_acceptable_length = np.sum((lengths >= self.results.min_length) & (lengths <= self.results.max_length))
 
             # get counts of binders and non-binders
@@ -168,6 +168,8 @@ class mhc_report:
             n_binders = n_with_acceptable_length - binder_counts['Non-binding']
             lf_score = round(n_with_acceptable_length / n_all_peps, 2)
             bf_score = round(n_binders/n_with_acceptable_length, 2)
+            lf_color = f'rgba(255, 99, 71, {1-lf_score})'
+            bf_color = f'rgba(255, 99, 71, {1-bf_score})'
 
             warning = 'background-color: #ff5c4f'
 
@@ -175,10 +177,8 @@ class mhc_report:
             tablerow.add(td(sample, style='word-break: break-word'))
             tablerow.add(td(n_all_peps))
             tablerow.add(td(n_with_acceptable_length))
-            tablerow.add(td(f'{lf_score}',
-                            style=warning if lf_score < lf_cutoff else ''))
-            tablerow.add(td(f'{bf_score}',
-                            style=warning if bf_score < bf_cutoff else ''))
+            tablerow.add(td(f'{lf_score}', style=f'background-color: {lf_color}'))
+            tablerow.add(td(f'{bf_score}', style=f'background-color: {bf_color}'))
             tablebody.add(tablerow)
 
         t.add(tablebody)
