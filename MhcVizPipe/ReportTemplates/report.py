@@ -90,6 +90,7 @@ class mhc_report:
         self.fig_dir = self.results.tmp_folder / 'figures'
         if not self.fig_dir.exists():
             self.fig_dir.mkdir()
+        (self.fig_dir / 'heatmaps_w_common_y_axis').mkdir()
 
     def lab_logo(self):
         lab_logo = base64.b64encode(
@@ -421,6 +422,8 @@ class mhc_report:
                 div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='col-4',
                     style="margin-right: auto")
             )
+
+            fig.write_image(str(self.fig_dir / 'heatmaps_w_common_y_axis' / f'{sample}_heatmap.pdf'), engine="kaleido")
 
         #card = div(className='card')
         #card.add(div(b('Binding Specificity Heatmaps'), className='card-header'))
