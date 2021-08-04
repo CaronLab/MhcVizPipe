@@ -14,9 +14,9 @@ from dominate.util import raw
 from dominate.tags import *
 from dominate import document
 import PlotlyLogo.logo as pl
-from MhcVizPipe.defaults import ROOT_DIR
+from MhcVizPipe.parameters import ROOT_DIR
 import concurrent.futures
-from MhcVizPipe.defaults import Parameters
+from MhcVizPipe.parameters import Parameters
 
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):

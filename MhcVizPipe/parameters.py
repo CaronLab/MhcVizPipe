@@ -12,7 +12,7 @@ EXECUTABLE = executable
 TOOLS = str((Path(executable) / '../../../tools').resolve())
 
 if '--standalone' in argv:
-    config_file = str(Path(TOOLS) / '../mhcvizpipe.config')
+    config_file = str((Path(TOOLS) / '../mhcvizpipe.config').resolve())
 else:
     config_file = str(os.path.expanduser('~/.mhcvizpipe.config'))
 
@@ -27,6 +27,7 @@ class Parameters:
     def __init__(self):
         c = ConfigParser()
         self.config = c
+        self.config_file = config_file
 
     @property
     def TMP_DIR(self) -> str:

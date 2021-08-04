@@ -16,19 +16,19 @@ from MhcVizPipe.Tools.cl_tools import MhcToolHelper
 import flask
 from sys import argv
 from urllib.parse import quote as urlquote
-from MhcVizPipe.defaults import ROOT_DIR, default_config_file, config_file
-from MhcVizPipe.defaults import Parameters
+from MhcVizPipe.parameters import ROOT_DIR, default_config_file, config_file
+from MhcVizPipe.parameters import Parameters
+from MhcVizPipe.Tools.utils import clean_peptides, sanitize_sample_name
 from waitress import serve
 from warnings import simplefilter, catch_warnings
 import traceback
 import zipfile
 from os import walk as os_walk
 from subprocess import Popen
-from MhcVizPipe.defaults import TOOLS
+from MhcVizPipe.parameters import TOOLS
 from os import chdir
 import tarfile
 import structlog
-from MhcVizPipe.Tools import unmodify_peptides
 from MhcVizPipe import __version__
 import dash_table
 
@@ -693,13 +693,6 @@ def open_close_info_modal(open_modal, close_modal):
         raise PreventUpdate
 
 
-def sanitize_sample_name(sample_name: str):
-    for bad_character in [' ', ':', '/', '\\', '$', '@', '*', '(', ')', '{', '}', '[', ']']:
-        sample_name = sample_name.replace(bad_character, '_')
-    sample_name = sample_name.replace('&', 'AND')
-    return sample_name
-
-
 @app.callback([Output('peptide-list-area', 'value'),
                Output('modal', 'is_open'),
                Output('column-header-choices', 'options'),
@@ -963,7 +956,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
     # when samples are removed from the datatable they don't get removed from the data storage element, so we
     # need to make sure we only use the samples present in the table
     samples_to_use = [x['sample-name'] for x in sample_info_datatable]
-    sample_peptides = {} # this will be filled in below
+    sample_peptides = {}  # this will be filled in below
     # check that there are no duplicate filenames
     if len(samples_to_use) != len(set(samples_to_use)):
         return (no_update,
@@ -985,7 +978,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
             max_length = 22
         for sample_name in samples_to_use:
             peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
-            peps = unmodify_peptides.clean_peptides(peps)
+            peps = clean_peptides(peps)
             sample_peptides[sample_name] = peps
         time = str(datetime.now()).replace(' ', '_')
         analysis_location = str(Path(Parameters.TMP_DIR)/time)

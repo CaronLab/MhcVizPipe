@@ -1,21 +1,40 @@
 import argparse
-from MhcVizPipe.Tools.cl_tools import MhcPeptides, MhcToolHelper
+from argparse import RawDescriptionHelpFormatter
+from MhcVizPipe.Tools.cl_tools import MhcToolHelper
+from MhcVizPipe.Tools.utils import sanitize_sample_name, \
+    clean_peptides, load_template_file, load_peptide_file, package_report
 from MhcVizPipe.ReportTemplates import report
-from MhcVizPipe.defaults import Parameters, ROOT_DIR
+from MhcVizPipe.parameters import Parameters, ROOT_DIR
 from pathlib import Path
 from os import getcwd
+from datetime import datetime
+from os.path import expanduser
+import shutil
 
-"""
-NOTE: This interface is out of date. It needs to be refactored before it will work.
-"""
 
 Parameters = Parameters()
 TMP_DIR = Parameters.TMP_DIR
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="Welcome to the MhcVizPipe command line interface (CLI). This "
+                                             "CLI will allow you to generate MhcVizPipe reports using "
+                                             "standard scripting practices.\n\n"
+                                             "If you have not previously used the graphical interface on "
+                                             "your computer, the first time you run the CLI a config file "
+                                             f"will be created in one of two locations. If you are running MVP "
+                                             f"from a standalone installation (i.e. not installed into Python "
+                                             f"using PIP), the config file will be in the MhcVizPipe directory "
+                                             f"and will be called mhcvizpipe.config. If you are running "
+                                             f"MhcVizPipe from Python directly, the file will be created in "
+                                             f"your home directory: {str(expanduser('~/.mhcvizpipe.config'))}.\n\n"
+                                             f"If it is the first time you have run MhcVizPipe, be sure to check "
+                                             f"the configuration in the above file.")
 
 parser.add_argument('-f', '--files', type=str, nargs='+', required=True,
                     help='One or more files (space separated) containing peptide lists to analyze.')
+parser.add_argument('-t', '--template', type=str, required=True,
+                    help='A tab-separated file containing file paths and alleles. Can be used to process peptide lists '
+                         'with different alleles at the same time. The first column must be the file paths, and the '
+                         'respective alleles can be put in the following columns, up to 6 per sample.')
 parser.add_argument('-d', '--delimiter', type=str, required=False, choices=['comma', 'tab'],
                     help='Delimiter if the file is delimited (e.g. for .csv use "comma").')
 parser.add_argument('-H', '--column_header', type=str, required=False, help='The name of the column containing the peptide '
@@ -31,7 +50,9 @@ parser.add_argument('-n', '--name', type=str, default='',
 parser.add_argument('-p', '--publish_directory', type=str, required=False, default=getcwd(),
                     help='The directory where you want the report published. It should be an absolute path.')
 parser.add_argument('--f_out', type=str, required=False, default='report.html',
-                    help='The filename you want for the report. Defaults to "report".')
+                    help='The filename you want for the report. Defaults to "report.html". A zip file containing '
+                         'all the report components will be created in the same directory as the report (e.g. '
+                         'figures, NetMHCpan and GibbsCluster results).')
 parser.add_argument('-v', '--version', type=str, required=False, default='4.1', choices=['4.0', '4.1'],
                     help='Which version of NetMHCpan to use. For internal use during development.')
 parser.add_argument('-e', '--exp_info', type=str, default='',
@@ -39,8 +60,11 @@ parser.add_argument('-e', '--exp_info', type=str, default='',
                          'this format (including quotes): "A: Z; B: Y; C: X;" etc... where ABC(etc.) are field names '
                          '(e.g. cell line, # of cells, MS Instrument, etc) and ZYX(etc) are details describing the '
                          'field (e.g. JY cell line, 10e6, Orbitrap Fusion, etc.).')
-parser.add_argument('--max', type=int, required=False, help='Maximum peptide length to run through NetMHCpan.')
-parser.add_argument('--standalone', action='store_true', help='Run MVP in "standalone" mode.')
+parser.add_argument('--standalone', action='store_true', help='Run MVP in from a standalone installation (i.e. '
+                                                              'not installed from PIP). You don\'t usually need to '
+                                                              'invoke this as it is done automatically from the '
+                                                              'bash script included in the standalone MhcVizPipe '
+                                                              'distribution.')
 
 if __name__ == '__main__':
     netmhcpan_alleles = []
@@ -64,75 +88,59 @@ if __name__ == '__main__':
             print(f'ERROR: {a} is not a recognized allele by the chosen software.')
             raise SystemExit
 
-    file_names = args.files
-    peptide_data = {}
-    for file in args.files:
-        sample_name = Path(file).name
-        peptide_data[sample_name] = {}
-        with open(file, 'r') as f:
-            lines = f.readlines()
-            peptides = []
-            if args.delimiter:
-                if args.delimiter == 'comma':
-                    delimiter = ','
-                else:
-                    delimiter = '\t'
-                header_index = lines[0].strip().index(args.column_header)
-                for line in lines[1:]:
-                    peptides.append(line.strip().split(delimiter)[header_index])
-            else:
-                for line in lines:
-                    peptides.append(line.strip())
-        peptide_data[sample_name] = {'description': '', 'peptides': peptides}
+    sample_info = []
+    sample_peptides = {}
+    time = str(datetime.now()).replace(' ', '_')
+    analysis_location = str(Path(Parameters.TMP_DIR) / time)
 
-    samples = []
-    for sample_name in peptide_data.keys():
-        samples.append(
-            MhcPeptides(sample_name=sample_name,
-                        sample_description=peptide_data[sample_name]['description'],
-                        peptides=peptide_data[sample_name]['peptides'])
-        )
-    #time = str(datetime.now()).replace(' ', '_')
-    analysis_location = args.publish_directory
-
-    if args.mhc_class == 'I':
-        min_length = 8
+    if args.template:
+        files_alleles = load_template_file(args.template)
+        for file in files_alleles:
+            sample_name = sanitize_sample_name(Path(file['filepath']).name)
+            sample_info.append({'sample-name': sample_name,
+                                'sample-description': '',
+                                'sample-alleles': ', '.join(file['alleles'])})
+            sample_peptides[sample_name] = clean_peptides(load_peptide_file(file['filepath']))
     else:
-        min_length = 9
-
-    if args.max:
-        max_length = args.max
-    elif args.mhc_class == 'I':
-        max_length = 12
-    else:
-        max_length = 22
+        files = args.files
+        alleles = args.alleles
+        for file in files:
+            sample_name = sanitize_sample_name(Path(file).name)
+            sample_info.append({'sample-name': sample_name,
+                                'sample-description': '',
+                                'sample-alleles': ', '.join(alleles)})
+            sample_peptides[sample_name] = clean_peptides(load_peptide_file(file))
+    cl_tools = MhcToolHelper(
+        sample_info_datatable=sample_info,
+        mhc_class=args.mhc_class,
+        sample_peptides=sample_peptides,
+        tmp_directory=analysis_location,
+        min_length=8 if args.mhc_class == 'I' else 9,
+        max_length=12 if args.mhc_class == 'I' else 22
+    )
 
     exp_info = args.exp_info.replace('; ', '\n').replace(';', '\n')
 
-    cl_tools = MhcToolHelper(
-        samples=samples,
-        mhc_class=args.mhc_class,
-        alleles=args.alleles,
-        tmp_directory=analysis_location,
-        min_length=min_length,
-        max_length=max_length
-    )
-    cl_tools.make_binding_prediction_jobs()
-    cl_tools.run_jobs()
-    cl_tools.aggregate_netmhcpan_results()
-    cl_tools.clear_jobs()
-
+    cl_tools.make_binding_predictions()
     cl_tools.make_cluster_with_gibbscluster_jobs()
     cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
     cl_tools.order_gibbs_runs()
     cl_tools.run_jobs()
     cl_tools.find_best_files()
-    analysis = report.mhc_report(cl_tools, args.mhc_class, args.description, args.name, exp_info)
+    analysis = report.mhc_report(cl_tools,
+                                 args.mhc_class,
+                                 Parameters.THREADS,
+                                 args.description,
+                                 args.name,
+                                 exp_info)
     _ = analysis.make_report()
+    packaged_report = package_report(analysis_location)
+    report_location = Path(args.f_out).parent
     report = Path(analysis_location) / 'report.html'
     if args.f_out.endswith('.html'):
         f_out = args.f_out
     else:
         f_out = args.f_out + '.html'
-    Path(report).rename(f_out)
+    shutil.copy(report, f_out)
+    shutil.copy(packaged_report, str(report_location / 'MVP_report_components.zip'))
     print('Done!')

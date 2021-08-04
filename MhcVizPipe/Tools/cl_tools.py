@@ -4,7 +4,7 @@ import os
 from numpy import array_split
 import numpy as np
 from pathlib import Path
-from MhcVizPipe.Tools.unmodify_peptides import clean_peptides
+from MhcVizPipe.Tools.utils import clean_peptides
 from typing import List
 from multiprocessing import Pool
 from MhcVizPipe.Tools.jobs import Job, _run_multiple_processes
@@ -40,7 +40,7 @@ class MhcToolHelper:
         self.samples = list(sample_peptides.keys())
         self.sample_alleles = {}
 
-        from MhcVizPipe.defaults import Parameters
+        from MhcVizPipe.parameters import Parameters
         self.Parameters = Parameters()
         self.GIBBSCLUSTER = self.Parameters.GIBBSCLUSTER
         self.NETMHCPAN = self.Parameters.NETMHCPAN
