@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import base64
 import io
+import shutil
+
 import dash
 from dash.dependencies import Input, Output, State
 from dash.dash import no_update
@@ -24,6 +26,8 @@ from warnings import simplefilter, catch_warnings
 import traceback
 import zipfile
 from os import walk as os_walk
+from os.path import islink
+from os import unlink
 from subprocess import Popen
 from MhcVizPipe.parameters import TOOLS
 from os import chdir
@@ -1219,6 +1223,14 @@ def initialize() -> None:
     Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split()).communicate()
+
+    # check for unix links if using WSL in windows, if they are there replace with copies of targets
+    if 'Microsoft' in platform.release():
+        for tool in ["netMHCIIpan", "netMHCpan4.1"]:
+            path = str(Path(TOOLS) / tool / 'Linux_x86_64' / 'data')
+            if islink(path):
+                unlink(path)
+                shutil.copytree(str(Path(TOOLS) / tool / 'data'), path)
 
 
 if __name__ == '__main__':
