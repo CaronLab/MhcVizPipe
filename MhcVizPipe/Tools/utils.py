@@ -112,3 +112,9 @@ def package_report(analysis_location):
                 zipf.write(str(p), p.relative_to(analysis_location))
 
     return zip_out
+
+
+def check_alleles(allele_list, good_alleles):
+    for a in allele_list:
+        if a not in good_alleles:
+            raise ValueError(f'ERROR: {a} is not a recognized allele by the chosen software.')
