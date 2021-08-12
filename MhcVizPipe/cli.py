@@ -1,7 +1,7 @@
 import argparse
 from argparse import RawDescriptionHelpFormatter
 from MhcVizPipe.Tools.cl_tools import MhcToolHelper
-from MhcVizPipe.Tools.utils import sanitize_sample_name, \
+from MhcVizPipe.Tools.utils import sanitize_sample_name, check_alleles,\
     clean_peptides, load_template_file, load_peptide_file, package_report
 from MhcVizPipe.ReportTemplates import report
 from MhcVizPipe.parameters import Parameters, ROOT_DIR
@@ -29,9 +29,9 @@ parser = argparse.ArgumentParser(description="Welcome to the MhcVizPipe command 
                                              f"If it is the first time you have run MhcVizPipe, be sure to check "
                                              f"the configuration in the above file.")
 
-parser.add_argument('-f', '--files', type=str, nargs='+', required=True,
+parser.add_argument('-f', '--files', type=str, nargs='+',
                     help='One or more files (space separated) containing peptide lists to analyze.')
-parser.add_argument('-t', '--template', type=str, required=True,
+parser.add_argument('-t', '--template', type=str,
                     help='A tab-separated file containing file paths and alleles. Can be used to process peptide lists '
                          'with different alleles at the same time. The first column must be the file paths, and the '
                          'respective alleles can be put in the following columns, up to 6 per sample.')
@@ -39,7 +39,7 @@ parser.add_argument('-d', '--delimiter', type=str, required=False, choices=['com
                     help='Delimiter if the file is delimited (e.g. for .csv use "comma").')
 parser.add_argument('-H', '--column_header', type=str, required=False, help='The name of the column containing the peptide '
                                                                             'list, if it is a multi-column file.')
-parser.add_argument('-a', '--alleles', type=str, required=True, nargs='+',
+parser.add_argument('-a', '--alleles', type=str, nargs='+',
                     help='MHC alleles, spaces separated if more than one.')
 parser.add_argument('-c', '--mhc_class', type=str, choices=['I', 'II'], required=True, help='MHC class')
 parser.add_argument('-D', '--description', type=str, default='',
@@ -53,8 +53,6 @@ parser.add_argument('--f_out', type=str, required=False, default='report.html',
                     help='The filename you want for the report. Defaults to "report.html". A zip file containing '
                          'all the report components will be created in the same directory as the report (e.g. '
                          'figures, NetMHCpan and GibbsCluster results).')
-parser.add_argument('-v', '--version', type=str, required=False, default='4.1', choices=['4.0', '4.1'],
-                    help='Which version of NetMHCpan to use. For internal use during development.')
 parser.add_argument('-e', '--exp_info', type=str, default='',
                     help='Optional details to be added to the report (e.g. experimental conditions). Should be in '
                          'this format (including quotes): "A: Z; B: Y; C: X;" etc... where ABC(etc.) are field names '
@@ -70,8 +68,6 @@ if __name__ == '__main__':
     netmhcpan_alleles = []
     args = parser.parse_args()
     dir = getcwd()
-    if len(args.alleles) == 1:
-        args.alleles = args.alleles[0].split(' ')
     if args.mhc_class == 'I':
         with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
             for allele in f.readlines():
@@ -83,11 +79,6 @@ if __name__ == '__main__':
                 allele = allele.strip()
                 netmhcpan_alleles.append(allele)
 
-    for a in args.alleles:
-        if a not in netmhcpan_alleles:
-            print(f'ERROR: {a} is not a recognized allele by the chosen software.')
-            raise SystemExit
-
     sample_info = []
     sample_peptides = {}
     time = str(datetime.now()).replace(' ', '_')
@@ -96,14 +87,16 @@ if __name__ == '__main__':
     if args.template:
         files_alleles = load_template_file(args.template)
         for file in files_alleles:
-            sample_name = sanitize_sample_name(Path(file['filepath']).name)
+            check_alleles(file['alleles'], netmhcpan_alleles)
+            sample_name = sanitize_sample_name(Path(file['file']).name)
             sample_info.append({'sample-name': sample_name,
                                 'sample-description': '',
                                 'sample-alleles': ', '.join(file['alleles'])})
-            sample_peptides[sample_name] = clean_peptides(load_peptide_file(file['filepath']))
+            sample_peptides[sample_name] = clean_peptides(load_peptide_file(file['file']))
     else:
         files = args.files
         alleles = args.alleles
+        check_alleles(alleles, netmhcpan_alleles)
         for file in files:
             sample_name = sanitize_sample_name(Path(file).name)
             sample_info.append({'sample-name': sample_name,
@@ -120,13 +113,15 @@ if __name__ == '__main__':
     )
 
     exp_info = args.exp_info.replace('; ', '\n').replace(';', '\n')
-
+    print(f'Running NetMHC{args.mhc_class if args.mhc_class == "II" else ""}pan')
     cl_tools.make_binding_predictions()
+    print('Running GibbsCluster')
     cl_tools.make_cluster_with_gibbscluster_jobs()
     cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
     cl_tools.order_gibbs_runs()
     cl_tools.run_jobs()
     cl_tools.find_best_files()
+    print('Creating report')
     analysis = report.mhc_report(cl_tools,
                                  args.mhc_class,
                                  Parameters.THREADS,
@@ -134,6 +129,7 @@ if __name__ == '__main__':
                                  args.name,
                                  exp_info)
     _ = analysis.make_report()
+    print('Creating report archive')
     packaged_report = package_report(analysis_location)
     report_location = Path(args.f_out).parent
     report = Path(analysis_location) / 'report.html'
