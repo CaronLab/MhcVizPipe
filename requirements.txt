@@ -4,10 +4,10 @@ dash-bootstrap-components
 pandas
 numpy
 dominate
-upsetplot
 seaborn
 waitress
 plotly-logo
+upsetplotly
 kaleido
 johnnydep
 structlog

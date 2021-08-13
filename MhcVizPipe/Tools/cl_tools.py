@@ -34,6 +34,8 @@ class MhcToolHelper:
         #self.sample_info_datatable = pd.DataFrame(data=self.sample_info,
         #                                          columns=['sample-name', 'sample-description', 'sample-alleles'])
         self.original_peptides = sample_peptides
+        self.all_original_peptides = set()
+        self.all_original_peptides.update(*[set(p) for p in list(sample_peptides.values())])
         self.sample_peptides = {}
         for sample, peptides in sample_peptides.items():
             self.sample_peptides[sample] = [p for p in peptides if min_length <= len(p) <= max_length]

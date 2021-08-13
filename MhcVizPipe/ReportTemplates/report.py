@@ -6,7 +6,7 @@ import numpy as np
 from MhcVizPipe.Tools import plotly_venn
 import base64
 import pandas as pd
-from upsetplot import UpSet, from_contents
+from upsetplotly import UpSetPlotly
 import matplotlib.pyplot as plt
 from matplotlib.text import Text as plotText
 from pathlib import Path
@@ -210,8 +210,7 @@ class mhc_report:
             for allele in self.sample_alleles[sample]:
                 tablerow = tr()
                 if allele == self.sample_alleles[sample][0]:
-                    tablerow.add(td(p(sample, style='writing-mode: vertical-rl;'
-                                                    'font-weight: bold'),
+                    tablerow.add(td(p(sample, style='word-break: break-word'),
                                     rowspan=len(self.sample_alleles[sample]),
                                     style="vertical-align : middle;text-align:center;"
                                     )
@@ -275,7 +274,6 @@ class mhc_report:
         n_peps_fig.update_xaxes(title_text='Binding strength')
         n_peps_fig.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
         n_peps_fig.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
-        n_peps_fig.update_xaxes(fixedrange=True)
         n_peps_fig.write_image(str(self.fig_dir / 'binding_histogram.pdf'), engine="kaleido")
         card = div(div(b('Binding Affinities'), className='card-header'), className='card')
         card.add(div(raw(n_peps_fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body'))
@@ -445,65 +443,39 @@ class mhc_report:
     def gen_upset_plot(self, className=None):
         # total_peps = len([pep for s in self.results.samples for pep in s.peptides])
         total_peps = np.sum([len(self.results.sample_peptides[s]) for s in self.results.samples])
-        data = from_contents({s: set(self.results.sample_peptides[s]) for s in self.results.samples})
-        for intersection in data.index.unique():
-            if len(data.loc[intersection, :])/total_peps < 0.005:
-                data.drop(index=intersection, inplace=True)
-        data['peptide_length'] = np.vectorize(len)(data['id'])
-        n_sets = len(data.index.unique())
-        if n_sets <= 100:  # Plot horizontal
-            upset = UpSet(data,
-                          sort_by='cardinality',
-                          #sort_categories_by=None,
-                          show_counts=True,)
-                          #totals_plot_elements=4,
-                          #intersection_plot_elements=10)
-            upset.add_catplot(value='peptide_length', kind='boxen', color='gray')
-            plot = upset.plot()
-            plot['totals'].grid(False)
-            ylim = plot['intersections'].get_ylim()[1]
-            plot['intersections'].set_ylim((0, ylim * 1.1))
-            for c in plot['intersections'].get_children():
-                if isinstance(c, plotText):
-                    text = c.get_text()
-                    text = text.replace('\n', ' ')
-                    c.set_text(text)
-                    c.set_rotation('vertical')
-                    pos = c.get_position()
-                    pos = (pos[0], pos[1] + 0.02 * ylim)
-                    c.set_position(pos)
-        else:  # plot vertical
-            upset = UpSet(data, subset_size='count',
-                          orientation='vertical',
-                          sort_by='cardinality',
-                          sort_categories_by=None,
-                          show_counts=True)
-            upset.add_catplot(value='peptide_length', kind='boxen', color='gray')
-            plot = upset.plot()
-            lim = plot['intersections'].get_xlim()
-            plot['intersections'].set_xlim([0, lim[1] * 1.6])
-            plot['totals'].grid(False)
-            ylim = plot['totals'].get_ylim()[1]
-            for c in plot['totals'].get_children():
-                if isinstance(c, plotText):
-                    text = c.get_text()
-                    text = text.replace('\n', ' ')
-                    c.set_text(text)
-                    c.set_rotation('vertical')
-                    pos = c.get_position()
-                    pos = (pos[0], pos[1] + 0.1 * ylim)
-                    c.set_position(pos)
-            plt.draw()
-        upset_fig = f'{self.fig_dir / "upsetplot.svg"}'
-        plt.savefig(upset_fig, bbox_inches="tight")
-        encoded_upset_fig = base64.b64encode(open(upset_fig, 'rb').read()).decode()
-        card = div(className='card', style="height: 100%")
-        card.add(div([b('UpSet Plot'), p('Only intersections > 0.5% are displayed')], className='card-header'))
-        plot_body = div(img(src=f'data:image/svg+xml;base64,{encoded_upset_fig}',
-                            className='img-fluid',
-                            style=f'width: 100%; height: auto'),
-                        className='card-body')
+        data = [set(self.results.sample_peptides[s]) for s in self.results.samples]
+        sample_names = [str(s) for s in self.results.samples]
+        lengths = {p: len(p) for p in self.results.all_original_peptides}
+
+        fig = UpSetPlotly(samples=data, sample_names=sample_names)
+        fig.add_secondary_plot(data=lengths, label='Peptide<br>length', plot_type='box')
+
+        usp_plot = fig.plot(order_by='decreasing',
+                            intersection_limit='by_sample 0.01',
+                            show_fig=False,
+                            return_fig=True,
+                            color='#525252')
+        usp_plot.layout.margin = dict(l=0, r=0, t=40, b=0)
+        usp_plot.update_layout(font_color='#212529')
+
+        upset_fig = f'{self.fig_dir / "upsetplot.pdf"}'
+        usp_plot.write_image(upset_fig, engine='kaleido')
+        n = len(self.results.samples)
+        if n <= 5:
+            height = '450px'
+        else:
+            height = f'{500 + (n - 5) * 25}px'
+        card = div(className='card', style=f"height: 100%")
+        card.add(div([b('UpSet Plot '), '(only displaying intersections containing >= 1% of at least one sample)'],
+                     className='card-header'))
+
+        plot_body = div(wrap_plotly_fig(usp_plot, height=height), className='card-body')
         card.add(plot_body)
+        if not className:
+            if fig.n_plotted_intersections >= 6:
+                className = 'col-12'
+            else:
+                className = 'col-6'
         return div(card, className=className)
 
     def sequence_logos(self, className=None):
@@ -779,15 +751,17 @@ class mhc_report:
                   #'(can be changed in the MhcVizPipe settings).'
                   # commented out the above because we are unsure about having the cutoffs
                   , style="white-space: pre")
-                with div(className='row'):
-                    self.quick_quality_table(className='col-12')
-                with div(className='row', style='flex-direction: row-reverse'):
+                n = len(self.results.samples)
+                if n <= 5:
+                    height = '500px'
+                else:
+                    height = f'{500 + (n - 5) * 25}px'
+                with div(className='row', style='overflow: auto'):
+                    self.quick_quality_table(className='col')
                     if len(self.samples) > 1:
-                        up = self.gen_upset_plot()
-                        up['style'] = "margin-right: 15px; margin-left: 15px; margin-bottom: 15px"
-                        self.gen_length_histogram(className='col')
-                    else:
-                        self.gen_length_histogram(className='col-12')
+                        u = self.gen_upset_plot()
+                        #u['style'] = f'margin-bottom: 1em'
+                    self.gen_length_histogram(className='col-12')
                 hr()
                 h3("Annotation Results")
                 pan = 'NetMHCpan' if self.mhc_class == 'I' else 'NetMHCIIpan'
@@ -799,8 +773,12 @@ class mhc_report:
                   f'\u2022Percentages are calculated across rows (i.e. percentage of total peptides for a respective sample).',
                   style='white-space: pre')
                 with div(className='row'):
-                    self.gen_peptide_tables(className='col-6')
-                    self.gen_binding_histogram(className='col-6')
+                    if len(self.results.samples) <= 6:
+                        self.gen_peptide_tables(className='col-6')
+                        self.gen_binding_histogram(className='col-6')
+                    else:
+                        self.gen_peptide_tables(className='col-12')
+                        self.gen_binding_histogram(className='col-12')
                 hr()
                 with div(className='row'):
                     with div(className='col-12'):
