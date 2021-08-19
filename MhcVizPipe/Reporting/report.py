@@ -94,7 +94,7 @@ class mhc_report:
         self.metrics = {}
         self.calculate_metrics()
 
-    def calculate_metrics(self, write_file: True):
+    def calculate_metrics(self, write_file: bool = True):
         # get counts of binders and non-binders
         def get_highest_binding(predictions):
             if 'Strong' in predictions.values:
