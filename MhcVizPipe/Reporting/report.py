@@ -91,6 +91,56 @@ class mhc_report:
         if not self.fig_dir.exists():
             self.fig_dir.mkdir()
         (self.fig_dir / 'heatmaps_w_common_y_axis').mkdir()
+        self.metrics = {}
+
+    def calculate_metrics(self, write_file: True):
+        # get counts of binders and non-binders
+        def get_highest_binding(predictions):
+            if 'Strong' in predictions.values:
+                return 'Strong'
+            elif 'Weak' in predictions.values:
+                return 'Weak'
+            else:
+                return 'Non-binding'
+
+        min_len = self.results.min_length
+        max_len = self.results.max_length
+        self.metrics['acceptable_length_key'] = f'n_peptides_{min_len}-{max_len}_mers'
+
+        for sample in self.results.samples:
+            all_peps = list(set(self.results.original_peptides[sample]))  # all peptides
+            n_all_peps = len(all_peps)  # number of peptides in original list
+            lengths = np.vectorize(len)(all_peps)  # lengths of those peptides
+            n_with_acceptable_length = np.sum(
+                (lengths >= self.results.min_length) & (lengths <= self.results.max_length))
+
+            counts_df = self.preds.loc[self.preds['Sample'] == sample, :]
+            counts_df = counts_df.pivot(index='Peptide', columns='Allele', values='Binder')
+            bindings = counts_df.apply(get_highest_binding, axis=1).values
+            binders, counts = np.unique(bindings, return_counts=True)
+            binder_counts = {binder: count for binder, count in zip(list(binders), (list(counts)))}
+            n_binders = n_with_acceptable_length - binder_counts['Non-binding']
+            lf_score = round(n_with_acceptable_length / n_all_peps, 2)
+            bf_score = round(n_binders / n_with_acceptable_length, 2)
+            lf_color = f'rgba(255, 99, 71, {1 - lf_score})'
+            bf_color = f'rgba(255, 99, 71, {1 - bf_score})'
+
+            self.metrics[sample] = {}
+            self.metrics[sample]['n_peptides'] = n_all_peps
+            self.metrics[sample][self.metrics['acceptable_length_key']] = n_with_acceptable_length
+            self.metrics[sample]['lf_score'] = lf_score
+            self.metrics[sample]['bf_score'] = bf_score
+            self.metrics[sample]['lf_color'] = lf_color
+            self.metrics[sample]['bf_color'] = bf_color
+
+        if write_file:
+            with open(str(self.results.tmp_folder / 'sample_metrics.txt'), 'w') as f:
+                for sample in self.results.samples:
+                    f.write(f'{sample}\t')
+                    f.write(f"{self.metrics[sample]['n_peptides']}\t")
+                    f.write(f"{self.metrics[sample][f'n_peptides_{min_len}-{max_len}_mers']}\t")
+                    f.write(f"{self.metrics[sample]['lf_score']}\t")
+                    f.write(f"{self.metrics[sample]['bf_score']}\n")
 
     def lab_logo(self):
         lab_logo = base64.b64encode(
@@ -147,39 +197,14 @@ class mhc_report:
         )
         tablebody = tbody()
         for sample in self.results.samples:
-            all_peps = list(set(self.results.original_peptides[sample]))  # all peptides
-            n_all_peps = len(all_peps)  # number of peptides in original list
-            lengths = np.vectorize(len)(all_peps)  # lengths of those peptides
-            mean_length = round(np.mean(lengths), 2)  # mean length of all peptides, not using for now
-            n_with_acceptable_length = np.sum((lengths >= self.results.min_length) & (lengths <= self.results.max_length))
-
-            # get counts of binders and non-binders
-            def get_highest_binding(predictions):
-                if 'Strong' in predictions.values:
-                    return 'Strong'
-                elif 'Weak' in predictions.values:
-                    return 'Weak'
-                else:
-                    return 'Non-binding'
-            counts_df = self.preds.loc[self.preds['Sample'] == sample, :]
-            counts_df = counts_df.pivot(index='Peptide', columns='Allele', values='Binder')
-            bindings = counts_df.apply(get_highest_binding, axis=1).values
-            binders, counts = np.unique(bindings, return_counts=True)
-            binder_counts = {binder: count for binder, count in zip(list(binders), (list(counts)))}
-            n_binders = n_with_acceptable_length - binder_counts['Non-binding']
-            lf_score = round(n_with_acceptable_length / n_all_peps, 2)
-            bf_score = round(n_binders/n_with_acceptable_length, 2)
-            lf_color = f'rgba(255, 99, 71, {1-lf_score})'
-            bf_color = f'rgba(255, 99, 71, {1-bf_score})'
-
-            warning = 'background-color: #ff5c4f'
-
             tablerow = tr()
             tablerow.add(td(sample, style='word-break: break-word'))
-            tablerow.add(td(n_all_peps))
-            tablerow.add(td(n_with_acceptable_length))
-            tablerow.add(td(f'{lf_score}', style=f'background-color: {lf_color}'))
-            tablerow.add(td(f'{bf_score}', style=f'background-color: {bf_color}'))
+            tablerow.add(td(self.metrics[sample]['n_all_peps']))
+            tablerow.add(td(self.metrics[sample][self.metrics['acceptable_length_key']]))
+            tablerow.add(td(f'{self.metrics[sample]["lf_score"]}',
+                            style=f'background-color: {self.metrics[sample]["lf_color"]}'))
+            tablerow.add(td(f'{self.metrics[sample]["bf_score"]}',
+                            style=f'background-color: {self.metrics[sample]["bf_color"]}'))
             tablebody.add(tablerow)
 
         t.add(tablebody)
