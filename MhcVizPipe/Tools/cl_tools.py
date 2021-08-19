@@ -144,7 +144,7 @@ class MhcToolHelper:
         for sample in samples:
             peptides = list(self.binding_predictions.loc[self.binding_predictions['Sample'] == sample, 'Peptide'].unique())
             alleles = list(self.binding_predictions.loc[self.binding_predictions['Sample'] == sample, 'Allele'].unique())
-            with open(self.tmp_folder / f'{sample}_netMHC{"II" if self.mhc_class == "II" else ""}pan_predictions.tsv') as f:
+            with open(self.tmp_folder / f'{sample}_netMHC{"II" if self.mhc_class == "II" else ""}pan_predictions.tsv', 'w') as f:
                 keys = list(self.prediction_dict[peptides[0]][alleles[0]].keys())
                 header = ['Peptide'] + keys
                 f.write('\t'.join(header) + '\n')
