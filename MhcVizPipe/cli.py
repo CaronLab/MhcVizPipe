@@ -3,7 +3,7 @@ from argparse import RawDescriptionHelpFormatter
 from MhcVizPipe.Tools.cl_tools import MhcToolHelper
 from MhcVizPipe.Tools.utils import sanitize_sample_name, check_alleles,\
     clean_peptides, load_template_file, load_peptide_file, package_report
-from MhcVizPipe.ReportTemplates import report
+from MhcVizPipe.Reporting import report
 from MhcVizPipe.parameters import Parameters, ROOT_DIR
 from pathlib import Path
 from os import getcwd

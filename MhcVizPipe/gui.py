@@ -13,7 +13,7 @@ from dash.exceptions import PreventUpdate
 from random import uniform
 from datetime import datetime
 from pathlib import Path
-from MhcVizPipe.ReportTemplates import report
+from MhcVizPipe.Reporting import report
 from MhcVizPipe.Tools.cl_tools import MhcToolHelper
 import flask
 from sys import argv
