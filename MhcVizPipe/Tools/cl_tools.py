@@ -53,6 +53,7 @@ class MhcToolHelper:
             self.tmp_folder.mkdir(parents=True)
         self.predictions_made = False
         self.binding_predictions: pd.DataFrame = pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'])
+        self.prediction_dict: dict = None
         self.gibbs_directories = []
         self.supervised_gibbs_directories = {}
         self.gibbs_cluster_lengths = {}
@@ -117,6 +118,7 @@ class MhcToolHelper:
             all_predictions[allele] = {pep: {} for pep in peptides}
             for pep in peptides:
                 all_predictions[allele][pep] = predictions[pep][allele]
+        self.prediction_dict = all_predictions
 
         # add all predictions to the self.binding_predictions DataTable
         for sample in self.sample_info:
@@ -136,6 +138,21 @@ class MhcToolHelper:
                 pd.DataFrame(columns=['Sample', 'Peptide', 'Allele', 'Rank', 'Binder'], data=rows),
                 ignore_index=True
             )
+
+    def write_binding_predictions(self):
+        samples = self.binding_predictions['Sample'].unique()
+        for sample in samples:
+            peptides = list(self.binding_predictions.loc[self.binding_predictions['Sample'] == sample, 'Peptide'].unique())
+            alleles = list(self.binding_predictions.loc[self.binding_predictions['Sample'] == sample, 'Allele'].unique())
+            with open(self.tmp_folder / f'{sample}_netMHC{"II" if self.mhc_class == "II" else ""}pan_predictions.tsv') as f:
+                keys = list(self.prediction_dict[peptides[0]][alleles[0]].keys())
+                header = ['Peptide'] + keys
+                f.write('\t'.join(header) + '\n')
+                for allele in alleles:
+                    for peptide in peptides:
+                        keys = self.prediction_dict[peptide][allele].keys()
+                        to_write = [peptide] + [self.prediction_dict[peptide][allele][k] for k in keys()]
+                        f.write('\t'.join(to_write) + '\n')
 
     def make_cluster_with_gibbscluster_jobs(self):
         os.chdir(self.tmp_folder)

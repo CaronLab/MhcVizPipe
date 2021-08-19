@@ -115,6 +115,8 @@ if __name__ == '__main__':
     exp_info = args.exp_info.replace('; ', '\n').replace(';', '\n')
     print(f'Running NetMHC{args.mhc_class if args.mhc_class == "II" else ""}pan')
     cl_tools.make_binding_predictions()
+    print(f'Writing binding predictions')
+    cl_tools.write_binding_predictions()
     print('Running GibbsCluster')
     cl_tools.make_cluster_with_gibbscluster_jobs()
     cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()

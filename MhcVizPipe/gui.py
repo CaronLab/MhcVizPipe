@@ -996,6 +996,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
             max_length=max_length
         )
         cl_tools.make_binding_predictions()
+        cl_tools.write_binding_predictions()
         cl_tools.make_cluster_with_gibbscluster_jobs()
         cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
         cl_tools.order_gibbs_runs()
