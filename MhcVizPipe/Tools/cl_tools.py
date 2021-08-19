@@ -146,12 +146,12 @@ class MhcToolHelper:
             alleles = list(self.binding_predictions.loc[self.binding_predictions['Sample'] == sample, 'Allele'].unique())
             with open(self.tmp_folder / f'{sample}_netMHC{"II" if self.mhc_class == "II" else ""}pan_predictions.tsv', 'w') as f:
                 keys = list(self.prediction_dict[alleles[0]][peptides[0]].keys())
-                header = ['Peptide'] + keys
+                header = ['Allele', 'Peptide'] + keys
                 f.write('\t'.join(header) + '\n')
                 for allele in alleles:
                     for peptide in peptides:
                         keys = self.prediction_dict[allele][peptide].keys()
-                        to_write = [peptide] + [str(self.prediction_dict[allele][peptide][k]) for k in keys]
+                        to_write = [allele, peptide] + [str(self.prediction_dict[allele][peptide][k]) for k in keys]
                         f.write('\t'.join(to_write) + '\n')
 
     def make_cluster_with_gibbscluster_jobs(self):
