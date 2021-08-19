@@ -92,6 +92,7 @@ class mhc_report:
             self.fig_dir.mkdir()
         (self.fig_dir / 'heatmaps_w_common_y_axis').mkdir()
         self.metrics = {}
+        self.calculate_metrics()
 
     def calculate_metrics(self, write_file: True):
         # get counts of binders and non-binders
