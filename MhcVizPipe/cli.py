@@ -49,10 +49,6 @@ parser.add_argument('-n', '--name', type=str, default='',
                     help='Submitter name (optional).')
 parser.add_argument('-p', '--publish_directory', type=str, required=False, default=getcwd(),
                     help='The directory where you want the report published. It should be an absolute path.')
-parser.add_argument('--f_out', type=str, required=False, default='report.html',
-                    help='The filename you want for the report. Defaults to "report.html". A zip file containing '
-                         'all the report components will be created in the same directory as the report (e.g. '
-                         'figures, NetMHCpan and GibbsCluster results).')
 parser.add_argument('-e', '--exp_info', type=str, default='',
                     help='Optional details to be added to the report (e.g. experimental conditions). Should be in '
                          'this format (including quotes): "A: Z; B: Y; C: X;" etc... where ABC(etc.) are field names '
@@ -133,12 +129,8 @@ if __name__ == '__main__':
     _ = analysis.make_report()
     print('Creating report archive')
     packaged_report = package_report(analysis_location)
-    report_location = Path(args.f_out).parent
+    report_location = args.publish_directory
     report = Path(analysis_location) / 'report.html'
-    if args.f_out.endswith('.html'):
-        f_out = args.f_out
-    else:
-        f_out = args.f_out + '.html'
-    shutil.copy(report, f_out)
+    shutil.copy(report, str(report_location / 'report.html'))
     shutil.copy(packaged_report, str(report_location / 'MVP_report_components.zip'))
     print('Done!')
