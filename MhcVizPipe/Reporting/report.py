@@ -136,6 +136,7 @@ class mhc_report:
 
         if write_file:
             with open(str(self.results.tmp_folder / 'sample_metrics.txt'), 'w') as f:
+                f.write(f'sample\tn_peptides\tn_peptides_{min_len}-{max_len}_mers\tlength_score\tbinding_score\n')
                 for sample in self.results.samples:
                     f.write(f'{sample}\t')
                     f.write(f"{self.metrics[sample]['n_peptides']}\t")
@@ -200,7 +201,7 @@ class mhc_report:
         for sample in self.results.samples:
             tablerow = tr()
             tablerow.add(td(sample, style='word-break: break-word'))
-            tablerow.add(td(self.metrics[sample]['n_all_peps']))
+            tablerow.add(td(self.metrics[sample]['n_peptides']))
             tablerow.add(td(self.metrics[sample][self.metrics['acceptable_length_key']]))
             tablerow.add(td(f'{self.metrics[sample]["lf_score"]}',
                             style=f'background-color: {self.metrics[sample]["lf_color"]}'))
