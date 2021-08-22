@@ -64,6 +64,10 @@ if __name__ == '__main__':
     netmhcpan_alleles = []
     args = parser.parse_args()
     dir = getcwd()
+
+    print(f'File(s): {args.files if args.files else args.template}')
+    print(f'Output directory: {args.publish_directory}')
+
     if args.mhc_class == 'I':
         with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
             for allele in f.readlines():
@@ -130,7 +134,9 @@ if __name__ == '__main__':
     print('Creating report archive')
     packaged_report = package_report(analysis_location)
     report_location = Path(args.publish_directory)
+    if not report_location.exists():
+        report_location.mkdir()
     report = Path(analysis_location) / 'report.html'
     shutil.copy(report, str(report_location / 'report.html'))
     shutil.copy(packaged_report, str(report_location / 'MVP_report_components.zip'))
-    print('Done!')
+    print('Done!\n')
