@@ -137,10 +137,6 @@ if __name__ == '__main__':
     if not report_location.exists():
         report_location.mkdir()
     report = Path(analysis_location) / 'report.html'
-    figures = Path(analysis_location) / 'MVP_figures.zip'
-    analysis = Path(analysis_location) / 'MVP_analysis.zip'
-
     shutil.copy(report, str(report_location / 'report.html'))
-    shutil.copy(analysis, str(report_location / 'MVP_analysis.zip'))
-    shutil.copy(figures, str(report_location / 'MVP_figures.zip'))
+    shutil.copy(packaged_report, str(report_location / 'MVP_report_components.zip'))
     print('Done!\n')

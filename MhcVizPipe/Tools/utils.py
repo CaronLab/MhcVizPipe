@@ -97,9 +97,10 @@ def load_template_file(filepath: Union[str, PathLike]):
 def package_report(analysis_location):
     zip_out = f'{analysis_location}/MVP_report_components.zip'
     with zipfile.ZipFile(zip_out, 'w', zipfile.ZIP_STORED) as zipf:
-        netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.csv')]
+        netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.tsv')]
         for f in netmhcpan_files:
             zipf.write(f, arcname=Path(f).name)
+        zipf.write(str(Path(analysis_location) / 'sample_metrics.txt'), arcname='sample_metrics.txt')
         for root, dirs, files in os_walk(f'{analysis_location}/gibbs'):
             for file in files:
                 p = Path(root, file)
