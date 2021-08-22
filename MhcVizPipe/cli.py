@@ -129,7 +129,7 @@ if __name__ == '__main__':
     _ = analysis.make_report()
     print('Creating report archive')
     packaged_report = package_report(analysis_location)
-    report_location = args.publish_directory
+    report_location = Path(args.publish_directory)
     report = Path(analysis_location) / 'report.html'
     shutil.copy(report, str(report_location / 'report.html'))
     shutil.copy(packaged_report, str(report_location / 'MVP_report_components.zip'))
