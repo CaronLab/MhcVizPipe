@@ -1007,9 +1007,10 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
         download_href = f'/download/{urlquote(time+"/"+"report.html")}'
         # put everything in an archive
         with zipfile.ZipFile(f'{analysis_location}/MVP_analysis.zip', 'w', zipfile.ZIP_STORED) as zipf:
-            netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.csv')]
+            netmhcpan_files = [str(x) for x in Path(analysis_location).glob('*_predictions.tsv')]
             for f in netmhcpan_files:
                 zipf.write(f, arcname=Path(f).name)
+            zipf.write(str(Path(analysis_location)/'sample_metrics.txt'), arcname='sample_metrics.txt')
             for root, dirs, files in os_walk(f'{analysis_location}/gibbs'):
                 for file in files:
                     p = Path(root, file)
