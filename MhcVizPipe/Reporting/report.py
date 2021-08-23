@@ -513,82 +513,104 @@ class mhc_report:
 
         # get the peptides in each group
         for sample in self.results.samples:
-            pep_groups_file = self.results.gibbs_files[sample]['unsupervised']['pep_groups_file']
-            if not Path(pep_groups_file).exists():
-                raise FileNotFoundError(f'The GibbsCluster output file {pep_groups_file} does not exist.')
-            with open(pep_groups_file, 'r') as f:
-                pep_lines = f.readlines()[1:]
-            n_motifs = self.results.gibbs_files[sample]['unsupervised']['n_groups']
-            gibbs_peps[sample] = {str(x): [] for x in range(1, int(n_motifs)+1)}  # <---- there is a problem here because gibbcluster can find weird groups (like 2of2 but no 1of2) so we need to account for this somehow
+            if self.results.gibbs_files[sample]['unsupervised'] is not None:
+                pep_groups_file = self.results.gibbs_files[sample]['unsupervised']['pep_groups_file']
+                if not Path(pep_groups_file).exists():
+                    raise FileNotFoundError(f'The GibbsCluster output file {pep_groups_file} does not exist.')
+                with open(pep_groups_file, 'r') as f:
+                    pep_lines = f.readlines()[1:]
+                n_motifs = self.results.gibbs_files[sample]['unsupervised']['n_groups']
+                gibbs_peps[sample] = {str(x): [] for x in range(1, int(n_motifs)+1)}  # <---- there is a problem here because gibbcluster can find weird groups (like 2of2 but no 1of2) so we need to account for this somehow
 
-            for line in pep_lines:
-                line = [x for x in line.split(' ') if x != '']
-                group = str(int(line[1]) + 1)
-                pep = line[3]
-                gibbs_peps[sample][group].append(pep)  # will contain the peptides belonging to each group
+                for line in pep_lines:
+                    line = [x for x in line.split(' ') if x != '']
+                    group = str(int(line[1]) + 1)
+                    pep = line[3]
+                    gibbs_peps[sample][group].append(pep)  # will contain the peptides belonging to each group
 
         sample_logos = {}
         # make logos asynchronously
         with concurrent.futures.ProcessPoolExecutor(max_workers=self.cpus) as executor:
             for sample in self.results.samples:
-                cores = self.results.gibbs_files[sample]['unsupervised']['cores']
-                if not isinstance(cores, list):
-                    cores = [cores]
-                sample_logos[sample] = [executor.submit(make_logo, core) for core in cores]
+                if self.results.gibbs_files[sample]['unsupervised'] is not None:
+                    cores = self.results.gibbs_files[sample]['unsupervised']['cores']
+                    if not isinstance(cores, list):
+                        cores = [cores]
+                    sample_logos[sample] = [executor.submit(make_logo, core) for core in cores]
+
         for sample in self.results.samples:
-            sample_logos[sample] = [x.result() for x in sample_logos[sample]]
+            if sample in sample_logos.keys():
+                sample_logos[sample] = [x.result() for x in sample_logos[sample]]
 
         for sample in self.results.samples:
             motifs_row = div(className='row')
-            cores = self.results.gibbs_files[sample]['unsupervised']['cores']
+            total_n_peptides = 0
+            n_outliers = 0
+            if self.results.gibbs_files[sample]['unsupervised'] is not None:
+                cores = self.results.gibbs_files[sample]['unsupervised']['cores']
 
-            logos = sample_logos[sample]
+                logos = sample_logos[sample]
 
-            pep_groups = []
-            for x in range(len(cores)):
-                pep_groups.append(cores[x].name.replace('gibbs.', '')[0])
-            p_df: pd.DataFrame = self.pep_binding_dict[sample]
-            width = 160 + 50*len(self.sample_alleles[sample])
-            motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), width=f'{width}px', height='360px'))
-            logos_for_row = div(className="row")
-            motifs_row.add(div(logos_for_row, className="col"))
-            for i in range(len(logos)):
-                logos[i][0].write_image(str(logo_dir / f'{sample}_{i}.pdf'), engine="kaleido")
-                g_peps = set(gibbs_peps[sample][pep_groups[i]])  # the set of peptides found in the group
-                strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
-                                                len(g_peps)) for allele in self.sample_alleles[sample]}
-                top_binder = np.max(list(strong_binders.values()))
+                pep_groups = []
+                for x in range(len(cores)):
+                    pep_groups.append(cores[x].name.replace('gibbs.', '')[0])
+                p_df: pd.DataFrame = self.pep_binding_dict[sample]
+                width = 160 + 50*len(self.sample_alleles[sample])
+                motifs_row.add(wrap_plotly_fig(self.sample_heatmap(sample), width=f'{width}px', height='360px'))
+                logos_for_row = div(className="row")
+                motifs_row.add(div(logos_for_row, className="col"))
+                for i in range(len(logos)):
+                    logos[i][0].write_image(str(logo_dir / f'{sample}_{i}.pdf'), engine="kaleido")
+                    g_peps = set(gibbs_peps[sample][pep_groups[i]])  # the set of peptides found in the group
+                    strong_binders = {allele: round(len(g_peps & set(p_df[p_df[allele] == "Strong"].index)) * 100 /
+                                                    len(g_peps)) for allele in self.sample_alleles[sample]}
+                    top_binder = np.max(list(strong_binders.values()))
 
-                composition = []
-                for key in list(strong_binders.keys()):
-                    text = f'{key}: {strong_binders[key]}%, '
-                    if key == list(strong_binders.keys())[-1]:
-                        text = text[:-2]
-                    style_str = "display: inline-block; white-space: pre; margin: 0"
-                    if (strong_binders[key] == top_binder) & (strong_binders[key] != 0):
-                        composition.append(b(text, style=style_str))
-                    else:
-                        composition.append(p(text, style=style_str))
+                    composition = []
+                    for key in list(strong_binders.keys()):
+                        text = f'{key}: {strong_binders[key]}%, '
+                        if key == list(strong_binders.keys())[-1]:
+                            text = text[:-2]
+                        style_str = "display: inline-block; white-space: pre; margin: 0"
+                        if (strong_binders[key] == top_binder) & (strong_binders[key] != 0):
+                            composition.append(b(text, style=style_str))
+                        else:
+                            composition.append(p(text, style=style_str))
 
-                logos_for_row.add(
+                    logos_for_row.add(
+                        div(
+                            [
+                                wrap_plotly_fig(logos[i][0], height="300px", width="100%"),
+                                p(f'Peptides in group: {len(g_peps)}\n',
+                                  style='text-align: center; white-space: pre; margin: 0'),
+                                div([*composition], style="width: 100%; text-align: center")
+                            ],
+                            className='col',
+                            style=f'max-width: 400px;'
+                                  f'min-width: 260px'
+                                  f'height: 100%;'
+                                  f'display: block;'
+                                  f'margin-right: auto;'
+                                  f'font-size: 11pt'
+                        ),
+                    )
+                total_n_peptides = len(p_df)
+                n_outliers = self.results.gibbs_files[sample]['unsupervised']['n_outliers']
+            else:
+                motifs_row.add(
                     div(
                         [
-                            wrap_plotly_fig(logos[i][0], height="300px", width="100%"),
-                            p(f'Peptides in group: {len(g_peps)}\n',
-                              style='text-align: center; white-space: pre; margin: 0'),
-                            div([*composition], style="width: 100%; text-align: center")
+                            p('Too few peptides to reliably cluster')
                         ],
                         className='col',
                         style=f'max-width: 400px;'
                               f'min-width: 260px'
-                              f'height: 100%;'
                               f'display: block;'
                               f'margin-right: auto;'
-                              f'font-size: 11pt'
-                    ),
+                              f'font-size: 11pt;'
+                              f'text-align: center'
+                    )
                 )
-            total_n_peptides = len(p_df)
-            n_outliers = self.results.gibbs_files[sample]['unsupervised']['n_outliers']
             motifs.add(
                 div(
                     [
@@ -664,7 +686,7 @@ class mhc_report:
                         div(
                             [
                                 b(f'{allele}'),
-                                p('Too few peptides to cluster')
+                                p('Too few peptides to reliably cluster')
                             ],
                             className='col',
                             style=f'max-width: 400px;'

@@ -159,6 +159,9 @@ class MhcToolHelper:
         for sample in self.samples:
             fname = Path(self.tmp_folder, f'{sample}_forgibbs.csv')
             peps = np.array(clean_peptides(self.sample_peptides[sample]))
+            if len(peps) < 20:
+                self.not_enough_peptides.append(sample)
+                continue
             lengths = np.vectorize(len)(peps)
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
             peps.tofile(str(fname), '\n', '%s')
@@ -226,6 +229,9 @@ class MhcToolHelper:
             self.gibbs_files[sample] = {}
             for run in ['unannotated', 'unsupervised']:
                 sample_dirs = list(Path(self.tmp_folder/'gibbs'/sample/run).glob('*'))
+                if len(sample_dirs) == 0: # no gibbscluster runs happened, probably because there weren't enough peptides
+                    self.gibbs_files[sample][run] = None
+                    continue
                 high_score = 0
                 best_grouping = ''
                 best_n_motifs = 0
