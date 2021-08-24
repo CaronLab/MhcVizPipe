@@ -122,7 +122,7 @@ if __name__ == '__main__':
     cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
     cl_tools.order_gibbs_runs()
     cl_tools.run_jobs()
-    cl_tools.find_best_files()
+    cl_tools.find_gibbs_files()
     print('Creating report')
     analysis = report.mhc_report(cl_tools,
                                  args.mhc_class,

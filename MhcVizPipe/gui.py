@@ -1001,7 +1001,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
         cl_tools.make_cluster_with_gibbscluster_by_allele_jobs()
         cl_tools.order_gibbs_runs()
         cl_tools.run_jobs()
-        cl_tools.find_best_files()
+        cl_tools.find_gibbs_files()
         analysis = report.mhc_report(cl_tools, mhc_class, Parameters.THREADS, description, submitter_name, exp_info)
         _ = analysis.make_report()
         download_href = f'/download/{urlquote(time+"/"+"report.html")}'

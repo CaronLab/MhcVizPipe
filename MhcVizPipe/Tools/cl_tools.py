@@ -166,19 +166,17 @@ class MhcToolHelper:
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
             peps.tofile(str(fname), '\n', '%s')
             n_groups = len(self.sample_alleles[sample])
-            n_groups = n_groups if n_groups >= 5 else 5
-            for groups in range(1, n_groups+1):
-                if self.mhc_class == 'I':
-                    command = f'{self.GIBBSCLUSTER} -f {fname} -P {groups}groups ' \
-                              f'-g {groups} -k 1 -T -j 2 -C -D 4 -I 1 -G'.split(' ')
-                else:
-                    command = f'{self.GIBBSCLUSTER} -f {fname} -P {groups}groups ' \
-                              f'-g {groups} -k 1 -T -j 2 -G'.split(' ')
+            if self.mhc_class == 'I':
+                command = f'{self.GIBBSCLUSTER} -f {fname} ' \
+                          f'-g {n_groups} -k 1 -T -j 2 -C -D 4 -I 1 -G'.split(' ')
+            else:
+                command = f'{self.GIBBSCLUSTER} -f {fname} ' \
+                          f'-g {n_groups} -k 1 -T -j 2 -G'.split(' ')
 
-                job = Job(command=command,
-                          working_directory=self.tmp_folder/'gibbs'/sample/'unsupervised',
-                          id=f'gibbscluster_{groups}groups')
-                self.jobs.append(job)
+            job = Job(command=command,
+                      working_directory=self.tmp_folder/'gibbs'/sample/'unsupervised',
+                      id=f'gibbscluster_{n_groups}groups')
+            self.jobs.append(job)
 
     def make_cluster_with_gibbscluster_by_allele_jobs(self):
         os.chdir(self.tmp_folder)
@@ -206,58 +204,46 @@ class MhcToolHelper:
                     peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
 
                     peps.tofile(str(fname), '\n', '%s')
-                    n_groups = 5 if allele == 'unannotated' else 1
-                    for g in range(1, n_groups+1):
-                        if self.mhc_class == 'I':
-                            if 'kb' in allele.lower():
-                                length = 8
-                            else:
-                                length = 9
-                            command = f'{self.GIBBSCLUSTER} -f {fname} -P {g}groups ' \
-                                      f'-l {str(length)} -g {g} -k 1 -T -j 2 -C -D 4 -I 1 -G'.split(' ')
+                    n_groups = 1
+                    if self.mhc_class == 'I':
+                        if 'kb' in allele.lower():
+                            length = 8
                         else:
-                            command = f'{self.GIBBSCLUSTER} -f {fname} -P {g}groups ' \
-                                      f'-g {g} -k 1 -T -j 2 -G'.split(' ')
+                            length = 9
+                        command = f'{self.GIBBSCLUSTER} -f {fname} ' \
+                                  f'-l {str(length)} -g {n_groups} -k 1 -T -j 2 -C -D 4 -I 1 -G'.split(' ')
+                    else:
+                        command = f'{self.GIBBSCLUSTER} -f {fname} ' \
+                                  f'-g {n_groups} -k 1 -T -j 2 -G'.split(' ')
 
-                        job = Job(command=command,
-                                  working_directory=self.tmp_folder/'gibbs'/sample/allele,
-                                  id=f'gibbscluster_{g}groups')
-                        self.jobs.append(job)
+                    job = Job(command=command,
+                              working_directory=self.tmp_folder/'gibbs'/sample/allele,
+                              id=f'gibbscluster_{n_groups}groups')
+                    self.jobs.append(job)
 
-    def find_best_files(self):
+    def find_gibbs_files(self):
         for sample in self.samples:
             self.gibbs_files[sample] = {}
             for run in ['unannotated', 'unsupervised']:
-                sample_dirs = list(Path(self.tmp_folder/'gibbs'/sample/run).glob('*'))
-                if len(sample_dirs) == 0: # no gibbscluster runs happened, probably because there weren't enough peptides
+                if run == 'unsupervised':
+                    n_groups = len(self.sample_alleles[sample])
+                else:
+                    n_groups = 1
+
+                gibbs_dir = list(Path(self.tmp_folder/'gibbs'/sample/run).glob('*'))
+                if len(gibbs_dir) == 0:  # no gibbscluster runs happened, probably because there weren't enough peptides
                     self.gibbs_files[sample][run] = None
                     continue
-                high_score = 0
-                best_grouping = ''
-                best_n_motifs = 0
-                best_grouping_dir = ''
-                for grouping in sample_dirs:
-                    with open(grouping/'images'/'gibbs.KLDvsClusters.tab', 'r') as f:
-                        klds = np.array(f.readlines()[1].strip().split()[1:], dtype=float)
-                        score = np.sum(klds)
-                        n_motifs = np.sum(klds != 0)
-                    if score > high_score:
-                        best_grouping = grouping.stem[0]
-                        best_grouping_dir = Path(grouping)
-                        high_score = score
-                        best_n_motifs = n_motifs
-                if best_grouping == '':
-                    self.gibbs_files[sample][run] = None
-                    continue
+                assert len(gibbs_dir) == 1
+                gibbs_dir = gibbs_dir[0]
                 self.gibbs_files[sample][run] = {}
-                self.gibbs_files[sample][run]['n_groups'] = best_grouping
-                self.gibbs_files[sample][run]['directory'] = best_grouping_dir
-                self.gibbs_files[sample][run]['n_motifs'] = best_n_motifs
-                self.gibbs_files[sample][run]['cores'] = [x for x in
-                                                                      list(Path(best_grouping_dir / 'cores').glob('*'))
-                                                                      if 'of' in x.name]
-                self.gibbs_files[sample][run]['pep_groups_file'] = best_grouping_dir/'res'/f'gibbs.{best_grouping}g.ds.out'
-                with open(best_grouping_dir/'res'/f'gibbs.{best_grouping}g.out', 'r') as f:
+                self.gibbs_files[sample][run]['n_groups'] = str(n_groups)
+                self.gibbs_files[sample][run]['directory'] = gibbs_dir
+                self.gibbs_files[sample][run]['n_motifs'] = n_groups
+                self.gibbs_files[sample][run]['cores'] = [x for x in list(Path(gibbs_dir / 'cores').glob('*'))
+                                                          if 'of' in x.name]
+                self.gibbs_files[sample][run]['pep_groups_file'] = gibbs_dir/'res'/f'gibbs.{n_groups}g.ds.out'
+                with open(gibbs_dir/'res'/f'gibbs.{n_groups}g.out', 'r') as f:
                     contents = f.read()
                     self.gibbs_files[sample][run]['n_outliers'] = \
                         re.findall('# Trash cluster: removed ([0-9]*) outliers', contents)[0]

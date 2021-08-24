@@ -700,6 +700,7 @@ class mhc_report:
             # now the unannotated peptides
             if self.results.gibbs_files[sample]['unannotated'] is not None:
                 logos = self.results.gibbs_files[sample]['unannotated']['cores']
+                assert len(logos) == 1
                 pep_groups = []
                 for logo in logos:
                     pep_groups.append(logo.name.replace('gibbs.', '')[0])
@@ -708,7 +709,7 @@ class mhc_report:
                     motifs_row.add(
                         div(
                             [
-                                b(f'Non-binders group {pep_groups[x]}'),
+                                b(f'Non-binders'),
                                 wrap_plotly_fig(sample_logos[sample]['unannotated'][x][0], height="300px", width="100%"),
                                 p(f'Peptides: {len(gibbs_peps[f"unannotated_{sample}"][pep_groups[x]])}\n'),
                             ],
