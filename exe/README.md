@@ -1,4 +1,4 @@
 Source code and scripts for starting MhcVizPipe. Source code creates executable files for Linux and MacOS.
 
-The executable and script do basically the same thing. They check the directory structure to make sure the correct 
-files are there and that they can be executed by the operating system, then MhcVizPipe is started using a Python call.
+The executable checks that the MhcVizPipe.sh script is executable. On MacOS it also checks that the quarantine attribute 
+is removed if present. It then runs the script in a new window.
