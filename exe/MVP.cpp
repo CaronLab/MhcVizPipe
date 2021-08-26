@@ -82,6 +82,10 @@ int main()
                 return 1;
             }
         }
+        else{
+            // we are hopefully in Windows
+            term = "start powershell -NoExit -Command "; // I think this will work, but we might need to explicitly invoke "wsl" as part of the command
+        }
     }
     // check that the executable is probably in the correct directory
     if (! boost::algorithm::ends_with(dir, "MhcVizPipe")){
