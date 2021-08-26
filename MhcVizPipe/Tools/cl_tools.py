@@ -165,8 +165,7 @@ class MhcToolHelper:
             lengths = np.vectorize(len)(peps)
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
             peps.tofile(str(fname), '\n', '%s')
-            n_groups = len(self.sample_alleles[sample])
-            n_groups = n_groups if n_groups >= 5 else 5
+            n_groups = 6  # search for up to 6 motifs
             for groups in range(1, n_groups+1):
                 if self.mhc_class == 'I':
                     command = f'{self.GIBBSCLUSTER} -f {fname} -P {groups}groups ' \
@@ -206,7 +205,7 @@ class MhcToolHelper:
                     peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
 
                     peps.tofile(str(fname), '\n', '%s')
-                    n_groups = 5 if allele == 'unannotated' else 1
+                    n_groups = 2 if allele == 'unannotated' else 1
                     for g in range(1, n_groups+1):
                         if self.mhc_class == 'I':
                             if 'kb' in allele.lower():
