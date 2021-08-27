@@ -1226,8 +1226,9 @@ def initialize() -> None:
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
     Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split()).communicate()
 
-    # check for unix links if using WSL in windows, if they are there replace with copies of targets
-    if 'Microsoft' in platform.release():
+    # check for links if using WSL in windows, if they are there replace with copies of targets.
+    # This has sometimes been an issue for me when running in Windows. Not always, so I'm not sure what the secret is...
+    if 'microsoft' in platform.release().lower():
         for tool in ["netMHCIIpan", "netMHCpan4.1"]:
             path = str(Path(TOOLS) / tool / 'Linux_x86_64' / 'data')
             if islink(path):
