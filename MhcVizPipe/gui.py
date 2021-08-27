@@ -1238,7 +1238,7 @@ def initialize() -> None:
 if __name__ == '__main__':
     structlog.configure(logger_factory=structlog.stdlib.LoggerFactory())
     import platform
-    windows = 'Microsoft' in platform.release()
+    windows = 'microsoft' in platform.release().lower()
     welcome = f'''
     ========================================
     MhcVizPipe v{__version__}
