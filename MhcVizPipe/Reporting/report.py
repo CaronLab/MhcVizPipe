@@ -104,6 +104,20 @@ class mhc_report:
             else:
                 return 'Non-binding'
 
+        # mix two colors, input must be tuples representing RGB colors
+        # adapted from here: https://stackoverflow.com/questions/25668828/how-to-create-colour-gradient-in-python
+        def color_fader(c1, c2, mix=0):  # fade (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
+            c1 = np.asarray(c1)
+            c2 = np.asarray(c2)
+            mixed = (1 - mix) * c1 + mix * c2
+            return f'rgb{tuple(mixed)}'
+
+        good_color = (100, 246, 52)
+        bad_color = (255, 35, 75)
+
+        def score_color(score):
+            return color_fader(bad_color, good_color, score)
+
         min_len = self.results.min_length
         max_len = self.results.max_length
         self.metrics['acceptable_length_key'] = f'n_peptides_{min_len}-{max_len}_mers'
@@ -123,8 +137,8 @@ class mhc_report:
             n_binders = n_with_acceptable_length - binder_counts['Non-binding']
             lf_score = round(n_with_acceptable_length / n_all_peps, 2)
             bf_score = round(n_binders / n_with_acceptable_length, 2)
-            lf_color = f'rgba(255, 99, 71, {1 - lf_score})'
-            bf_color = f'rgba(255, 99, 71, {1 - bf_score})'
+            lf_color = score_color(lf_score)
+            bf_color = score_color(bf_score)
 
             self.metrics[sample] = {}
             self.metrics[sample]['n_peptides'] = n_all_peps
