@@ -178,9 +178,6 @@ class mhc_report:
         return info_div
 
     def quick_quality_table(self, className=None):
-        len_cutoff = self.parameters.LENGTH_CUTOFF
-        lf_cutoff = 0  # self.parameters.LF_CUTOFF Set these to 0 for now. I'll leave the code inplace in case we wish to revisit the cutoffs
-        bf_cutoff = 0  # self.parameters.BF_CUTOFF
         t = table(className=f'table table-hover table-bordered',
                   style="text-align: center",
                   id='quality-table')
@@ -795,10 +792,6 @@ class mhc_report:
                   f"fraction of peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
                   f"\u2022BF Score: fraction of peptides between {self.results.min_length} and "
                   f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
-                  #f'\u2022Cells are flagged red if average length is >= {self.parameters.LENGTH_CUTOFF}, '
-                  #f'LF Score <= {self.parameters.LF_CUTOFF} or BF Score <= {self.parameters.BF_CUTOFF} '
-                  #'(can be changed in the MhcVizPipe settings).'
-                  # commented out the above because we are unsure about having the cutoffs
                   , style="white-space: pre")
                 n = len(self.results.samples)
                 if n <= 5:
