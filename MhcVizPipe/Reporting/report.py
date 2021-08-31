@@ -7,8 +7,6 @@ from MhcVizPipe.Tools import plotly_venn
 import base64
 import pandas as pd
 from upsetplotly import UpSetPlotly
-import matplotlib.pyplot as plt
-from matplotlib.text import Text as plotText
 from pathlib import Path
 from dominate.util import raw
 from dominate.tags import *
