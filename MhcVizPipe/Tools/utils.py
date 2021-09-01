@@ -119,3 +119,20 @@ def check_alleles(allele_list, good_alleles):
     for a in allele_list:
         if a not in good_alleles:
             raise ValueError(f'ERROR: {a} is not a recognized allele by the chosen software.')
+
+
+def convert_win_2_wsl_path(path: Union[str, Path]):
+    """
+    Convert a windows path to the respective Windows Subsystem for Linux path.
+
+    :param path: The Windows path.
+    :return: The WSL path as a string.
+    """
+    parts = Path(path).parts
+    wsl_path = "/mnt/"
+    wsl_path += parts[0][0].lower() + "/"
+    if len(parts) > 1:
+        wsl_path += '/'.join(parts[1:])
+    return wsl_path
+
+
