@@ -473,16 +473,18 @@ class mhc_report:
         sample_names = [str(s) for s in self.results.samples]
         lengths = {p: len(p) for p in self.results.all_original_peptides}
 
-        fig = UpSetPlotly(samples=data, sample_names=sample_names)
-        fig.add_secondary_plot(data=lengths, label='Peptide<br>length', plot_type='box')
+        usp = UpSetPlotly(samples=data, sample_names=sample_names)
+        usp.add_secondary_plot(data=lengths, label='Peptide<br>length', plot_type='box')
 
-        usp_plot = fig.plot(order_by='decreasing',
+        usp_plot = usp.plot(order_by='decreasing',
                             intersection_limit='by_sample 0.01',
                             show_fig=False,
                             return_fig=True,
-                            color='#525252')
+                            color='#686868')
         usp_plot.layout.margin = dict(l=0, r=0, t=40, b=0)
         usp_plot.update_layout(font_color='#212529')
+        usp_plot.update_xaxes(titlefont={'size': 16}, tickfont={'size': 14})
+        usp_plot.update_yaxes(titlefont={'size': 16}, tickfont={'size': 14})
 
         upset_fig = f'{self.fig_dir / "upsetplot.pdf"}'
         usp_plot.write_image(upset_fig, engine='kaleido')
@@ -498,7 +500,7 @@ class mhc_report:
         plot_body = div(wrap_plotly_fig(usp_plot, height=height), className='card-body')
         card.add(plot_body)
         if not className:
-            if fig.n_plotted_intersections >= 6:
+            if usp.n_plotted_intersections >= 6:
                 className = 'col-12'
             else:
                 className = 'col-6'
