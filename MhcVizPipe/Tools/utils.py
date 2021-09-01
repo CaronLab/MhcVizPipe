@@ -40,9 +40,9 @@ def clean_peptides(peptide_list, verbose=False):
 
 
 def sanitize_sample_name(sample_name: str):
-    for bad_character in [' ', ':', '/', '\\', '$', '@', '*', '(', ')', '{', '}', '[', ']']:
+    for bad_character in [' ', ':', ';', '/', '\\', '$', '@', '*', '!', '^', '(', ')', '{', '}', '[', ']']:
         sample_name = sample_name.replace(bad_character, '_')
-    sample_name = sample_name.replace('&', 'AND')
+    sample_name = sample_name.replace('&', 'AND').replace('%', 'percent')
     return sample_name
 
 
