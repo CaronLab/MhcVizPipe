@@ -1220,20 +1220,16 @@ def initialize() -> None:
     for tool in tools:
         download_data_file(tool)
 
-    # make sure all the scripts are executable
-    Popen(f'chmod +x {str(Path(TOOLS) / ".." / "MhcVizPipe.sh")}'.split()).communicate()
-    Popen(f'chmod +x {str(Path(TOOLS) / "gibbscluster")}'.split()).communicate()
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCIIpan")}'.split()).communicate()
-    Popen(f'chmod +x {str(Path(TOOLS) / "netMHCpan4.1")}'.split()).communicate()
-
     # check for links if using WSL in windows, if they are there replace with copies of targets.
     # This has sometimes been an issue for me when running in Windows. Not always, so I'm not sure what the secret is...
-    if 'microsoft' in platform.release().lower():
-        for tool in ["netMHCIIpan", "netMHCpan4.1"]:
+    '''  I'm commenting this out because it doesn't seem to matter, but I will leave it here.
+    if platform.system().lower() == 'windows':
+        for tool in ["netMHCIIpan-4.0", "netMHCpan-4.1"]:
             path = str(Path(TOOLS) / tool / 'Linux_x86_64' / 'data')
-            if islink(path):
+            if not Path(path).is_dir():
                 unlink(path)
                 shutil.copytree(str(Path(TOOLS) / tool / 'data'), path)
+    '''
 
 
 if __name__ == '__main__':
