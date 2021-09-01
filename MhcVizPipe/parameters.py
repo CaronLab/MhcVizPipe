@@ -11,7 +11,11 @@ if '--standalone' in argv:
 else:
     default_config_file = str(Path(ROOT_DIR) / 'mhcvizpipe_defaults.config')
 EXECUTABLE = executable
-TOOLS = str((Path(executable) / '../../../tools').resolve())
+
+if platform.system().lower() == "windows":
+    TOOLS = str((Path(executable) / '../../tools').resolve())
+else:
+    TOOLS = str((Path(executable) / '../../../tools').resolve())
 
 if '--standalone' in argv:
     config_file = str((Path(TOOLS) / '../mhcvizpipe.config').resolve())
