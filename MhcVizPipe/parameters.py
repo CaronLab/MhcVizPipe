@@ -2,6 +2,8 @@ from configparser import ConfigParser
 import os
 from pathlib import Path
 from sys import executable, argv
+import platform
+from tempfile import gettempdir
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if '--standalone' in argv:
@@ -14,7 +16,7 @@ TOOLS = str((Path(executable) / '../../../tools').resolve())
 if '--standalone' in argv:
     config_file = str((Path(TOOLS) / '../mhcvizpipe.config').resolve())
 else:
-    config_file = str(os.path.expanduser('~/.mhcvizpipe.config'))
+    config_file = str(Path('~/.mhcvizpipe.config').expanduser())
 
 if not Path(config_file).exists():
     with open(default_config_file, 'r') as f:
@@ -31,8 +33,11 @@ class Parameters:
 
     @property
     def TMP_DIR(self) -> str:
-        self.config.read(config_file)
-        return str(Path(self.config['DIRECTORIES']['temp directory']).expanduser())
+        if platform.system().lower() != "windows":
+            self.config.read(config_file)
+            return str(Path(self.config['DIRECTORIES']['temp directory']).expanduser())
+        else:
+            return str(Path(gettempdir()) / 'mhcvizpipe')
 
     @property
     def NETMHCPAN(self) -> str:
