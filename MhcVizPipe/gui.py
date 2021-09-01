@@ -984,7 +984,7 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
             peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
             peps = clean_peptides(peps)
             sample_peptides[sample_name] = peps
-        time = str(datetime.now()).replace(' ', '_')
+        time = str(datetime.now()).replace(' ', '_').replace(':', '-')
         analysis_location = str(Path(Parameters.TMP_DIR)/time)
 
         cl_tools = MhcToolHelper(
