@@ -466,16 +466,6 @@ class mhc_report:
         #return div(card, className=className)
         return heatmaps
 
-    def gen_venn_diagram(self, className=None):
-        fig = venn_diagram(self.results)
-
-        venn = div(className='card')
-        with venn:
-            div(b('Venn Diagram'), className='card-header')
-            div(raw(fig.to_html(full_html=False, include_plotlyjs=False)), className='card-body')
-
-        return div(venn, className=className)
-
     def gen_upset_plot(self, className=None):
         # total_peps = len([pep for s in self.results.samples for pep in s.peptides])
         total_peps = np.sum([len(self.results.sample_peptides[s]) for s in self.results.samples])
