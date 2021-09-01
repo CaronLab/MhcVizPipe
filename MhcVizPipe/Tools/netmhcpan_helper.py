@@ -10,6 +10,8 @@ from multiprocessing import Pool
 from uuid import uuid4
 import pandas as pd
 import tempfile
+import platform
+from MhcVizPipe.Tools.utils import convert_win_2_wsl_path
 
 common_aa = "ARNDCQEGHILKMFPSTWYV"
 TMP_DIR = str(Path(tempfile.gettempdir(), 'pynetmhcpan').expanduser())
@@ -196,16 +198,21 @@ class NetMHCpanHelper:
             if len(chunk) < 1:
                 continue
             fname = Path(self.temp_dir, f'peplist_{job_number}.csv')
+
             # save the new peptide list, this will be given to netMHCpan
             with open(str(fname), 'w') as f:
                 f.write('\n'.join(chunk))
+
+            # if we are in windows, convert the filepath to the WSL path
+            if platform.system().lower() == 'windows':
+                fname = convert_win_2_wsl_path(fname)
+
             # run netMHCpan
             if self.mhc_class == 'I':
                 command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -BA'.split(' ')
             else:
                 command = f'{self.NETMHCIIPAN} -inptype 1 -f {fname} -a {",".join(self.alleles)} -BA'.split(' ')
 
-            # command = f'{self.NETMHCPAN} -p -f {fname} -a {",".join(self.alleles)} -BA'.split(' ')
             job = Job(command=command,
                       working_directory=self.temp_dir)
             self.jobs.append(job)
