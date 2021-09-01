@@ -1,16 +1,15 @@
-import subprocess
 import pandas as pd
 import os
-from numpy import array_split
 import numpy as np
 from pathlib import Path
 from MhcVizPipe.Tools.utils import clean_peptides
 from typing import List
-from multiprocessing import Pool
 from MhcVizPipe.Tools.jobs import Job, _run_multiple_processes
 from MhcVizPipe.Tools.netmhcpan_helper import NetMHCpanHelper
 import re
 import shutil
+from MhcVizPipe.Tools.utils import convert_win_2_wsl_path
+import platform
 
 
 class MhcToolHelper:
@@ -44,9 +43,15 @@ class MhcToolHelper:
 
         from MhcVizPipe.parameters import Parameters
         self.Parameters = Parameters()
-        self.GIBBSCLUSTER = self.Parameters.GIBBSCLUSTER
-        self.NETMHCPAN = self.Parameters.NETMHCPAN
-        self.NETMHCIIPAN = self.Parameters.NETMHCIIPAN
+
+        if platform.system().lower() != 'windows':
+            self.GIBBSCLUSTER = self.Parameters.GIBBSCLUSTER
+            self.NETMHCPAN = self.Parameters.NETMHCPAN
+            self.NETMHCIIPAN = self.Parameters.NETMHCIIPAN
+        else:
+            self.GIBBSCLUSTER = 'wsl ' + convert_win_2_wsl_path(self.Parameters.GIBBSCLUSTER)
+            self.NETMHCPAN = 'wsl ' + convert_win_2_wsl_path(self.Parameters.NETMHCPAN)
+            self.NETMHCIIPAN = 'wsl ' + convert_win_2_wsl_path(self.Parameters.NETMHCIIPAN)
 
         self.tmp_folder = Path(tmp_directory)
         if not self.tmp_folder.exists():
@@ -165,6 +170,11 @@ class MhcToolHelper:
             lengths = np.vectorize(len)(peps)
             peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
             peps.tofile(str(fname), '\n', '%s')
+
+            # if we are in windows, convert the filepath to the WSL path
+            if platform.system().lower() == 'windows':
+                fname = convert_win_2_wsl_path(fname)
+
             n_groups = 6  # search for up to 6 motifs
             for groups in range(1, n_groups+1):
                 if self.mhc_class == 'I':
@@ -197,6 +207,7 @@ class MhcToolHelper:
 
             for allele, peps in allele_peps.items():
                 fname = Path(self.tmp_folder, f"{allele}_{sample}_forgibbs.csv")
+
                 peps = np.array(list(allele_peps[allele]))
                 if len(peps) < 20:
                     self.not_enough_peptides.append(f'{allele}_{sample}')
@@ -205,6 +216,11 @@ class MhcToolHelper:
                     peps = peps[(lengths >= self.min_length) & (lengths <= self.max_length)]
 
                     peps.tofile(str(fname), '\n', '%s')
+
+                    # if we are in windows, convert the filepath to the WSL path
+                    if platform.system().lower() == 'windows':
+                        fname = convert_win_2_wsl_path(fname)
+
                     n_groups = 2 if allele == 'unannotated' else 1
                     for g in range(1, n_groups+1):
                         if self.mhc_class == 'I':
