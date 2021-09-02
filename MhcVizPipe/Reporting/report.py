@@ -15,6 +15,7 @@ import PlotlyLogo.logo as pl
 from MhcVizPipe.parameters import ROOT_DIR
 import concurrent.futures
 from MhcVizPipe.parameters import Parameters
+from MhcVizPipe import __version__
 
 
 def wrap_plotly_fig(fig: go.Figure, width: str = '100%', height: str = '100%'):
@@ -476,7 +477,7 @@ class mhc_report:
         usp = UpSetPlotly(samples=data, sample_names=sample_names)
         usp.add_secondary_plot(data=lengths, label='Peptide<br>length', plot_type='box')
 
-        usp_plot = usp.plot(order_by='decreasing',
+        usp_plot = usp.plot(order_by=None,
                             intersection_limit='by_sample 0.01',
                             show_fig=False,
                             return_fig=True,
@@ -761,7 +762,8 @@ class mhc_report:
                                                                'margin-bottom: 20px'):
                 with div(className='row'):
                     with div(className='col-12', style='display: flex; height: 60px'):
-                        div([h1('M'), h3('hc'), h1('V'), h3('iz'), h1('P'), h3('ipe'),
+                        div([h1('M'), h3('hc'), h1('V'), h3('iz'), h1('P'), h3(f'ipe'),
+                             h5(f' (v{__version__})', style="white-space: pre"),
                              h3(' - Analysis report', style="white-space: pre")],
                             style="background-color: #0c0c0c; padding: 5px; color: white;"
                                   "border-radius: 6px; width: 100%; display: flex"),
