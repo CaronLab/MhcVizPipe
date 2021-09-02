@@ -46,7 +46,7 @@ server = flask.Flask(__name__)
 
 app = dash.Dash(__name__, external_scripts=["https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"],
                 external_stylesheets=external_stylesheets, server=server)
-app.title = "MhcVizPipe"
+app.title = f"MhcVizPipe v{__version__}"
 
 class_i_alleles = []
 with open(Path(ROOT_DIR, 'assets', 'class_I_alleles.txt')) as f:
@@ -103,7 +103,7 @@ app.layout = html.Div(children=[
                                       html.P('V'),
                                       html.H3('iz'),
                                       html.P('P'),
-                                      html.H3('ipe')],
+                                      html.H3([f'ipe (v{__version__})'])],
                             style={"background-color": "#0c0c0c", "padding": "5px", "color": "white",
                                    "border-radius": "6px", "width": "100%", "display": 'flex'}),
                     lab_logo()
@@ -580,7 +580,8 @@ app.layout = html.Div(children=[
                 ],
             ),
             dbc.ModalFooter(
-                html.A(dbc.Button('Reset'), href='/')
+                [html.P('(Press Esc to return to the GUI with resetting the form)', className='mr-auto'),
+                 html.A(dbc.Button('Reset'), href='/')]
             )
         ],
         id="modal2",
