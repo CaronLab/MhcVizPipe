@@ -1089,19 +1089,6 @@ def check_mvp_version_and_update(a, b, c):
                 html.P(f'Would you like to upgrade?', style={'margin-top': '20px'})
             ]
             return True, header, body, False, no_update
-    elif a == 0:
-        uptodate, current, latest = check_if_version_is_uptodate('MhcVizPipe')
-        if latest == 'none' or uptodate:
-            raise PreventUpdate
-        else:
-            header = 'MhcVizPipe needs to be upgraded'
-            body = [
-                html.P('A new version of MhcVizPipe is available:'),
-                html.P(f'  Current: {current}', style={'white-space': 'pre'}),
-                html.P(f'  Latest: {latest}', style={'white-space': 'pre'}),
-                html.P(f'Would you like to upgrade?', style={'margin-top': '20px'})
-            ]
-            return True, header, body, False, no_update
     elif triggered_by == 'upgrade-no':
         return False, no_update, no_update, no_update, no_update
     elif triggered_by == 'upgrade-yes':
