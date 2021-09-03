@@ -49,13 +49,22 @@ fi
 chmod +x "$CDIR"/tools/gibbscluster
 chmod +x "$CDIR"/tools/netMHCIIpan
 chmod +x "$CDIR"/tools/netMHCpan4.1
-chmod -R +x "$CDIR"/python/bin
 
-# if we're on a Mac, remove any quarantine attributes
-if [[ $OSTYPE == *darwin* ]]; then
-	echo "Preparing directory"
-	xattr -r -s -d com.apple.quarantine "$CDIR"/tools "$CDIR"/python
+if [[ $(uname -a) == *Microsoft* || $(uname -a) == *Windows* || $(uname -a) == *microsoft* || $(uname -a) == *windows* ]]
+then
+  python=$PWD/python/python.exe
+  win_python=$(powershell.exe wsl wslpath -m "$python")
+  powershell.exe -Command "$win_python -m MhcVizPipe.cli $args --standalone"
+else
+  chmod -R +x "$CDIR"/python/bin
+
+  # if we're on a Mac, remove any quarantine attributes
+  if [[ $OSTYPE == *darwin* ]]
+  then
+    echo "Preparing directory"
+    xattr -r -s -d com.apple.quarantine "$CDIR"/tools "$CDIR"/python
+  fi
+
+  # start the program
+  "$CDIR"/python/bin/python3 -m MhcVizPipe.cli $@ --standalone
 fi
-
-# start the program
-"$CDIR"/python/bin/python3 -m MhcVizPipe.gui @$ --standalone
