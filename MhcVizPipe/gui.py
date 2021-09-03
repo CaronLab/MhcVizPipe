@@ -955,6 +955,22 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
                            style={'width': '360px', 'margin-top': '2px'})],
                 no_update,
                 False, '', False)
+    # check for alleles with colons in them. we can't run these on Windows yet...
+    if platform.system().lower() == 'windows':
+        for allele in set(alleles):
+            if ':' in allele:
+                return (no_update,
+                        no_update,
+                        no_update,
+                        no_update,
+                        no_update,
+                        [dbc.Alert(id=str(uniform(0, 1)), color='danger',
+                                   children=f"Due to limitations in the Windows filesystem, MhcVizPipe cannot currently "
+                                            f"run alleles which contain colons. This will be addressed in a future "
+                                            f"release.",
+                                   style={'width': '360px', 'margin-top': '2px'})],
+                        no_update,
+                        False, '', False)
     if n_clicks is None:
         raise PreventUpdate
 
@@ -1064,6 +1080,19 @@ def check_mvp_version_and_update(a, b, c):
             body = f'The installed version of MhcVizPipe is {current}, which is up-to-date. ' \
                    f'You can exit this window by clicking outside of it.'
             return True, header, body, True, no_update
+        else:
+            header = 'MhcVizPipe needs to be upgraded'
+            body = [
+                html.P('A new version of MhcVizPipe is available:'),
+                html.P(f'  Current: {current}', style={'white-space': 'pre'}),
+                html.P(f'  Latest: {latest}', style={'white-space': 'pre'}),
+                html.P(f'Would you like to upgrade?', style={'margin-top': '20px'})
+            ]
+            return True, header, body, False, no_update
+    elif a == 0:
+        uptodate, current, latest = check_if_version_is_uptodate('MhcVizPipe')
+        if latest == 'none' or uptodate:
+            raise PreventUpdate
         else:
             header = 'MhcVizPipe needs to be upgraded'
             body = [
