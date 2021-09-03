@@ -100,7 +100,7 @@ chmod +x "$CDIR"/tools/gibbscluster
 chmod +x "$CDIR"/tools/netMHCIIpan
 chmod +x "$CDIR"/tools/netMHCpan4.1
 
-if [[ $(uname -a) == *Microsoft* || $(uname -a) == *Windows* ]]
+if [[ $(uname -a) == *Microsoft* || $(uname -a) == *Windows* || $(uname -a) == *microsoft* || $(uname -a) == *windows* ]]
 then
   python=$PWD/python/python.exe
   win_python=$(powershell.exe wsl wslpath -m "$python")
