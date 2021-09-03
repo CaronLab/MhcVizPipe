@@ -1250,7 +1250,7 @@ if __name__ == '__main__':
     For a brief introduction to using the GUI, click the link to
     "help and resources" near the top of the GUI. For more information
     and the latest updates please visit our GitHub repository:
-    https://github.com/kevinkovalchik/MhcVizPipe.
+    https://github.com/CaronLab/MhcVizPipe.
 
     To shut down this instance of MhcVizPipe, close this window or
     use the following keyboard shortcut in the terminal:
