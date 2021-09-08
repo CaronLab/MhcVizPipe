@@ -102,9 +102,7 @@ chmod +x "$CDIR"/tools/netMHCpan4.1
 
 if [[ $(uname -a) == *Microsoft* || $(uname -a) == *Windows* || $(uname -a) == *microsoft* || $(uname -a) == *windows* ]]
 then
-  python=$PWD/python/python.exe
-  win_python=$(powershell.exe wsl wslpath -m "$python")
-  powershell.exe -Command "$win_python -m MhcVizPipe.gui --standalone"
+  powershell.exe -Command "./python/python.exe -m MhcVizPipe.gui --standalone"
 else
   chmod -R +x "$CDIR"/python/bin
 
