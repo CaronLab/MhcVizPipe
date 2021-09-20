@@ -268,8 +268,14 @@ app.layout = html.Div(children=[
                         ], width=8),
                     dbc.Col(
                         [
-                            html.P('Allele search (click arrow to add to selected cells):',
-                                   style={'font-weight': 'bold', 'margin-top': '4rem'}),
+                            html.P('Add alleles:',
+                                   style={'font-weight': 'bold', 'margin': '0', 'margin-top': '1rem'}),
+                            html.P('- click on allele in list or press enter to select it',
+                                   style={'font-weight': 'bold', 'margin': '0'}),
+                            html.P('- click the arrow to add to selected cells',
+                                   style={'font-weight': 'bold', 'margin': '0'}),
+                            html.P('- in the next section selecting class I or II changes the available alleles',
+                                   style={'font-weight': 'bold'}),
                             html.Div(
                                 [
                                     html.A('\u27AF',
@@ -279,7 +285,8 @@ app.layout = html.Div(children=[
                                         id='mhc-alleles',
                                         options=class_i_alleles,
                                         multi=True,
-                                        style={'width': '100%', 'margin-left': '5px'}
+                                        style={'width': '100%', 'margin-left': '5px'},
+                                        placeholder="Type to search..."
                                     )
                                 ],
                                 style={'display': 'flex'}
