@@ -795,9 +795,9 @@ class mhc_report:
                     self.exp_info(className='col-6')
                 hr()
                 h3("Sample Overview")
-                p(f"{unescape('&bull;')}LF Score: "
+                p(f" - LF Score: "
                   f"fraction of peptides between {self.results.min_length} and {self.results.max_length} mers.\n"
-                  f"{unescape('&bull;')}BF Score: fraction of peptides between {self.results.min_length} and "
+                  f" - BF Score: fraction of peptides between {self.results.min_length} and "
                   f"{self.results.max_length} mers which are predicted to be strong or weak binders.\n"
                   , style="white-space: pre")
                 n = len(self.results.samples)
