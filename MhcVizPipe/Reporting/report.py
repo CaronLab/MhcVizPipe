@@ -818,8 +818,8 @@ class mhc_report:
                 wb = '2.0' if self.mhc_class == 'I' else '10.0'
                 p(f'{pan} eluted ligand predictions made for all peptides between {self.results.min_length} & '
                   f'{self.results.max_length} mers, inclusive.\n'
-                  f'{unescape("&bull;")}Percent rank cutoffs for strong and weak binders: {sb} and {wb}.\n'
-                  f'{unescape("&bull;")}Percentages are calculated across rows (i.e. percentage of total peptides for a respective sample).',
+                  f' - Percent rank cutoffs for strong and weak binders: {sb} and {wb}.\n'
+                  f' - Percentages are calculated across rows (i.e. percentage of total peptides for a respective sample).',
                   style='white-space: pre')
                 with div(className='row'):
                     if len(self.results.samples) <= 6:
@@ -856,7 +856,7 @@ class mhc_report:
                         h3('Sequence Motifs')
                         p(f'Clustering performed with all peptides between {self.results.min_length} & '
                           f'{self.results.max_length} mers, inclusive.')
-                        p(f'{unescape("&bull;")}Percentages represent the percentage of peptides in a given group predicted to strongly '
+                        p(f' - Percentages represent the percentage of peptides in a given group predicted to strongly '
                           'bind the indicated allele.')
                         div([
                             div(style='width: 18px; height: 18px; background-color: #21d426; border-radius: 3px'),
