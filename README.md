@@ -10,25 +10,28 @@ with a modern web browser.
 
 Here are some of the features of MhcVizPipe:
 
-### Sample Overview
-![](images/sample_overview.png)
+## Sample Overview
 
-The "Sample Overview" sections gives you a quick look at the peptide length distributions and the overlapping sets of
-peptides between multiple samples.
+The "Sample Overview" sections gives you a quick look at the peptide length distributions, QC scores 
+(LF and BF score), and the overlapping sets of peptides between multiple samples.
 
-### Annotation Results
-![](images/annotation_results.png)
+![](images/sample_overview.png.png)
+
+## Annotation Results
 
 The "Annotation Results" section summarizes the results of NetMHCpan(4.0 or 4.1) or NetMHCIIpan4.0. A table shows the 
 number and proportion of strong, weak and non-binders per sample per allele while overall binding characteristics of
 each sample are displayed in a single figure.
 
-### Peptide Grouping and Sequence Motifs
-![](images/unsupervised_logos.png)
+![](images/annotation_results.png)
+
+## Clustering and Sequence Motifs
 
 The "Sequence Motifs" section highlights the prominent motifs identified by GibbsCluster, including motifs generated from the analysis of
 all peptides ("Unsupervised GibbsCluster") and motifs generated for each allele-specific peptide list as identified by
 NetMHCpan or NetMHCIIpan ("Allele-specific GibbsCluster").
+
+![](images/gibbs_cluster_results.png)
 
 ## When to use MhcVizPipe
 
