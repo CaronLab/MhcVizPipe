@@ -9,7 +9,8 @@ and easy-to-understand reports in HTML format. The reports are fully portable an
 with a modern web browser.
 
 MhcVizPipe comes with both a [graphical user interface](https://github.com/CaronLab/MhcVizPipe/wiki/Usage) 
-and a [command line interface](https://github.com/CaronLab/MhcVizPipe/wiki/Command-line-interface).
+and a [command line interface](https://github.com/CaronLab/MhcVizPipe/wiki/Command-line-interface). For help 
+installing and using MhcVizPipe, please [visit the wiki](https://github.com/CaronLab/MhcVizPipe/wiki).
 
 Here are some of the features of the reports generated using MhcVizPipe:
 
