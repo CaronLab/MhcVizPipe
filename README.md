@@ -11,7 +11,7 @@ with a modern web browser.
 MhcVizPipe comes with both a [graphical user interface](https://github.com/CaronLab/MhcVizPipe/wiki/Usage) 
 and a [command line interface](https://github.com/CaronLab/MhcVizPipe/wiki/Command-line-interface).
 
-Here are some of the features of MhcVizPipe:
+Here are some of the features of the reports generated using MhcVizPipe:
 
 ## Sample Overview
 
