@@ -1,5 +1,5 @@
 # MhcVizPipe (MVP)
-A reporting pipeline for visualization of immunopeptidomics MS data.
+A reporting pipeline for visualization and quality control of immunopeptidomics MS data.
 
 MhcVizPipe is intended for rapid assessment and comparison of general sample quality and composition across a single or multiple
 files. Example use cases of MhcVizPipe are assessment of QC samples or comparison of samples during method development.
