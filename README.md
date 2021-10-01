@@ -8,6 +8,9 @@ MhcVizPipe connects the bioinformatic tools NetMHCpan, NetMHCIIpan and GibbsClus
 and easy-to-understand reports in HTML format. The reports are fully portable and can be viewed on any computer
 with a modern web browser.
 
+MhcVizPipe comes with both a [graphical user interface](https://github.com/CaronLab/MhcVizPipe/wiki/Usage) 
+and a [command line interface](https://github.com/CaronLab/MhcVizPipe/wiki/Command-line-interface).
+
 Here are some of the features of MhcVizPipe:
 
 ## Sample Overview
