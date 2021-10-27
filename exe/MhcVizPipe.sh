@@ -36,7 +36,7 @@ fi
 
 if [[ ! (-e "$CDIR"/tools/gibbscluster && -e "$CDIR"/tools/netMHCIIpan && -e "$CDIR"/tools/netMHCpan4.1) ]]
 then
-	echo "One or more of the tool scripts are missing from the \"tools\" folder. It should have the following scipt files: \
+	echo "One or more of the tool scripts are missing from the \"tools\" folder. It should have the following script files: \
 netMHCpan4.0, netMHCpan4.1, netMHCIIpan, and gibbscluster. Please replace these files either by downloading them from \
 https://github.com/CaronLab/MhcVizPipe/tree/master/tool_scripts or extracting them from your original MhcVizPipe download \
 (if you still have it).";
