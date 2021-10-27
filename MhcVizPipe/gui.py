@@ -1175,10 +1175,10 @@ def download_data_file(tool: str) -> None:
     :return: None
     """
     if tool == 'netMHCIIpan':
-        url = 'http://www.cbs.dtu.dk/services/NetMHCIIpan/data.tar.gz'
+        url = 'https://services.healthtech.dtu.dk/services/NetMHCIIpan-4.0/data.tar.gz'
         dest = str(Path(TOOLS) / 'netMHCIIpan-4.0')
     elif tool == 'netMHCpan4.1':
-        url = 'http://www.cbs.dtu.dk/services/NetMHCpan/data.tar.gz'
+        url = 'https://services.healthtech.dtu.dk/services/NetMHCpan-4.1/data.tar.gz'
         dest = str(Path(TOOLS) / 'netMHCpan-4.1')
     else:
         raise ValueError('tool must be one of {netMHCIIpan, netMHCpan4.1}')
