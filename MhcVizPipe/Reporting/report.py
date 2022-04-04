@@ -134,7 +134,10 @@ class mhc_report:
             bindings = counts_df.apply(get_highest_binding, axis=1).values
             binders, counts = np.unique(bindings, return_counts=True)
             binder_counts = {binder: count for binder, count in zip(list(binders), (list(counts)))}
-            n_binders = n_with_acceptable_length - binder_counts['Non-binding']
+            if 'Non-binding' in binder_counts:
+                n_binders = n_with_acceptable_length - binder_counts['Non-binding']
+            else:
+                n_binders = n_with_acceptable_length
             lf_score = round(n_with_acceptable_length / n_all_peps, 2)
             bf_score = round(n_binders / n_with_acceptable_length, 2)
             lf_color = score_color(lf_score)
