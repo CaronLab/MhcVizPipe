@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.11]
+
+### Changed
+
+- Added the option to change the maximum "acceptable" peptide length. This can be set in the Settings window.
+The first time you run MhcVizPipe after this update, you will need to add the parameters to the settings 
+by clicking `LOAD DEFAULTS` in the settings window.
+## [0.7.2 - 0.7.10]
+
+Missed these updates in the changelog...
+
 ## [0.7.1]
 
 ### Changed
