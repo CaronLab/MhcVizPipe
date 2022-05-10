@@ -97,3 +97,23 @@ class Parameters:
         if threads < 1 or threads > os.cpu_count():
             threads = os.cpu_count()
         return threads
+
+    @property
+    def CLASS_I_MAX_LENGTH(self) -> int:
+        self.config.read(config_file)
+        if 'class I max length' not in self.config['ANALYSIS']:
+            raise KeyError('`class I max length` is missing from the parameters file. This parameters was added in '
+                           'version 0.7.11. You can either add it manually to the end of the [ANALYSIS] part of the '
+                           'settings window, or you can choose to add it automatically by clicking "LOAD DEFAULTS" in '
+                           'the settings window.')
+        return int(self.config['ANALYSIS']['class I max length'])
+
+    @property
+    def CLASS_II_MAX_LENGTH(self) -> int:
+        self.config.read(config_file)
+        if 'class II max length' not in self.config['ANALYSIS']:
+            raise KeyError('`class II max length` is missing from the parameters file. This parameters was added in '
+                           'version 0.7.11. You can either add it manually to the end of the [ANALYSIS] part of the '
+                           'settings window, or you can choose to add it automatically by clicking "LOAD DEFAULTS" in '
+                           'the settings window.')
+        return int(self.config['ANALYSIS']['class II max length'])

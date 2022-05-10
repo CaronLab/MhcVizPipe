@@ -42,6 +42,9 @@ parser.add_argument('-H', '--column_header', type=str, required=False, help='The
 parser.add_argument('-a', '--alleles', type=str, nargs='+',
                     help='MHC alleles, spaces separated if more than one.')
 parser.add_argument('-c', '--mhc_class', type=str, choices=['I', 'II'], required=True, help='MHC class')
+parser.add_argument('-m', '--max_length', type=int, default=None, required=False,
+                    help='Maximum peptide length to consider as "acceptable" in the analysis. Defaults to 9 for class '
+                         'I and 22 for class II.')
 parser.add_argument('-D', '--description', type=str, default='',
                     help='An optional description of the experiment/analysis. Enclose it in quotes, e.g. "This is '
                          'a description of my analysis".')
@@ -103,13 +106,20 @@ if __name__ == '__main__':
                                 'sample-description': '',
                                 'sample-alleles': ', '.join(alleles)})
             sample_peptides[sample_name] = clean_peptides(load_peptide_file(file))
+    if args.max_length is not None:
+        max_length = args.max_length
+    else:
+        if args.mhc_class == 'I':
+            max_length = 12
+        else:
+            max_length = 22
     cl_tools = MhcToolHelper(
         sample_info_datatable=sample_info,
         mhc_class=args.mhc_class,
         sample_peptides=sample_peptides,
         tmp_directory=analysis_location,
         min_length=8 if args.mhc_class == 'I' else 9,
-        max_length=12 if args.mhc_class == 'I' else 22
+        max_length=max_length
     )
 
     exp_info = args.exp_info.replace('; ', '\n').replace(';', '\n')

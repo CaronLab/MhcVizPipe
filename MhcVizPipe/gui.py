@@ -1000,10 +1000,10 @@ def run_analysis(n_clicks, peptides, submitter_name, description, mhc_class, exp
     try:
         if mhc_class == 'I':
             min_length = 8
-            max_length = 12
+            max_length = Parameters.CLASS_I_MAX_LENGTH
         else:
             min_length = 9
-            max_length = 22
+            max_length = Parameters.CLASS_II_MAX_LENGTH
         for sample_name in samples_to_use:
             peps = [p.strip() for p in peptides[sample_name]['peptides'] if len(p.strip()) != 0]
             peps = clean_peptides(peps)
